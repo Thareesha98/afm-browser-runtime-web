@@ -14,11 +14,11 @@
     "check": "pnpm run typecheck && pnpm test"
   },
   "dependencies": {
-    "@afm/adapter-auth": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/auth",
-    "@afm/adapter-model": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/model",
-    "@afm/adapter-secret": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/secret",
-    "@afm/adapter-tool": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/tool",
-    "@afm/engine": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/engine",
+    "@afm/adapter-auth": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c6c2229652dfd370e81ad484ecc40b2ce69ec632&path:/typescript-interpreter/packages/adapters/auth",
+    "@afm/adapter-model": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c6c2229652dfd370e81ad484ecc40b2ce69ec632&path:/typescript-interpreter/packages/adapters/model",
+    "@afm/adapter-secret": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c6c2229652dfd370e81ad484ecc40b2ce69ec632&path:/typescript-interpreter/packages/adapters/secret",
+    "@afm/adapter-tool": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c6c2229652dfd370e81ad484ecc40b2ce69ec632&path:/typescript-interpreter/packages/adapters/tool",
+    "@afm/engine": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c6c2229652dfd370e81ad484ecc40b2ce69ec632&path:/typescript-interpreter/packages/engine",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/instrument-sans": "5.3.0",
     "pdfjs-dist": "6.3.289",
