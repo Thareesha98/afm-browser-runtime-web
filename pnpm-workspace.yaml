@@ -1,0 +1,30 @@
+overrides:
+  '@afm/adapter-model>@afm/engine@workspace:*': '-'
+  '@afm/adapter-secret>@afm/engine@workspace:*': '-'
+  '@afm/adapter-tool>@afm/engine@workspace:*': '-'
+  '@afm/adapter-tool>@afm/adapter-auth@workspace:*': '-'
+  fast-uri: '>=3.1.6'
+  ip-address: '>=10.3.1'
+  hono: '>=4.13.5'
+  '@hono/node-server': '>=1.19.15'
+  qs: '>=6.16.0'
+  'postcss@<8.5.23': '^8.5.23'
+  'nanoid@<3.3.18': '^3.3.18'
+  proxy-addr: '>=2.0.8'
+  source-map-js: '>=1.2.2'
+packageExtensions:
+  '@afm/adapter-model@0.0.0':
+    peerDependencies:
+      '@afm/engine': '0.0.0'
+  '@afm/adapter-secret@0.0.0':
+    peerDependencies:
+      '@afm/engine': '0.0.0'
+  '@afm/adapter-tool@0.0.0':
+    peerDependencies:
+      '@afm/engine': '0.0.0'
+      '@afm/adapter-auth': '0.0.0'
+blockExoticSubdeps: true
+allowBuilds:
+  esbuild: true
+onlyBuiltDependencies:
+  - esbuild

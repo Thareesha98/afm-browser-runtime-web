@@ -3,18 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm run typecheck && pnpm test"
   },
   "dependencies": {
-    "@afm/adapter-auth": "workspace:*",
-    "@afm/adapter-model": "workspace:*",
-    "@afm/adapter-secret": "workspace:*",
-    "@afm/adapter-tool": "workspace:*",
-    "@afm/engine": "workspace:*",
+    "@afm/adapter-auth": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/auth",
+    "@afm/adapter-model": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/model",
+    "@afm/adapter-secret": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/secret",
+    "@afm/adapter-tool": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/adapters/tool",
+    "@afm/engine": "git+https://github.com/Thareesha98/reference-implementations-afm.git#9a3db3a140766499b9488428002bccb838bd5688&path:/typescript-interpreter/packages/engine",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/instrument-sans": "5.3.0",
     "pdfjs-dist": "6.3.289",
@@ -26,9 +30,12 @@
     "remark-gfm": "^4.0.0"
   },
   "devDependencies": {
+    "@types/node": "^26.0.1",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^6.0.0",
-    "vite": "^8.1.0"
+    "typescript": "^5.7.2",
+    "vite": "^8.1.0",
+    "vitest": "^5.0.2"
   }
 }
