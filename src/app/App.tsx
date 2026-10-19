@@ -61,7 +61,7 @@ function Providers({ children }: { children: ReactNode }) {
 export function RouterRoot() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Providers>
           <AppRoutes />
         </Providers>
