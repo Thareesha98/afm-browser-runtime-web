@@ -126,7 +126,7 @@ export function ModelPanel({ content, savedSecrets, issue, onApply, onSaveKey, o
                 className="u-input"
                 type="password"
                 value={key}
-                placeholder={saved ? "•••••••••••••••••••••" : `paste your ${known.label} key`}
+                placeholder={saved ? "•••••••••••••••••••••" : `Paste your ${known.label} key`}
                 onChange={(event) => setKey(event.target.value)}
               />
               {issue !== null && !rejected && <p className="u-hint u-warn-note">{issue.text}</p>}

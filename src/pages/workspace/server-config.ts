@@ -39,7 +39,7 @@ export const AUTH_METHODS: Method[] = [
     id: "basic",
     label: "Username",
     fields: [
-      { key: "username", name: "username", required: true, placeholder: "your username" },
+      { key: "username", name: "username", required: true, placeholder: "Your username" },
       { key: "password", name: "password", required: true, placeholder: "${env:MY_PASSWORD}" },
     ],
   },

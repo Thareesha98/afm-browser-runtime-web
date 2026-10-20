@@ -55,7 +55,7 @@ export function AuthFields({ fields, values, secretEdits, saved, rejected, onVal
               className="u-input mono"
               type="password"
               value={secretEdits[field.key] ?? ""}
-              placeholder={saved(field.key) ? "•••••••••••••••••••••" : `paste the ${field.name}`}
+              placeholder={saved(field.key) ? "•••••••••••••••••••••" : `Paste the ${field.name}`}
               onChange={(event) => onSecretEdit(field.key, event.target.value)}
               onBlur={onSecretBlur}
             />
