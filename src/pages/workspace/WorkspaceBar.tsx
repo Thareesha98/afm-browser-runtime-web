@@ -108,7 +108,7 @@ export function WorkspaceBar({
             <span className="u-sep" aria-hidden="true" />
           </>
         )}
-        <Ico label="Conversation" on={open === "chat"} onClick={() => onToggle("chat")}>
+        <Ico label="Chat" on={open === "chat"} onClick={() => onToggle("chat")}>
           <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
         </Ico>
         <Ico label="Share this agent" on={open === "share"} disabled={!canAct} onClick={() => onToggle("share")}>

@@ -134,7 +134,6 @@ export function BuildPane({
                 </svg>
               </span>
               <span className="u-field-name">Role</span>
-              <span className="u-field-req">Required</span>
               <span className="u-field-hint">who the agent is</span>
               <span className="u-field-tools">
                 <ExpandButton onClick={() => setFocus("Role")} />
@@ -159,7 +158,6 @@ export function BuildPane({
                 </svg>
               </span>
               <span className="u-field-name">Instructions</span>
-              <span className="u-field-req">Required</span>
               <span className="u-field-hint">how it should behave</span>
               <span className="u-field-tools">
                 <ExpandButton onClick={() => setFocus("Instructions")} />

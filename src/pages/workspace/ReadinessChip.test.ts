@@ -33,7 +33,7 @@ function chip(role: string, instructions: string, phase: ChipPhase): string {
 describe("the readiness chip", () => {
   it("counts what is ready and ticks it", () => {
     const html = chip("a", "", "missing");
-    expect(html).toContain("2 of 3 ready");
+    expect(html).toContain("Ready: 2/3");
     expect(html.match(/u-need-item done/g)).toHaveLength(2);
     expect(html.match(/u-need-item todo/g)).toHaveLength(1);
   });
@@ -42,7 +42,14 @@ describe("the readiness chip", () => {
     const html = chip("", "", "missing");
     expect(html.indexOf("Role")).toBeLessThan(html.indexOf("Instructions"));
     expect(html.indexOf("Instructions")).toBeLessThan(html.indexOf("Model"));
-    expect(html).toContain("1 of 3 ready");
+    expect(html).toContain("Ready: 1/3");
+  });
+
+  it("opens from a small circle that fills as the agent gets ready", () => {
+    const html = chip("a", "", "missing");
+    expect(html).toContain("u-need-dot");
+    expect(html).toContain("stroke-dasharray:37.69911184307752 56.548667764616276");
+    expect(chip("", "", "missing")).toContain("stroke-dasharray:18.84955592153876 56.548667764616276");
   });
 
   it("turns green and ticks all three while it says Ready to run", () => {
@@ -50,6 +57,7 @@ describe("the readiness chip", () => {
     expect(html).toContain("Ready to run");
     expect(html).toContain("u-need ready");
     expect(html).not.toContain("todo");
+    expect(html).toContain("stroke-dasharray:56.548667764616276 56.548667764616276");
   });
 
   it("fades while it leaves", () => {

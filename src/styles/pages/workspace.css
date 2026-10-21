@@ -99,12 +99,26 @@
   min-height: 62px;
   max-height: 148px;
 }
-.u-field-text:empty::before,
-.u-field-text:has(> p:only-child > br:only-child)::before,
-.u-field-text:has(> br:only-child)::before {
+/* The example and the empty first paragraph share one grid cell, so the typing line starts on the same line as the
+   example. The box keeps the height it always had here: the example's lines plus the empty paragraph. RichText sets is-empty. */
+.u-field-text.is-empty {
+  display: grid;
+  align-content: start;
+  padding-bottom: 1.68em;
+}
+.u-field-text.is-empty::before {
   content: attr(data-placeholder);
+  grid-area: 1 / 1;
+  margin: 1em 0;
   color: var(--faint);
   pointer-events: none;
+}
+.u-field-text.is-empty > p {
+  grid-area: 1 / 1;
+  align-self: start;
+}
+.u-field-text.is-empty:empty::before {
+  margin: 0;
 }
 .u-field-text.has-more {
   -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent 100%);
@@ -216,6 +230,8 @@
 }
 .code-editor-line {
   display: block;
+  /* a blank line still takes a full line, or the text drawn here drifts above the typing line in the textarea */
+  min-height: 1.8em;
   margin: 0 -16px 0 0;
   padding: 0 16px 0 0;
 }
@@ -296,12 +312,18 @@
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
-.u-focus-body:empty::before,
-.u-focus-body:has(> p:only-child > br:only-child)::before,
-.u-focus-body:has(> br:only-child)::before {
+/* In the bigger window the example takes no height and sits where the first line of text will, so the typing line is on it. */
+.u-focus-body.is-empty::before {
   content: attr(data-placeholder);
+  display: block;
+  height: 0;
+  position: relative;
+  top: 1em;
   color: var(--faint);
   pointer-events: none;
+}
+.u-focus-body.is-empty:empty::before {
+  top: 0;
 }
 .u-focus-raw {
   border: 0;
@@ -1500,24 +1522,59 @@ label.u-group {
 .u-stage-top {
   position: relative;
 }
+/* It opens from a small circle (the progress ring) and spreads out, the way a phone's live notification does, and
+   closes back into the circle when the agent is ready. */
 .u-need {
+  --need-ease: cubic-bezier(0.22, 1.18, 0.36, 1);
   position: absolute;
   left: var(--need-x, 50%);
   top: 15px;
-  transform: translateX(-50%);
+  translate: -50% 0;
   z-index: 5;
   display: inline-flex;
   align-items: center;
-  gap: 14px;
   height: 30px;
-  padding: 0 15px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 999px;
   font-size: 13px;
   color: var(--ink2);
   white-space: nowrap;
-  transition: opacity 0.2s ease;
+  animation: need-pop 0.32s var(--need-ease) both;
+}
+.u-need-dot {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--ink2);
+}
+.u-need-dot svg {
+  width: 20px;
+  height: 20px;
+}
+.u-need-track {
+  stroke: currentColor;
+  opacity: 0.2;
+}
+.u-need-arc {
+  stroke: currentColor;
+  transition: stroke-dasharray 0.4s ease;
+}
+.u-need-body {
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  animation: need-open 0.5s 0.1s var(--need-ease) both;
+}
+.u-need-in {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 15px 0 2px;
+  animation: need-fade-in 0.22s 0.3s ease both;
 }
 .u-need-lead {
   font-weight: 650;
@@ -1548,15 +1605,74 @@ label.u-group {
   border-color: color-mix(in srgb, var(--ok) 22%, var(--surface));
   font-weight: 650;
 }
+.u-need.ready .u-need-dot,
 .u-need.ready .u-need-lead {
   color: var(--ok);
 }
+.u-need.ready .u-need-track {
+  opacity: 0.25;
+}
 .u-need.is-leaving {
-  opacity: 0;
+  animation: need-vanish 0.16s 0.4s ease-in both;
+}
+.u-need.is-leaving .u-need-in {
+  animation: need-fade-out 0.14s ease both;
+}
+.u-need.is-leaving .u-need-body {
+  animation: need-close 0.34s 0.1s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes need-pop {
+  from {
+    opacity: 0;
+    scale: 0.55;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes need-open {
+  from {
+    grid-template-columns: 0fr;
+  }
+  to {
+    grid-template-columns: 1fr;
+  }
+}
+@keyframes need-close {
+  from {
+    grid-template-columns: 1fr;
+  }
+  to {
+    grid-template-columns: 0fr;
+  }
+}
+@keyframes need-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes need-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes need-vanish {
+  to {
+    opacity: 0;
+    scale: 0.55;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .u-need {
-    transition: none;
+  .u-need,
+  .u-need-body,
+  .u-need-in,
+  .u-need.is-leaving .u-need-body,
+  .u-need.is-leaving .u-need-in {
+    animation: none;
+  }
+  .u-need.is-leaving {
+    animation: need-fade-out 0.2s both;
   }
 }
 
@@ -1568,22 +1684,35 @@ label.u-group {
   cursor: default;
 }
 
-/* "Required" beside the field name */
-.u-field-req {
-  font-size: 13px;
-  color: var(--muted);
+/* A gentle highlight on the field being typed in: one thin line around the whole field (its heading and its text).
+   It is drawn over the field's own padding and the card's side padding, so nothing moves or resizes. */
+.u-field {
+  position: relative;
 }
-.u-field-req::after {
-  content: " ·";
+.u-field::after {
+  content: "";
+  position: absolute;
+  inset: 3px -12px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  pointer-events: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.u-field:focus-within::after {
+  border-color: var(--ink2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
-/* A gentle highlight on the field being typed in. It is drawn outside the field, so nothing moves or resizes. */
-.u-field:focus-within {
-  border-radius: 14px;
-  box-shadow:
-    0 0 0 6px var(--surface),
-    0 0 0 7px var(--ink2),
-    0 0 0 10px color-mix(in srgb, var(--ink) 9%, transparent);
+/* The API key box: a little lower under its label, and a softer line while typing than the page-wide focus ring. */
+.u-key-input {
+  margin-top: 5px;
+}
+.u-key-input:focus-visible {
+  outline: none;
+  border-color: var(--ink2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 /* The line under the editor keeps its space (so the card keeps its size) but goes quiet while the chip says the same thing. */
