@@ -410,7 +410,7 @@ export function StartHere({
 
       <div className="u-start-list">
         <StartOption icon={<Glyph path={ICON_PATHS.blank} />} name="Blank" onClick={onBlank} on
-          desc="Write the role and instructions yourself. It is already on the right." />
+          desc="Write the role and instructions yourself. It is already in the editor." />
         <StartOption icon={<Glyph path={ICON_PATHS.generate} />} name="Generate with AI" onClick={() => setView("prompt")}
           desc="Describe what you want and get a first version to edit." />
         <StartOption icon={<Glyph path={ICON_PATHS.template} />} name="From a template" onClick={() => setView("templates")}

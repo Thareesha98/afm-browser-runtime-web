@@ -15,6 +15,7 @@
 // under the License.
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { BuildPane } from "./BuildPane";
 import { ReadinessChip, chipAnnouncement } from "./ReadinessChip";
 import type { Needs } from "./readiness";
@@ -44,6 +45,8 @@ interface Props extends EditableProps {
   showRaw?: number;
   onOpenPanel?: (panel: "model" | "tools") => void;
   chip?: { needs: Needs; phase: ChipPhase; onHold: (held: boolean) => void };
+  // buttons that sit at the end of the Build / Raw row on a narrow window (they are in the header otherwise)
+  toolbarExtras?: ReactNode;
 }
 
 function agentFilename(content: string): string | undefined {
@@ -56,7 +59,7 @@ function agentFilename(content: string): string | undefined {
   return `${slug === "" ? "agent" : slug}.afm.md`;
 }
 
-export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, onOpenPanel, chip }: Props) {
+export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, onOpenPanel, chip, toolbarExtras }: Props) {
   const [mode, setMode] = useState<EditorMode>("simple");
   const firstRaw = useRef(showRaw);
   useEffect(() => {
@@ -98,6 +101,7 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
             </button>
           </>
         )}
+        {toolbarExtras !== undefined && <span className="u-stage-tools">{toolbarExtras}</span>}
         {chip !== undefined && (
           <>
             <ReadinessChip needs={chip.needs} phase={chip.phase} onHold={chip.onHold} />

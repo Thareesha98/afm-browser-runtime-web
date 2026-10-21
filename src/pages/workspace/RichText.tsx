@@ -36,6 +36,7 @@ export function RichText({ value, placeholder, className = "", onChange, docKey 
     if (node === null) return;
     const more = node.scrollHeight - node.scrollTop - node.clientHeight > 1;
     node.classList.toggle("has-more", more);
+    node.classList.toggle("has-less", node.scrollTop > 1);
   }
 
   // The placeholder shows only while there is no text at all. (A CSS :empty rule is not enough: the browser leaves a

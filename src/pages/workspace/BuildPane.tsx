@@ -176,42 +176,45 @@ export function BuildPane({
       </div>
 
       <div className="u-rail">
-        <div className="u-rail-label">MODEL</div>
-        <div className="u-rail-row">
-          <span
-            className={lead(phase === "thinking", phase === "from-model" || phase === "answering", activity.modelBroken)}
-          />
-          <button
-            className={`u-node ${modelLive ? "live" : ""} ${activity.modelBroken ? "bad" : ""}`}
-            onClick={onOpenModel}
-            title={activity.modelBroken ? `${modelName} - this call did not come back` : modelName}
-          >
-            <span className="u-mk" style={{ background: providerColour(metadata.model?.provider ?? "") }}>
-              <ProviderMark provider={metadata.model?.provider ?? ""} size={14} />
-            </span>
-            <span className="u-node-body">
-              <span className="u-node-name">{modelLabel}</span>
-              <span className="u-node-sub">
-                {step("model") !== null
-                  ? "choose one"
-                  : (findProvider(metadata.model?.provider ?? "")?.label ?? metadata.model?.provider ?? "")}
+        <div className="u-rail-group">
+          <div className="u-rail-label">MODEL</div>
+          <div className="u-rail-row">
+            <span
+              className={lead(phase === "thinking", phase === "from-model" || phase === "answering", activity.modelBroken)}
+            />
+            <button
+              className={`u-node ${modelLive ? "live" : ""} ${activity.modelBroken ? "bad" : ""}`}
+              onClick={onOpenModel}
+              title={activity.modelBroken ? `${modelName} - this call did not come back` : modelName}
+            >
+              <span className="u-mk" style={{ background: providerColour(metadata.model?.provider ?? "") }}>
+                <ProviderMark provider={metadata.model?.provider ?? ""} size={14} />
               </span>
-            </span>
-          </button>
+              <span className="u-node-body">
+                <span className="u-node-name">{modelLabel}</span>
+                <span className="u-node-sub">
+                  {step("model") !== null
+                    ? "choose one"
+                    : (findProvider(metadata.model?.provider ?? "")?.label ?? metadata.model?.provider ?? "")}
+                </span>
+              </span>
+            </button>
+          </div>
         </div>
 
         <div className="u-rail-gap" />
-        <div className="u-rail-label">
-          TOOLS
-          {servers.length > 0 && (
-            <button className="u-node-add-sm" onClick={() => onOpenServer(null)} data-tip="Connect tools"
-              aria-label="Connect tools">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
-                aria-hidden="true">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
-            </button>
-          )}
+        <div className="u-rail-group">
+          <div className="u-rail-label">
+            TOOLS
+            {servers.length > 0 && (
+              <button className="u-node-add-sm" onClick={() => onOpenServer(null)} data-tip="Connect tools"
+                aria-label="Connect tools">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
+                  aria-hidden="true">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
+              </button>
+            )}
         </div>
 
         {servers.map((server) => {
@@ -250,6 +253,7 @@ export function BuildPane({
             </button>
           </div>
         )}
+        </div>
       </div>
 
       {focus !== null && (

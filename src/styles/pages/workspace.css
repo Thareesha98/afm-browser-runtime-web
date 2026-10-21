@@ -1718,13 +1718,3 @@ label.u-group {
 .u-stage-foot.is-covered .u-ready {
   visibility: hidden;
 }
-
-/* Phone: the chip is not designed for a phone yet, so the line under the editor keeps speaking there. */
-@media (max-width: 720px) {
-  .u-need {
-    display: none;
-  }
-  .u-stage-foot.is-covered .u-ready {
-    visibility: visible;
-  }
-}

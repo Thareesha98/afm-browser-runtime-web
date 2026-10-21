@@ -19,7 +19,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { WorkspaceBar } from "./WorkspaceBar";
 
-function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean; runTip?: string }): string {
+function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean; runTip?: string; compact?: boolean }): string {
   return renderToStaticMarkup(
     createElement(WorkspaceBar, {
       agentName: "Demo",
@@ -89,5 +89,28 @@ describe("the agent name", () => {
 
   it("reads as expanded while the agents list is open", () => {
     expect(bar({ canRun: true, running: false, agentsOpen: true })).toContain('aria-expanded="true"');
+  });
+});
+
+describe("the header on a narrow window", () => {
+  it("keeps Share, About and the theme switch on a wide window", () => {
+    const html = bar({ canRun: true, running: false });
+    expect(html).toContain("Share this agent");
+    expect(html).toContain("About this agent");
+    expect(html).toContain("Switch to dark");
+  });
+
+  it("keeps only Run, Chat and Settings when narrow (Share and About move beside Build / Raw)", () => {
+    const html = bar({ canRun: true, running: false, compact: true });
+    expect(html).toContain("u-play");
+    expect(html).toContain('aria-label="Chat"');
+    expect(html).toContain('aria-label="Settings"');
+    expect(html).not.toContain("Share this agent");
+    expect(html).not.toContain("About this agent");
+    expect(html).not.toContain("Switch to dark");
+  });
+
+  it("lets a long agent name shrink without losing the arrow", () => {
+    expect(bar({ canRun: true, running: false })).toContain('class="u-agentname-text"');
   });
 });
