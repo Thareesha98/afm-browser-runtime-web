@@ -33,16 +33,20 @@ function chip(role: string, instructions: string, phase: ChipPhase): string {
 describe("the readiness chip", () => {
   it("counts what is ready and ticks it", () => {
     const html = chip("a", "", "missing");
-    expect(html).toContain("Ready: 2/3");
+    expect(html).toContain("Ready: </span>2/3");
     expect(html.match(/u-need-item done/g)).toHaveLength(2);
     expect(html.match(/u-need-item todo/g)).toHaveLength(1);
+  });
+
+  it("lets the word Ready: drop away on a very small phone", () => {
+    expect(chip("", "", "missing")).toContain('<span class="u-need-word">Ready: </span>');
   });
 
   it("names the three in order", () => {
     const html = chip("", "", "missing");
     expect(html.indexOf("Role")).toBeLessThan(html.indexOf("Instructions"));
     expect(html.indexOf("Instructions")).toBeLessThan(html.indexOf("Model"));
-    expect(html).toContain("Ready: 1/3");
+    expect(html).toContain("Ready: </span>1/3");
   });
 
   it("opens from a small circle that fills as the agent gets ready", () => {

@@ -19,6 +19,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 const DELAY = 400;
 const WARM = 500;
 const GAP = 8;
+const PEEK = 2800;
 
 interface Shown {
   text: string;
@@ -73,6 +74,17 @@ export function Tip() {
       },
       keydown: (event) => {
         if ((event as KeyboardEvent).key === "Escape") hide();
+      },
+      // no hover on a phone: tapping a button that is blocked shows why, for a moment
+      click: (event) => {
+        const target = find(event);
+        if (target === null || target.getAttribute("aria-disabled") !== "true") return;
+        if (window.matchMedia("(hover: hover)").matches) return;
+        hide();
+        current = target;
+        visible = true;
+        setShown({ text: target.dataset.tip ?? "", box: target.getBoundingClientRect() });
+        timer = window.setTimeout(hide, PEEK);
       },
       focusout: hide,
       pointerdown: hide,

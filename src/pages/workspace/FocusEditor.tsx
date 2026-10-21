@@ -83,6 +83,27 @@ export function FocusEditor({ title, hint, value, placeholder, onChange, onClose
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  // On a phone the on-screen keyboard covers part of the page. Follow the part that is still visible, so the formatting
+  // bar stays above the keyboard.
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (viewport === null) return;
+    const root = document.documentElement;
+    const follow = () => {
+      root.style.setProperty("--visible-height", `${viewport.height}px`);
+      root.style.setProperty("--visible-top", `${viewport.offsetTop}px`);
+    };
+    follow();
+    viewport.addEventListener("resize", follow);
+    viewport.addEventListener("scroll", follow);
+    return () => {
+      viewport.removeEventListener("resize", follow);
+      viewport.removeEventListener("scroll", follow);
+      root.style.removeProperty("--visible-height");
+      root.style.removeProperty("--visible-top");
+    };
+  }, []);
+
   function startLink() {
     const selection = window.getSelection();
     savedRange.current = selection !== null && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;

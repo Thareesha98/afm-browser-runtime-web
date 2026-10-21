@@ -71,7 +71,16 @@ export function ReadinessChip({ needs, phase, onHold }: { needs: Needs; phase: C
       <Dot done={needs.done} total={needs.items.length} ready={ready} />
       <span className="u-need-body">
         <span className="u-need-in">
-          <span className="u-need-lead">{ready ? "Ready to run" : `Ready: ${needs.done}/${needs.items.length}`}</span>
+          <span className="u-need-lead">
+            {ready ? (
+              "Ready to run"
+            ) : (
+              <>
+                <span className="u-need-word">Ready: </span>
+                {`${needs.done}/${needs.items.length}`}
+              </>
+            )}
+          </span>
           {needs.items.map((item) => {
             const done = ready || item.done;
             return (

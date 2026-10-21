@@ -18,7 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { EditorPane } from "./EditorPane";
 import { ChatPane } from "./ChatPane";
-import { WorkspaceBar } from "./WorkspaceBar";
+import { AboutButton, ShareButton, WorkspaceBar } from "./WorkspaceBar";
 import { SharePanel } from "./SharePanel";
 import { SettingsPanel } from "./SettingsPanel";
 import { InfoPanel } from "./InfoPanel";
@@ -52,6 +52,10 @@ import { usePermissionsLedger } from "../../permissions/PermissionsLedgerContext
 import { agentBrief, getSection } from "./agent-source-edit";
 import { useSettled } from "./use-settled";
 import { useThemeContext } from "../../app/ThemeContext";
+import { useMediaQuery } from "../../app/use-media-query";
+
+// below this width the header keeps only Run, Chat and Settings; Share and About sit beside Build / Raw
+const COMPACT_QUERY = "(max-width: 640px)";
 
 export function WorkspacePage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -80,6 +84,7 @@ export function WorkspacePage() {
   const [rawRequest, setRawRequest] = useState(0);
   const permissions = usePermissionsLedger();
   const theme = useThemeContext();
+  const compact = useMediaQuery(COMPACT_QUERY);
   const agentIdRef = useRef(agentId);
   agentIdRef.current = agentId;
   const contentRef = useRef(content);
@@ -321,6 +326,7 @@ export function WorkspacePage() {
         onToggleAgents={() => toggleLeft("agents")}
         onToggleTheme={theme.toggle}
         dark={theme.resolved === "dark"}
+        compact={compact}
       />
 
       {fileLoading && <div className="draft-banner">Loading the agent file…</div>}
@@ -412,6 +418,14 @@ export function WorkspacePage() {
             showRaw={rawRequest}
             onOpenPanel={(panel) => openSide(panel)}
             chip={needs === null ? undefined : { needs, phase: chipPhase, onHold: setChipHeld }}
+            toolbarExtras={
+              compact ? (
+                <>
+                  <ShareButton open={side} onToggle={toggleSide} canAct={preview.ok} />
+                  <AboutButton open={side} onToggle={toggleSide} />
+                </>
+              ) : undefined
+            }
           />
           <StageFoot
             state={ready}
@@ -425,13 +439,13 @@ export function WorkspacePage() {
           />
         </div>
 
-        <div className="u-float-scrim" onClick={leavePanel} role="presentation" />
+        <div className="u-float-scrim" onClick={side !== null ? leavePanel : closeLeft} role="presentation" />
 
         <aside className="u-side" aria-hidden={side === null}>
           <SidePane
             title="Chat"
             heading={
-              chatFull ? (
+              chatFull && !compact ? (
                 <StatusPill status={chatState} />
               ) : (
                 <ChatHead name={agentLabel} iconUrl={agentIcon} status={chatState} />
