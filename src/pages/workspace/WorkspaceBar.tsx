@@ -19,7 +19,6 @@ import type { SidePanel } from "./workspace-view";
 
 interface Props {
   agentName: string;
-  saved: boolean;
   saveFailed: boolean;
   canAct: boolean;
   open: SidePanel | null;
@@ -66,7 +65,6 @@ function Ico({
 
 export function WorkspaceBar({
   agentName,
-  saved,
   saveFailed,
   canAct,
   open,
@@ -87,9 +85,7 @@ export function WorkspaceBar({
       <button className="u-agentname" onClick={onToggleAgents} aria-expanded={agentsOpen}>
         {agentName} <span className="u-caret" aria-hidden="true" />
       </button>
-      <span className={`u-saved ${saveFailed ? "is-failed" : ""}`}>
-        {saveFailed ? "Couldn’t save" : saved ? "Saved" : "Saving…"}
-      </span>
+      {saveFailed && <span className="u-saved is-failed">Couldn’t save</span>}
 
       <span className="u-bar-right">
         {(!running || canRun) && (

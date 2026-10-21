@@ -309,7 +309,6 @@ export function WorkspacePage() {
     <div className="workspace-shell">
       <WorkspaceBar
         agentName={agentLabel}
-        saved={content === savedContent}
         saveFailed={saveFailed}
         canAct={preview.ok}
         canRun={canRun}
