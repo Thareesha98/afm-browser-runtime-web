@@ -123,7 +123,7 @@ export function ModelPanel({ content, savedSecrets, issue, onApply, onSaveKey, o
                 </span>
               </div>
               <input
-                className="u-input"
+                className="u-input u-key-input"
                 type="password"
                 value={key}
                 placeholder={saved ? "•••••••••••••••••••••" : `Paste your ${known.label} key`}

@@ -15,12 +15,20 @@
 // under the License.
 
 import { describe, expect, it } from "vitest";
-import { CONFIRM_MS, LEAVE_MS, phaseOnStatus } from "./use-ready-chip";
+import { CONFIRM_MS, LEAVE_MS, SHOW_DELAY_MS, phaseOnStatus } from "./use-ready-chip";
 
 describe("the readiness chip over the editor", () => {
-  it("shows while something is missing", () => {
+  it("shows at once while the person is typing and something is missing", () => {
     expect(phaseOnStatus("hidden", "ready", "missing", true)).toBe("missing");
-    expect(phaseOnStatus("hidden", "missing", "missing", false)).toBe("missing");
+  });
+
+  it("waits when an agent is opened with something missing", () => {
+    expect(phaseOnStatus("hidden", "missing", "missing", false)).toBe("hidden");
+    expect(phaseOnStatus("hidden", "ready", "missing", false)).toBe("hidden");
+  });
+
+  it("stays up once it is showing", () => {
+    expect(phaseOnStatus("missing", "missing", "missing", false)).toBe("missing");
   });
 
   it("turns green when the last thing is typed in", () => {
@@ -47,8 +55,9 @@ describe("the readiness chip over the editor", () => {
     expect(phaseOnStatus("leaving", "ready", "ready", false)).toBe("leaving");
   });
 
-  it("stays green for two seconds, then fades over a fifth of a second", () => {
-    expect(CONFIRM_MS).toBe(2000);
-    expect(LEAVE_MS).toBe(200);
+  it("opens after three seconds, stays green for three, then plays its closing animation", () => {
+    expect(SHOW_DELAY_MS).toBe(3000);
+    expect(CONFIRM_MS).toBe(3000);
+    expect(LEAVE_MS).toBe(560);
   });
 });

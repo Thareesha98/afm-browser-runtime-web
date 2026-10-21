@@ -28,6 +28,29 @@ const RING = (
   </svg>
 );
 
+const RING_LENGTH = 2 * Math.PI * 9;
+
+// The small circle the chip opens from and closes back into: a ring that fills as the agent gets ready, then a tick.
+function Dot({ done, total, ready }: { done: number; total: number; ready: boolean }) {
+  const filled = ready ? RING_LENGTH : (RING_LENGTH * done) / total;
+  return (
+    <span className="u-need-dot" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+        <circle className="u-need-track" cx="12" cy="12" r="9" />
+        <circle
+          className="u-need-arc"
+          cx="12"
+          cy="12"
+          r="9"
+          transform="rotate(-90 12 12)"
+          style={{ strokeDasharray: `${filled} ${RING_LENGTH}`, opacity: filled === 0 ? 0 : 1 }}
+        />
+        {ready && <path d="M8.2 12.4l2.7 2.7 5-5.2" stroke="currentColor" strokeWidth="2.2" />}
+      </svg>
+    </span>
+  );
+}
+
 // What a screen reader hears when the chip changes (the chip itself is not a live region, because it comes and goes).
 export function chipAnnouncement(needs: Needs, phase: ChipPhase): string {
   if (phase === "confirm") return "Ready to run";
@@ -45,16 +68,21 @@ export function ReadinessChip({ needs, phase, onHold }: { needs: Needs; phase: C
       onMouseEnter={() => onHold(true)}
       onMouseLeave={() => onHold(false)}
     >
-      <span className="u-need-lead">{ready ? "Ready to run" : `${needs.done} of ${needs.items.length} ready`}</span>
-      {needs.items.map((item) => {
-        const done = ready || item.done;
-        return (
-          <span key={item.id} className={`u-need-item ${done ? "done" : "todo"}`}>
-            {done ? TICK : RING}
-            <span>{item.label}</span>
-          </span>
-        );
-      })}
+      <Dot done={needs.done} total={needs.items.length} ready={ready} />
+      <span className="u-need-body">
+        <span className="u-need-in">
+          <span className="u-need-lead">{ready ? "Ready to run" : `Ready: ${needs.done}/${needs.items.length}`}</span>
+          {needs.items.map((item) => {
+            const done = ready || item.done;
+            return (
+              <span key={item.id} className={`u-need-item ${done ? "done" : "todo"}`}>
+                {done ? TICK : RING}
+                <span>{item.label}</span>
+              </span>
+            );
+          })}
+        </span>
+      </span>
     </div>
   );
 }

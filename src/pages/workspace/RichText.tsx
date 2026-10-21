@@ -38,6 +38,14 @@ export function RichText({ value, placeholder, className = "", onChange, docKey 
     node.classList.toggle("has-more", more);
   }
 
+  // The placeholder shows only while there is no text at all. (A CSS :empty rule is not enough: the browser leaves a
+  // <br> behind, or a text node beside it, and then the example kept showing under what was typed.)
+  function markEmpty() {
+    const node = box.current;
+    if (node === null) return;
+    node.classList.toggle("is-empty", node.textContent === "");
+  }
+
   useEffect(() => {
     const node = box.current;
     if (node === null) return;
@@ -45,6 +53,7 @@ export function RichText({ value, placeholder, className = "", onChange, docKey 
     node.innerHTML = toHtml(value);
     lastEmitted.current = value;
     markOverflow();
+    markEmpty();
   }, [value, docKey]);
 
   function read() {
@@ -69,12 +78,14 @@ export function RichText({ value, placeholder, className = "", onChange, docKey 
       onInput={() => {
         read();
         markOverflow();
+        markEmpty();
       }}
       onScroll={markOverflow}
       onBlur={() => {
         read();
         if (rewindOnBlur && box.current !== null) box.current.scrollTop = 0;
         markOverflow();
+        markEmpty();
       }}
       onKeyDown={(event) => {
         if (mergeIntoPreviousItem(event)) read();

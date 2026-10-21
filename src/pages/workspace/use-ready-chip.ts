@@ -20,23 +20,27 @@ import type { ChipStatus } from "./readiness";
 
 export type ChipPhase = "missing" | "confirm" | "leaving" | "hidden";
 
-export const CONFIRM_MS = 2000;
-export const LEAVE_MS = 200;
+// An agent that is opened with something missing waits this long before the chip opens.
+export const SHOW_DELAY_MS = 3000;
+export const CONFIRM_MS = 3000;
+// How long the closing animation takes (the CSS in workspace.css plays it; the chip is removed once it is done).
+export const LEAVE_MS = 560;
 // The readiness check settles a moment after typing stops, so "the person just typed it" has to allow for that.
 export const EDIT_WINDOW_MS = 1500;
 
 // How the chip reacts when what the agent needs changes.
-// It is shown while something is missing. When the last missing thing is filled in by typing, it turns green for a moment.
+// Opening an agent with something missing shows it after a short wait; while the person is typing it is there at once.
+// When the last missing thing is filled in by typing, it turns green for a moment, then closes.
 // Opening an agent that is already complete shows nothing.
 export function phaseOnStatus(phase: ChipPhase, before: ChipStatus, status: ChipStatus, typedJustNow: boolean): ChipPhase {
-  if (status === "missing") return "missing";
+  if (status === "missing") return phase !== "hidden" || typedJustNow ? "missing" : "hidden";
   if (status === "none") return "hidden";
   if (before === "missing" && typedJustNow) return "confirm";
   return phase === "confirm" || phase === "leaving" ? phase : "hidden";
 }
 
 export function useReadyChip(status: ChipStatus, lastEditAt: MutableRefObject<number>, held: boolean): ChipPhase {
-  const [phase, setPhase] = useState<ChipPhase>(status === "missing" ? "missing" : "hidden");
+  const [phase, setPhase] = useState<ChipPhase>("hidden");
   const before = useRef(status);
 
   useEffect(() => {
@@ -45,7 +49,14 @@ export function useReadyChip(status: ChipStatus, lastEditAt: MutableRefObject<nu
     setPhase((current) => phaseOnStatus(current, was, status, Date.now() - lastEditAt.current < EDIT_WINDOW_MS));
   }, [status, lastEditAt]);
 
-  // the green state stays for two seconds, and waits while the pointer rests on the chip
+  // an agent opened with something missing: the chip opens after a short wait
+  useEffect(() => {
+    if (phase !== "hidden" || status !== "missing") return;
+    const timer = window.setTimeout(() => setPhase("missing"), SHOW_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [phase, status]);
+
+  // the green state stays for a few seconds, and waits while the pointer rests on the chip
   useEffect(() => {
     if (phase !== "confirm" || held) return;
     const timer = window.setTimeout(() => setPhase("leaving"), CONFIRM_MS);
