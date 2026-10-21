@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { EditorPane } from "./EditorPane";
 import { ChatPane } from "./ChatPane";
@@ -29,7 +29,8 @@ import { SidePane } from "./SideWindow";
 import { ChatHead, StatusPill, headerStatus } from "./ChatHead";
 import { useStandaloneSession } from "../../worker-client/useStandaloneSession";
 import { previewAgent, buildableAgent, collectAfmIssues } from "../../agent-validation";
-import { readiness, serverNameByUrl } from "./readiness";
+import { chipStatus, needsToRun, readiness, readinessSentence, runReason, serverNameByUrl } from "./readiness";
+import { useReadyChip } from "./use-ready-chip";
 import { SetupPane } from "./SetupPane";
 import { useSetup } from "./use-setup";
 import { MODEL_ROW, reachOf, serverRowId } from "./setup-check";
@@ -220,6 +221,24 @@ export function WorkspacePage() {
     serverNameByUrl: nameByUrl,
   });
 
+  // The readiness chip over the editor and the reason on the Run button
+  const needs = needsToRun({
+    role: getSection(settledContentForRead, "Role"),
+    instructions: getSection(settledContentForRead, "Instructions"),
+    metadata: readinessMetadata,
+  });
+  // when the person last typed in the editor, so the chip can tell "you just finished it" from "an agent was opened"
+  const lastEditAt = useRef(0);
+  const editContent = useCallback((next: string) => {
+    lastEditAt.current = Date.now();
+    setContent(next);
+  }, []);
+  const [chipHeld, setChipHeld] = useState(false);
+  const chipPhase = useReadyChip(chipStatus(needs, ready), lastEditAt, chipHeld);
+  const runTip = canRun
+    ? "Start the agent with this file"
+    : ((needs !== null ? runReason(needs) : null) ?? (ready.tone === "bad" ? readinessSentence(ready) : "Start the agent with this file"));
+
   function revokeGrants(serverUrl: string) {
     const scope = permissionScopeFor(agentIdRef.current, contentRef.current);
     for (const entry of grantsToRevoke(permissions.forAgent(scope), serverUrl)) {
@@ -296,6 +315,7 @@ export function WorkspacePage() {
         canRun={canRun}
         running={running}
         onRun={openSetup}
+        runTip={runTip}
         open={side}
         onToggle={toggleSide}
         agentsOpen={left === "agents"}
@@ -382,7 +402,7 @@ export function WorkspacePage() {
         <div className="u-stage">
           <EditorPane
             content={content}
-            onChange={setContent}
+            onChange={editContent}
             activity={activity}
             reach={{ ok: [...new Set([...reached.ok, ...reachedServerIds])], failed: reached.failed }}
             onOpenModel={() => openSide("model")}
@@ -392,6 +412,7 @@ export function WorkspacePage() {
             }}
             showRaw={rawRequest}
             onOpenPanel={(panel) => openSide(panel)}
+            chip={needs === null ? undefined : { needs, phase: chipPhase, onHold: setChipHeld }}
           />
           <StageFoot
             state={ready}

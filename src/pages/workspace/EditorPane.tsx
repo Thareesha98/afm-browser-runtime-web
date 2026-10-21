@@ -14,8 +14,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BuildPane } from "./BuildPane";
+import { ReadinessChip, chipAnnouncement } from "./ReadinessChip";
+import type { Needs } from "./readiness";
+import type { ChipPhase } from "./use-ready-chip";
 import type { ServerReach } from "./BuildPane";
 import type { AgentActivity } from "./agent-activity";
 import { buildableAgent, collectAfmIssues } from "../../agent-validation";
@@ -40,6 +43,7 @@ interface Props extends EditableProps {
   onOpenServer: (name: string | null) => void;
   showRaw?: number;
   onOpenPanel?: (panel: "model" | "tools") => void;
+  chip?: { needs: Needs; phase: ChipPhase; onHold: (held: boolean) => void };
 }
 
 function agentFilename(content: string): string | undefined {
@@ -52,7 +56,7 @@ function agentFilename(content: string): string | undefined {
   return `${slug === "" ? "agent" : slug}.afm.md`;
 }
 
-export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, onOpenPanel }: Props) {
+export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, onOpenPanel, chip }: Props) {
   const [mode, setMode] = useState<EditorMode>("simple");
   const firstRaw = useRef(showRaw);
   useEffect(() => {
@@ -62,9 +66,28 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
   const issues = collectAfmIssues(content);
   const filename = agentFilename(content);
 
+  // The readiness chip floats in this row, centred over the card (or over the row when there is no card, as in Raw).
+  const top = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const row = top.current;
+    if (row === null) return;
+    const card = row.parentElement?.querySelector<HTMLElement>(".u-brief") ?? null;
+    const place = () => {
+      if (card === null) return row.style.removeProperty("--need-x");
+      const r = row.getBoundingClientRect();
+      const c = card.getBoundingClientRect();
+      row.style.setProperty("--need-x", `${c.left + c.width / 2 - r.left}px`);
+    };
+    place();
+    const watch = new ResizeObserver(place);
+    watch.observe(row);
+    if (card !== null) watch.observe(card);
+    return () => watch.disconnect();
+  }, [mode, buildable.ok]);
+
   return (
     <>
-      <div className="u-stage-top">
+      <div className="u-stage-top" ref={top}>
         <ModeSwitch mode={mode} onMode={setMode} />
         {mode === "raw" && (
           <>
@@ -73,6 +96,14 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
             <button className="u-btn ghost sm" onClick={() => downloadAgentFile(content, filename)}>
               Download
             </button>
+          </>
+        )}
+        {chip !== undefined && (
+          <>
+            <ReadinessChip needs={chip.needs} phase={chip.phase} onHold={chip.onHold} />
+            <span className="visually-hidden" role="status" aria-live="polite">
+              {chipAnnouncement(chip.needs, chip.phase)}
+            </span>
           </>
         )}
       </div>

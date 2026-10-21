@@ -19,7 +19,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { WorkspaceBar } from "./WorkspaceBar";
 
-function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean }): string {
+function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean; runTip?: string }): string {
   return renderToStaticMarkup(
     createElement(WorkspaceBar, {
       agentName: "Demo",
@@ -31,6 +31,7 @@ function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean })
       agentsOpen: false,
       onToggleAgents: () => {},
       onRun: () => {},
+      runTip: "Start the agent with this file",
       onToggleTheme: () => {},
       dark: false,
       ...state,
@@ -58,10 +59,27 @@ describe("the Run button", () => {
     expect(html).not.toContain("Re-run");
   });
 
-  it("stays, disabled, while the file cannot run yet", () => {
+  it("stays, as an outline button, while the file cannot run yet", () => {
     const html = bar({ canRun: false, running: false });
     expect(html).toContain("u-play");
-    expect(html).toContain('disabled=""');
+    expect(html).toContain("is-blocked");
+    expect(html).toContain('aria-disabled="true"');
+  });
+
+  it("can still be reached with the keyboard while blocked, so its reason can be heard", () => {
+    expect(bar({ canRun: false, running: false })).not.toContain('disabled=""');
+  });
+
+  it("says why it is blocked on hover and focus", () => {
+    const html = bar({ canRun: false, running: false, runTip: "Add instructions to run. Role is done." });
+    expect(html).toContain('data-tip="Add instructions to run. Role is done."');
+  });
+
+  it("is not marked blocked when it can run", () => {
+    const html = bar({ canRun: true, running: false });
+    expect(html).not.toContain("is-blocked");
+    expect(html).not.toContain("aria-disabled");
+    expect(html).toContain('data-tip="Start the agent with this file"');
   });
 });
 

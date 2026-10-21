@@ -29,6 +29,8 @@ interface Props {
   canRun: boolean;
   running: boolean;
   onRun: () => void;
+  // what the Run button says on hover and focus: the reason while it is blocked
+  runTip: string;
   onToggleTheme: () => void;
   dark: boolean;
 }
@@ -74,6 +76,7 @@ export function WorkspaceBar({
   canRun,
   running,
   onRun,
+  runTip,
   onToggleTheme,
   dark,
 }: Props) {
@@ -91,7 +94,14 @@ export function WorkspaceBar({
       <span className="u-bar-right">
         {(!running || canRun) && (
           <>
-            <button className="u-btn primary" onClick={onRun} disabled={!canRun} title="Start the agent with this file">
+            <button
+              className={`u-btn primary${canRun ? "" : " is-blocked"}`}
+              onClick={() => {
+                if (canRun) onRun();
+              }}
+              aria-disabled={canRun ? undefined : true}
+              data-tip={runTip}
+            >
               <span className="u-play" aria-hidden="true" />
               {running ? "Re-run" : "Run"}
             </button>

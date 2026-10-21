@@ -1493,3 +1493,110 @@ label.u-group {
   padding: 0 13px;
   font-size: 12.5px;
 }
+
+/* ---- Editor (Build view): what the agent needs before it can run ---- */
+
+/* The chip floats in the Build / Raw row, centred over the card, so showing or hiding it never moves anything. */
+.u-stage-top {
+  position: relative;
+}
+.u-need {
+  position: absolute;
+  left: var(--need-x, 50%);
+  top: 15px;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  height: 30px;
+  padding: 0 15px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ink2);
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+.u-need-lead {
+  font-weight: 650;
+  color: var(--ink);
+}
+.u-need-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.u-need-item svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+.u-need-item.done {
+  color: var(--ok);
+}
+.u-need-item.done span {
+  color: var(--ink2);
+}
+.u-need-item.todo {
+  color: var(--bad);
+  font-weight: 650;
+}
+.u-need.ready {
+  background: var(--ok-soft);
+  border-color: color-mix(in srgb, var(--ok) 22%, var(--surface));
+  font-weight: 650;
+}
+.u-need.ready .u-need-lead {
+  color: var(--ok);
+}
+.u-need.is-leaving {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .u-need {
+    transition: none;
+  }
+}
+
+/* Run while something is missing: an outline button, not a grey fill that looks enabled. Same size as before. */
+.u-btn.primary.is-blocked {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line-strong);
+  cursor: default;
+}
+
+/* "Required" beside the field name */
+.u-field-req {
+  font-size: 13px;
+  color: var(--muted);
+}
+.u-field-req::after {
+  content: " ·";
+}
+
+/* A gentle highlight on the field being typed in. It is drawn outside the field, so nothing moves or resizes. */
+.u-field:focus-within {
+  border-radius: 14px;
+  box-shadow:
+    0 0 0 6px var(--surface),
+    0 0 0 7px var(--ink2),
+    0 0 0 10px color-mix(in srgb, var(--ink) 9%, transparent);
+}
+
+/* The line under the editor keeps its space (so the card keeps its size) but goes quiet while the chip says the same thing. */
+.u-stage-foot.is-covered .u-ready {
+  visibility: hidden;
+}
+
+/* Phone: the chip is not designed for a phone yet, so the line under the editor keeps speaking there. */
+@media (max-width: 720px) {
+  .u-need {
+    display: none;
+  }
+  .u-stage-foot.is-covered .u-ready {
+    visibility: visible;
+  }
+}

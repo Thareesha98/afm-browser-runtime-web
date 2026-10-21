@@ -134,7 +134,8 @@ export function BuildPane({
                 </svg>
               </span>
               <span className="u-field-name">Role</span>
-              <span className="u-field-hint">{step("role") !== null ? "say who it is" : "who it is"}</span>
+              <span className="u-field-req">Required</span>
+              <span className="u-field-hint">who the agent is</span>
               <span className="u-field-tools">
                 <ExpandButton onClick={() => setFocus("Role")} />
               </span>
@@ -142,7 +143,7 @@ export function BuildPane({
             <RichText
               className="u-field-text u-role"
               value={role}
-              placeholder="You are a helpful assistant…"
+              placeholder="e.g. You are a support agent for a coffee roastery."
               ariaLabel="Role"
               rewindOnBlur
               onChange={write("Role")}
@@ -158,9 +159,8 @@ export function BuildPane({
                 </svg>
               </span>
               <span className="u-field-name">Instructions</span>
-              <span className="u-field-hint">
-                {step("instructions") !== null ? "say how it should behave" : "how it should behave"}
-              </span>
+              <span className="u-field-req">Required</span>
+              <span className="u-field-hint">how it should behave</span>
               <span className="u-field-tools">
                 <ExpandButton onClick={() => setFocus("Instructions")} />
               </span>
@@ -168,7 +168,7 @@ export function BuildPane({
             <RichText
               className="u-field-text"
               value={instructions}
-              placeholder="Answer clearly and keep replies short…"
+              placeholder="e.g. Answer in two sentences. Ask one question if the request is unclear."
               ariaLabel="Instructions"
               rewindOnBlur
               onChange={write("Instructions")}
@@ -259,7 +259,11 @@ export function BuildPane({
           title={focus}
           hint={focus === "Role" ? "who this agent is" : "how it should behave"}
           value={focus === "Role" ? role : instructions}
-          placeholder={focus === "Role" ? "You are a helpful assistant" : "Answer clearly and keep replies short."}
+          placeholder={
+            focus === "Role"
+              ? "e.g. You are a support agent for a coffee roastery."
+              : "e.g. Answer in two sentences. Ask one question if the request is unclear."
+          }
           onChange={write(focus)}
           onClose={() => setFocus(null)}
         />

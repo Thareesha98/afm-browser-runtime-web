@@ -25,6 +25,58 @@ export interface Readiness {
   subject?: string;
   tail?: string;
   fix?: ReadyFix;
+  // true when the readiness chip over the editor already says this, so the line under the editor can stay quiet
+  chip?: boolean;
+}
+
+export function readinessSentence(state: Readiness): string {
+  return `${state.lead}${state.subject ?? ""}${state.tail ?? ""}`;
+}
+
+export interface Need {
+  id: "role" | "instructions" | "model";
+  label: string;
+  done: boolean;
+}
+
+export interface Needs {
+  items: Need[];
+  done: number;
+  allDone: boolean;
+}
+
+// The three things an agent needs before it can run. Null when the settings at the top of the file cannot be read.
+export function needsToRun(input: { role: string; instructions: string; metadata: AgentMetadata | null }): Needs | null {
+  if (input.metadata === null) return null;
+  const items: Need[] = [
+    { id: "role", label: "Role", done: input.role.trim() !== "" },
+    { id: "instructions", label: "Instructions", done: input.instructions.trim() !== "" },
+    { id: "model", label: "Model", done: (input.metadata.model?.name ?? "") !== "" },
+  ];
+  const done = items.filter((item) => item.done).length;
+  return { items, done, allDone: done === items.length };
+}
+
+export type ChipStatus = "missing" | "ready" | "none";
+
+// "missing": show the chip. "ready": all three are there. "none": nothing for the chip to say (the line under the editor explains).
+export function chipStatus(needs: Needs | null, state: Readiness): ChipStatus {
+  if (needs === null) return "none";
+  if (!needs.allDone) return "missing";
+  return state.tone === "bad" ? "none" : "ready";
+}
+
+const PHRASE: Record<Need["id"], string> = { role: "a role", instructions: "instructions", model: "a model" };
+
+// What the Run button says while something is missing, for example "Add instructions to run. Role is done."
+export function runReason(needs: Needs): string | null {
+  const missing = needs.items.filter((item) => !item.done);
+  if (missing.length === 0) return null;
+  const words = missing.map((item) => PHRASE[item.id]);
+  const list = words.length === 1 ? words[0]! : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
+  const head = `Add ${list} to run`;
+  const roleDone = needs.items.find((item) => item.id === "role")?.done === true;
+  return missing.length === 1 && missing[0]!.id === "instructions" && roleDone ? `${head}. Role is done.` : head;
 }
 
 export interface ReadinessInput {
@@ -60,15 +112,15 @@ export function readiness(input: ReadinessInput): Readiness {
   }
 
   if ((metadata.model?.name ?? "") === "") {
-    return { tone: "bad", lead: "Needs a model before it can run - ", subject: "choose one", fix: "model" };
+    return { tone: "bad", lead: "Needs a model before it can run - ", subject: "choose one", fix: "model", chip: true };
   }
 
   if (role.trim() === "") {
-    return { tone: "bad", lead: "Needs a role before it can run" };
+    return { tone: "bad", lead: "Needs a role before it can run", chip: true };
   }
 
   if (instructions.trim() === "") {
-    return { tone: "bad", lead: "Needs instructions before it can run" };
+    return { tone: "bad", lead: "Needs instructions before it can run", chip: true };
   }
 
   const firstError = issues.find((issue) => issue.severity === "error");
@@ -80,7 +132,7 @@ export function readiness(input: ReadinessInput): Readiness {
     return { tone: "bad", lead: "Did not start - ", subject: "see why", fix: "chat" };
   }
 
-  return { tone: "ok", lead: current && status === "ready" ? "Running" : "Ready" };
+  return current && status === "ready" ? { tone: "ok", lead: "Running" } : { tone: "ok", lead: "Ready", chip: true };
 }
 
 type McpServers = NonNullable<NonNullable<AgentMetadata["tools"]>["mcp"]>;

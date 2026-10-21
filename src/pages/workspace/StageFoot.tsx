@@ -19,7 +19,7 @@ import type { Readiness, ReadyFix } from "./readiness";
 export function StageFoot({ state, onFix }: { state: Readiness; onFix: (fix: ReadyFix) => void }) {
   const { tone, lead, subject, tail, fix } = state;
   return (
-    <div className="u-stage-foot">
+    <div className={`u-stage-foot${state.chip === true ? " is-covered" : ""}`}>
       <span className="u-ready">
         <span className={`u-ready-dot ${tone === "ok" ? "" : tone}`} aria-hidden="true" />
         {lead}
