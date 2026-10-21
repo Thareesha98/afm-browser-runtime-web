@@ -23,7 +23,6 @@ function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean; r
   return renderToStaticMarkup(
     createElement(WorkspaceBar, {
       agentName: "Demo",
-      saved: true,
       saveFailed: false,
       canAct: true,
       open: null,

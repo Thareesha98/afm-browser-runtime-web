@@ -1684,7 +1684,7 @@ label.u-group {
   cursor: default;
 }
 
-/* A gentle highlight on the field being typed in: one thin line around the whole field (its heading and its text).
+/* A gentle highlight on the field being typed in: a soft grey band around the whole field (its heading and its text).
    It is drawn over the field's own padding and the card's side padding, so nothing moves or resizes. */
 .u-field {
   position: relative;
@@ -1701,7 +1701,6 @@ label.u-group {
     box-shadow 0.15s ease;
 }
 .u-field:focus-within::after {
-  border-color: var(--ink2);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
