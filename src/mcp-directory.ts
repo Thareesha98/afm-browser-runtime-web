@@ -184,6 +184,27 @@ export const DIRECTORY_ENTRIES: readonly DirectoryEntry[] = [
     },
   },
   {
+    id: "canva",
+    title: "Canva",
+    description: "Create, edit and export designs, and manage folders, assets and comments.",
+    url: "https://mcp.canva.com/mcp",
+    publisher: "canva.com",
+    docsUrl: "https://www.canva.dev/docs/mcp/",
+    auth: {
+      type: "oauth2",
+      authorizeUrl: "https://mcp.canva.com/authorize",
+      tokenUrl: "https://mcp.canva.com/token",
+      registrationUrl: "https://mcp.canva.com/register",
+      clientIdMetadata: true,
+      scopes: [
+        "profile:read", "design:meta:read", "design:content:write", "design:content:read", "folder:read",
+        "folder:write", "brandtemplate:content:read", "brandtemplate:meta:read", "brandtemplate:content:write",
+        "comment:write", "comment:read", "asset:read", "asset:write", "brandkit:read", "help:answers:read",
+        "help:answers:write",
+      ],
+    },
+  },
+  {
     id: "clickup",
     title: "ClickUp",
     description: "Manage tasks, docs and comments in your workspace.",
