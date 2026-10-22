@@ -561,11 +561,16 @@
   color: var(--ok);
 }
 .u-agent-del {
+  position: relative;
+  z-index: 1;
   width: 26px;
   height: 26px;
-  border-color: var(--line);
-  background: var(--surface);
+  border-color: transparent;
+  background: transparent;
   color: var(--bad);
+}
+.u-agent-del:hover {
+  background: var(--bad-soft);
 }
 @media (hover: hover) {
   .u-agent-end {
@@ -590,6 +595,7 @@
   .u-agent-end:focus-within .u-agent-ago,
   .u-agent-end:focus-within .u-agent-open {
     opacity: 0;
+    pointer-events: none;
   }
 }
 
