@@ -42,7 +42,7 @@ function Icon({ path, size }: { path: string; size: number }) {
   );
 }
 
-export function StartDialog({ title, subtitle, footer, narrow = false, focusKey, onBack, onClose, onEscape, onOutside, children }: Props) {
+export function DialogFrame({ title, subtitle, footer, narrow = false, focusKey, onBack, onClose, onEscape, onOutside, children }: Props) {
   const titleId = useId();
   const subtitleId = useId();
   const panel = useRef<HTMLDivElement>(null);
