@@ -1,0 +1,59 @@
+// Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
+//
+// WSO2 LLC. licenses this file to you under the Apache License,
+// Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { ModelPanel } from "./ModelPanel";
+import type { Issue } from "./setup-check";
+
+const CONTENT = `---
+name: Tester
+model:
+  provider: openai
+  name: gpt-4o
+  authentication:
+    type: api-key
+    api_key: \${env:OPENAI_API_KEY}
+---
+
+# Role
+r
+`;
+
+function panel(savedSecrets: string[], issue: Issue | null = null): string {
+  return renderToStaticMarkup(
+    createElement(ModelPanel, { content: CONTENT, savedSecrets, issue, onApply: () => {}, onSaveKey: () => {}, onClose: () => {} }),
+  );
+}
+
+describe("the key chip in the Model window", () => {
+  it("starts every status with a capital letter", () => {
+    expect(panel([])).toContain("Not entered yet");
+    expect(panel(["OPENAI_API_KEY"])).toContain("Entered this session");
+    expect(panel(["OPENAI_API_KEY"], { kind: "rejected", text: "The key was not accepted." })).toContain("Not accepted");
+  });
+
+  it("uses no lower-case status", () => {
+    for (const html of [panel([]), panel(["OPENAI_API_KEY"])]) {
+      expect(html).not.toMatch(/>(not entered yet|entered this session|not accepted)</);
+    }
+  });
+
+  it("gives the Model window its own spacing", () => {
+    expect(panel([])).toContain("u-panel-body is-model");
+  });
+});
