@@ -20,7 +20,8 @@ import { brief, logDetails } from "../../brief-error";
 import { EXAMPLES } from "../../examples";
 import { MODEL_PROVIDERS, findProvider } from "./model-catalog";
 import type { AgentModelRef } from "../../protocol";
-import type { ChatState } from "../../chat-state";
+import { usableSecrets, type ChatState } from "../../chat-state";
+import { KeepOnDevice } from "./KeepOnDevice";
 import { resolveContent, normalizeAgentFileUrl } from "../../load-paths";
 import { McpProxyRequiredError, agentFileFetch } from "../../tool-factory";
 
@@ -71,7 +72,8 @@ interface Props {
   onUseSource: (source: string) => void;
   onGenerate: (prompt: string, model: AgentModelRef, final?: boolean) => void;
   onDismissDraft: () => void;
-  onSaveKey: (name: string, value: string) => void;
+  onSaveKey: (name: string, value: string, keep: boolean) => Promise<boolean>;
+  onOpenKeys: () => Promise<boolean>;
   onBlank: () => void;
 }
 
@@ -80,6 +82,7 @@ export function StartHere({
   onUseSource,
   onGenerate,
   onSaveKey,
+  onOpenKeys,
   onDismissDraft,
   onBlank,
 }: Props) {
@@ -88,6 +91,7 @@ export function StartHere({
   const [providerId, setProviderId] = useState(MODEL_PROVIDERS[0]!.id);
   const [modelId, setModelId] = useState(MODEL_PROVIDERS[0]!.models[0]!.id);
   const [key, setKey] = useState("");
+  const [keep, setKeep] = useState(false);
   const [answers, setAnswers] = useState("");
   const [link, setLink] = useState("");
   const [dropping, setDropping] = useState(false);
@@ -97,7 +101,8 @@ export function StartHere({
   const fileInput = useRef<HTMLInputElement>(null);
 
   const provider = findProvider(providerId) ?? MODEL_PROVIDERS[0]!;
-  const keySaved = state.savedSecrets.includes(provider.secretName);
+  const keySaved = usableSecrets(state).includes(provider.secretName);
+  const keyClosed = keySaved && !state.savedSecrets.includes(provider.secretName);
 
   const answered =
     state.generatedDraft !== null || state.clarifyQuestions.length > 0 || state.draftError !== null;
@@ -111,10 +116,11 @@ export function StartHere({
     authentication: { type: "api-key", api_key: `\${env:${provider.secretName}}` },
   } as AgentModelRef;
 
-  function writeFile(final = false, request = prompt.trim()) {
+  async function writeFile(final = false, request = prompt.trim()) {
     if (request === "") return;
     setWriting(true);
-    if (!keySaved && key.trim() !== "") onSaveKey(provider.secretName, key.trim());
+    if (keyClosed) await onOpenKeys();
+    else if (!keySaved && key.trim() !== "") void onSaveKey(provider.secretName, key.trim(), keep);
     onGenerate(request, authoringModel, final);
   }
 
@@ -286,7 +292,7 @@ export function StartHere({
           onSubmit={(event) => {
             event.preventDefault();
             if (answers.trim() === "") return;
-            writeFile(true, `${prompt.trim()}\n\nAnswers to your questions:\n${answers.trim()}`);
+            void writeFile(true, `${prompt.trim()}\n\nAnswers to your questions:\n${answers.trim()}`);
             setAnswers("");
           }}
         >
@@ -304,7 +310,7 @@ export function StartHere({
               type="button"
               disabled={writing}
               onClick={() => {
-                writeFile(true, prompt.trim());
+                void writeFile(true, prompt.trim());
                 setAnswers("");
               }}
             >
@@ -332,7 +338,7 @@ export function StartHere({
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            writeFile();
+            void writeFile();
           }}
           className="u-group"
         >
@@ -378,17 +384,20 @@ export function StartHere({
           </div>
 
           {!keySaved && (
-            <label className="u-group">
-              <span className="u-label">{provider.secretName}</span>
-              <input
-                className="u-input"
-                type="password"
-                value={key}
-                onChange={(event) => setKey(event.target.value)}
-                placeholder={provider.secretName}
-                autoComplete="off"
-              />
-            </label>
+            <>
+              <label className="u-group">
+                <span className="u-label">{provider.secretName}</span>
+                <input
+                  className="u-input"
+                  type="password"
+                  value={key}
+                  onChange={(event) => setKey(event.target.value)}
+                  placeholder={provider.secretName}
+                  autoComplete="off"
+                />
+              </label>
+              <KeepOnDevice keep={keep} onChange={setKeep} />
+            </>
           )}
 
           <p className="u-usage-note">

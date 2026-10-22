@@ -399,7 +399,8 @@ export function WorkspacePage() {
                   }}
                   onBlank={closeLeft}
                   onGenerate={(prompt, model, final) => session.generateDraft(prompt, model, final)}
-                  onSaveKey={(name, value) => void session.storeSecret(name, value, false)}
+                  onSaveKey={session.storeSecret}
+                  onOpenKeys={session.openKeys}
                   onDismissDraft={session.dismissDraft}
                 />
               )}
