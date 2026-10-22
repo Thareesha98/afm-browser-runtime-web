@@ -69,7 +69,7 @@ export function ModelPanel({ content, savedSecrets, passkeySecrets, issue, onApp
 
   return (
     <>
-      <div className="u-panel-body">
+      <div className="u-panel-body is-model">
         {onBack !== undefined && (
           <button className="u-detail-back is-near" onClick={onBack}>
             ← Back to Setup
