@@ -536,7 +536,7 @@ export function WorkspacePage() {
                   }}
                   onServerDropped={revokeGrants}
                   onStoreSecret={session.storeSecret}
-                  knownSecrets={session.state.savedSecrets}
+                  knownSecrets={usableSecrets(session.state)}
                   issue={serverEditing === null ? null : setup.issueOf(serverRowId(serverEditing))}
                   onProbe={session.probeServer}
                   onSignIn={session.startOAuthSignIn}

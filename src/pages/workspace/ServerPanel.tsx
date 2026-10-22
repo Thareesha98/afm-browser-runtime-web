@@ -33,6 +33,7 @@ import { credentialOf, displayName, issueSentence, type Issue } from "./setup-ch
 import { AuthFields, ServerTools } from "./server-panel-sections";
 import { ServerDirectory } from "./ServerDirectory";
 import { ServerDetail } from "./ServerDetail";
+import { KeepOnDevice } from "./KeepOnDevice";
 import type { DirectoryEntry, OAuthSignIn } from "../../mcp-directory";
 import { SignInRefusedError, authorizationCodeRefreshKey, type OAuthProviderRef } from "@afm/adapter-auth";
 
@@ -43,9 +44,9 @@ interface Props {
   onApply: (content: string) => void;
   onServerDropped: (serverUrl: string) => void;
   onProbe: (server: NonNullable<AgentMetadata["tools"]>) => Promise<ProbeResult>;
-  onSignIn: (provider: OAuthProviderRef, vetting: SignInVetting) => Promise<SignInOutcome>;
+  onSignIn: (provider: OAuthProviderRef, vetting: SignInVetting, keep: boolean) => Promise<SignInOutcome>;
   onSignOut: (provider: OAuthProviderRef) => void;
-  onStoreSecret: (name: string, value: string, keep: boolean, address?: string) => void;
+  onStoreSecret: (name: string, value: string, keep: boolean, address?: string) => Promise<boolean>;
   knownSecrets: string[];
   issue: Issue | null;
   onBack?: () => void;
@@ -126,6 +127,7 @@ export function ServerPanel({
   const [directoryQuery, setDirectoryQuery] = useState("");
   const [detail, setDetail] = useState<DirectoryEntry | null>(null);
   const [oauthFormOpen, setOauthFormOpen] = useState(false);
+  const [keep, setKeep] = useState(false);
   const [signInNote, setSignInNote] = useState<Exclude<SignInOutcome, { status: "signed-in" }> | null>(null);
   const signInNoteRef = useRef<HTMLDivElement>(null);
   const [secretEdits, setSecretEdits] = useState<Record<string, string>>({});
@@ -228,7 +230,7 @@ export function ServerPanel({
 
   function signIn(confirmedHost?: string) {
     setSignInNote(null);
-    void onSignIn(oauthProvider(), { listed: isListedServer(url.trim()), confirmedHost }).then((outcome) => {
+    void onSignIn(oauthProvider(), { listed: isListedServer(url.trim()), confirmedHost }, keep).then((outcome) => {
       if (outcome.status === "signed-in") void probe(true);
       else setSignInNote(outcome);
     });
@@ -297,7 +299,7 @@ export function ServerPanel({
       allowed,
     });
     for (const secret of next.secrets) {
-      onStoreSecret(secret.name, secret.value, false, serverAddress(url.trim()));
+      void onStoreSecret(secret.name, secret.value, keep, serverAddress(url.trim()));
     }
     onApply(next.content);
     if (existingUrl !== "" && existingUrl !== url.trim()) onServerDropped(existingUrl);
@@ -421,6 +423,7 @@ export function ServerPanel({
                       onSecretEdit={(key, value) => setSecretEdits((current) => ({ ...current, [key]: value }))}
                       onSecretBlur={() => hasTypedSecret && void probe(true)}
                     />
+                    {(hasTypedSecret || method === "oauth2") && <KeepOnDevice keep={keep} onChange={setKeep} />}
                     {method === "oauth2" && (
                       <div className="u-signin-row">
                         <button
