@@ -241,8 +241,8 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .xc-arw svg{width:15px;height:15px;display:block}
 
 .xc-thread{display:flex;flex-direction:column;gap:30px;padding:26px 0 18px}
-.xc-user{align-self:flex-end;max-width:70%;background:var(--user-bg);border:1px solid var(--user-bd);color:var(--user-ink);border-radius:20px 20px 7px 20px;padding:13px 19px;font-size:15px;line-height:1.55;box-shadow:var(--user-sh)}
-.xc-text{font-size:16.5px;line-height:1.75;color:var(--ink2);max-width:62ch}
+.xc-user{align-self:flex-end;max-width:70%;overflow-wrap:anywhere;background:var(--user-bg);border:1px solid var(--user-bd);color:var(--user-ink);border-radius:20px 20px 7px 20px;padding:13px 19px;font-size:15px;line-height:1.55;box-shadow:var(--user-sh)}
+.xc-text{font-size:16.5px;line-height:1.75;color:var(--ink2);max-width:62ch;overflow-wrap:anywhere}
 .xc-text strong{color:var(--ink);font-weight:600}
 .xc-caret{display:inline-block;width:2.5px;height:18px;background:var(--agent);vertical-align:-3px;margin-left:3px;border-radius:2px}
 [data-theme="dark"] .xc-caret{box-shadow:0 0 10px rgba(215,155,108,.8)}
