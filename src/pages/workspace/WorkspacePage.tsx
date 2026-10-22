@@ -16,6 +16,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
+import { usableSecrets } from "../../chat-state";
 import { EditorPane } from "./EditorPane";
 import { ChatPane } from "./ChatPane";
 import { AboutButton, ShareButton, WorkspaceBar } from "./WorkspaceBar";
@@ -510,13 +511,14 @@ export function WorkspacePage() {
               {overPanel === "model" && (
                 <ModelPanel
                   content={content}
-                  savedSecrets={session.state.savedSecrets}
+                  savedSecrets={usableSecrets(session.state)}
+                  passkeySecrets={session.state.passkeySecrets}
                   issue={setup.issueOf(MODEL_ROW)}
                   onApply={(next) => {
                     setContent(next);
                     setup.changed(MODEL_ROW);
                   }}
-                  onSaveKey={(name, value) => void session.storeSecret(name, value, false)}
+                  onSaveKey={session.storeSecret}
                   onBack={backToSetup ? leavePanel : undefined}
                   onClose={leavePanel}
                 />
