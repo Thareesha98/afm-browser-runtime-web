@@ -50,24 +50,36 @@ function panel(savedSecrets: string[], passkeySecrets: string[]): string {
 describe("the model panel's key", () => {
   it("says no key has been entered yet, and offers to keep one on this device", () => {
     const html = panel([], []);
-    expect(html).toContain("not entered yet");
+    expect(html).toContain("Not entered yet");
     expect(html).toContain("Keep on this device");
   });
 
   it("says a key typed in this session is only kept for the session", () => {
     const html = panel(["OPENAI_API_KEY"], []);
-    expect(html).toContain("entered this session");
+    expect(html).toContain("Entered this session");
     expect(html).not.toContain("Keep on this device");
   });
 
   it("says a key sealed with a passkey is saved on this device", () => {
     const html = panel(["OPENAI_API_KEY"], ["OPENAI_API_KEY"]);
-    expect(html).toContain("saved on this device");
-    expect(html).not.toContain("entered this session");
+    expect(html).toContain("Saved on this device");
+    expect(html).not.toContain("Entered this session");
   });
 
   it("ignores a key saved for another provider", () => {
     const html = panel(["ANTHROPIC_API_KEY"], ["ANTHROPIC_API_KEY"]);
-    expect(html).toContain("not entered yet");
+    expect(html).toContain("Not entered yet");
+  });
+});
+
+describe("the status words in the Model window", () => {
+  it("uses no lower-case status", () => {
+    for (const html of [panel([], []), panel(["OPENAI_API_KEY"], []), panel(["OPENAI_API_KEY"], ["OPENAI_API_KEY"])]) {
+      expect(html).not.toMatch(/>(not entered yet|entered this session|saved on this device|not accepted)</);
+    }
+  });
+
+  it("gives the Model window its own spacing", () => {
+    expect(panel([], [])).toContain("u-panel-body is-model");
   });
 });

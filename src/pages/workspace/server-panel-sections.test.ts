@@ -16,7 +16,7 @@
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ServerTools } from "./server-panel-sections";
+import { AuthFields, ServerTools } from "./server-panel-sections";
 
 const tools = (found: { name: string }[] | null) =>
   renderToStaticMarkup(
@@ -44,5 +44,38 @@ describe("a server's tool list", () => {
   it("says nothing about asking before there are any tools to tick", () => {
     expect(tools(null)).not.toContain("run without asking");
     expect(tools([])).not.toContain("run without asking");
+  });
+});
+
+const token = { key: "token", name: "token", required: true, placeholder: "${env:MY_TOKEN}" };
+const header = { key: "api_key", name: "api key", required: false, placeholder: "${env:MY_API_KEY}" };
+
+const fields = (saved: (key: string) => boolean, rejected = false) =>
+  renderToStaticMarkup(
+    createElement(AuthFields, {
+      fields: [token, header],
+      values: {},
+      secretEdits: {},
+      saved,
+      rejected,
+      onValue: () => {},
+      onSecretEdit: () => {},
+      onSecretBlur: () => {},
+    }),
+  );
+
+describe("the status beside a server's secret fields", () => {
+  it("starts every status with a capital letter", () => {
+    const none = fields(() => false);
+    expect(none).toContain(">Required<");
+    expect(none).toContain(">Optional<");
+    expect(fields((key) => key === "token")).toContain("Saved");
+    expect(fields(() => true, true)).toContain("Not accepted");
+  });
+
+  it("uses no lower-case status", () => {
+    for (const html of [fields(() => false), fields(() => true), fields(() => true, true)]) {
+      expect(html).not.toMatch(/>(required|optional|saved|not accepted)</);
+    }
   });
 });

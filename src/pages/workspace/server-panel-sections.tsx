@@ -42,10 +42,10 @@ export function AuthFields({ fields, values, secretEdits, saved, rejected, clien
               {saved(field.key) ? (
                 <span className={`u-chip ${rejected ? "bad" : "ok"}`}>
                   <span className="u-dot" aria-hidden="true" />
-                  {rejected ? "not accepted" : "saved"}
+                  {rejected ? "Not accepted" : "Saved"}
                 </span>
               ) : (
-                <span className="u-row-meta">{field.required ? "required" : "optional"}</span>
+                <span className="u-row-meta">{field.required ? "Required" : "Optional"}</span>
               )}
               {saved(field.key) && (
                 <button className="u-linkish" onClick={() => onSecretEdit(field.key, "")}>
@@ -66,7 +66,7 @@ export function AuthFields({ fields, values, secretEdits, saved, rejected, clien
           <label className="u-group" key={field.key}>
             <span className="u-label-row">
               <span className="u-label">{field.name}</span>
-              <span className="u-row-meta">{field.required ? "required" : "optional"}</span>
+              <span className="u-row-meta">{field.required ? "Required" : "Optional"}</span>
               {field.key === "client_id" && clientIdState === "loading" && (
                 <span className="u-loading" role="status">
                   <span className="u-spinner sm" aria-hidden="true" />

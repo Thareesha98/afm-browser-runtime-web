@@ -108,9 +108,9 @@ describe("TrustScreen", () => {
     expect(screen([])).toContain("in memory for this tab unless you choose to save it on this device.");
   });
 
-  it("marks a key as entered once the worker can answer for it, saved on the device or not", () => {
-    expect(screen([])).toContain("not entered");
-    expect(screen(["OPENAI_API_KEY"])).toContain("entered");
-    expect(screen(["OPENAI_API_KEY"])).not.toContain("not entered");
+  it("marks a key Entered once the worker can answer for it, saved on the device or not", () => {
+    expect(screen([])).toContain("Not entered");
+    expect(screen(["OPENAI_API_KEY"])).toContain(">Entered<");
+    expect(screen(["OPENAI_API_KEY"])).not.toContain("Not entered");
   });
 });

@@ -123,7 +123,7 @@ export function ModelPanel({ content, savedSecrets, passkeySecrets, issue, onApp
                 <span className="u-label">API key</span>
                 <span className={`u-chip ${rejected ? "bad" : saved ? "ok" : "warn"}`}>
                   <span className="u-dot" aria-hidden="true" />
-                  {rejected ? "not accepted" : sealed ? "saved on this device" : saved ? "entered this session" : "not entered yet"}
+                  {rejected ? "Not accepted" : sealed ? "Saved on this device" : saved ? "Entered this session" : "Not entered yet"}
                 </span>
               </div>
               <input
