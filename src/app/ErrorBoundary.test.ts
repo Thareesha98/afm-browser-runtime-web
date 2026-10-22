@@ -35,6 +35,7 @@ describe("ErrorBoundary", () => {
     const html = renderToStaticMarkup(boundary.render() as never);
     expect(html).toContain("Something went wrong");
     expect(html).toContain("Reload");
+    expect(html).toContain("Your agents and saved keys are untouched");
     expect(html).not.toContain("broken page");
   });
 

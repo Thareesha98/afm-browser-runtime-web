@@ -348,7 +348,7 @@ export function WorkspacePage() {
           <TrustScreen
             metadata={readable.metadata}
             source={content}
-            savedSecrets={session.state.savedSecrets}
+            savedSecrets={usableSecrets(session.state)}
             fileUrl={linkedFile}
             onRun={() => {
               setTrusted(true);

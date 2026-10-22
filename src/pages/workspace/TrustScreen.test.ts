@@ -17,7 +17,9 @@
 
 import { describe, expect, it } from "vitest";
 import type { AgentMetadata } from "@afm/engine";
-import { linkedFileHost, serverTools } from "./TrustScreen";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { TrustScreen, linkedFileHost, serverTools } from "./TrustScreen";
 
 const withServers = (mcp: unknown[]) => ({ name: "A", tools: { mcp } }) as AgentMetadata;
 
@@ -72,5 +74,43 @@ describe("linkedFileHost", () => {
   it("is nothing for a link that is not an https address", () => {
     expect(linkedFileHost("http://files.example.com/a.afm.md")).toBeNull();
     expect(linkedFileHost("not a url")).toBeNull();
+  });
+});
+
+const SOURCE = `---
+name: A
+model:
+  provider: openai
+  name: gpt-4o
+  authentication:
+    type: api-key
+    api_key: \${env:OPENAI_API_KEY}
+---
+
+# Role
+r
+`;
+
+describe("TrustScreen", () => {
+  const screen = (savedSecrets: string[]) =>
+    renderToStaticMarkup(
+      createElement(TrustScreen, {
+        metadata: { name: "A", model: { provider: "openai", name: "gpt-4o", authentication: { type: "api-key", api_key: "${env:OPENAI_API_KEY}" } } } as AgentMetadata,
+        source: SOURCE,
+        savedSecrets,
+        fileUrl: null,
+        onRun: () => {},
+        onOpenBuilder: () => {},
+      }),
+    );
+
+  it("says a key stays in this tab unless it is saved on this device", () => {
+    expect(screen([])).toContain("in memory for this tab unless you choose to save it on this device.");
+  });
+
+  it("marks a key as entered once the worker can answer for it, saved on the device or not", () => {
+    expect(screen([])).toContain("not entered");
+    expect(screen(["OPENAI_API_KEY"])).toContain("entered");
+    expect(screen(["OPENAI_API_KEY"])).not.toContain("not entered");
   });
 });

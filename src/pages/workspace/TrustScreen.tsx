@@ -133,7 +133,7 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
 
         <p className="u-hint">
           Tools the file lists run without asking. Any other tool asks first, unless you allow it in this tab. A key you enter stays
-          in memory for this tab and is gone when you close or refresh it.
+          in memory for this tab unless you choose to save it on this device.
         </p>
         <div className="u-trust-actions">
           <button className="u-btn ghost" onClick={onOpenBuilder}>
