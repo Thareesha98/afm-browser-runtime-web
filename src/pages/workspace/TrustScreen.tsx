@@ -18,6 +18,7 @@ import { DEFAULT_MAX_ITERATIONS, referencedSecretNames } from "@afm/engine";
 import type { AgentMetadata } from "@afm/engine";
 import { hostOf } from "../../load-paths";
 import { shortModelLabel } from "./model-catalog";
+import { displayName } from "./setup-check";
 
 interface Props {
   metadata: AgentMetadata;
@@ -90,7 +91,7 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
               <div className="u-declare-servers">
                 {servers.map((server) => (
                   <div key={server.name}>
-                    {server.name}
+                    {displayName(server.name)}
                     {server.host !== null && <span className="u-row-sub"> · {server.host}</span>}
                     <div className="u-declare-tools">
                       {server.tools.length === 0 ? (

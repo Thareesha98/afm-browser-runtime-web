@@ -18,7 +18,7 @@ import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { markColour, providerColour } from "./mark-colour";
 import { ProviderMark } from "./ProviderMark";
-import { MODEL_ROW, summaryOf, type KeysState, type SetupRow } from "./setup-check";
+import { MODEL_ROW, rowLabel, summaryOf, type KeysState, type SetupRow } from "./setup-check";
 
 const AUTO_RUN_DELAY_MS = 500;
 
@@ -150,7 +150,7 @@ export function SetupPane({ rows, keys, provider, ready, onConfigure, onCheckAga
         {row.kind === "model" ? <ProviderMark provider={provider} size={14} /> : row.name.trim().charAt(0).toUpperCase()}
       </span>
       <span className="u-run-t">
-        <span className="u-run-name">{row.name}</span>
+        <span className="u-run-name">{rowLabel(row)}</span>
         <span className="u-run-note">{row.note}</span>
       </span>
       <Status row={row} onConfigure={() => onConfigure(row)} />
