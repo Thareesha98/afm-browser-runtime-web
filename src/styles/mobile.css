@@ -997,8 +997,8 @@
     font-size: 16px;
     min-height: 28px;
   }
-  .xc-cbtn,
-  .xc-send {
+  .u-side .xc-composer .xc-cbtn,
+  .u-side .xc-composer .xc-send {
     width: 40px;
     height: 40px;
   }
