@@ -193,6 +193,8 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .u-run-st.ok{color:var(--ok)}
 .u-run-st.wait i{width:12px;height:12px;border-radius:99px;border:1.5px solid var(--line-strong);display:inline-block}
 .u-run-gap{margin-top:14px}
+.u-checkline{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink2);margin:10px 0 12px}
+.u-checkline + .u-hint{margin-top:-6px}
 
 .u-rawwrap{display:flex;flex-direction:column;height:100%;width:100%}
 .u-raw{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.8;padding:10px 0}
