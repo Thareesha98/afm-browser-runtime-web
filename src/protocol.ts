@@ -15,6 +15,7 @@
 // under the License.
 
 import type { OAuthProviderRef } from "@afm/adapter-auth";
+import type { passkey } from "@afm/adapter-secret";
 import type { Plan, LoopEvent, AgentMetadata, ChatMessage } from "@afm/engine";
 import type { Failure } from "./failure";
 
@@ -42,7 +43,10 @@ export type ClientMessage =
   | { type: "regenerate" }
   | { type: "reset-chat" }
   | { type: "set-secret"; name: string; value: string; address?: string }
+  | passkey.VaultMessage
+  | { type: "passkey-forget"; name: string }
   | { type: "list-secrets" }
+  | { type: "list-passkeys" }
   | { type: "remove-secret"; name: string }
   | { type: "permission-response"; id: string; decision: "allow" | "deny"; remember: boolean }
   | ({ type: "oauth-signin-start"; id: string; provider: OAuthProviderRef } & SignInVetting)
@@ -82,6 +86,7 @@ export type ServerMessage =
   | { type: "tools-listed"; tools: ToolInfo[] }
   | { type: "agent-not-ready"; reason: string }
   | { type: "secrets-list"; names: string[] }
+  | { type: "passkey-list"; names: string[] }
   | { type: "text-delta"; text: string }
   | { type: "tool-call"; id: string; name: string; args: unknown }
   | { type: "tool-result"; id: string; name: string; ok: boolean; content: string }
