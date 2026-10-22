@@ -18,6 +18,7 @@ import { createRoot } from "react-dom/client";
 import { RouterRoot } from "./app/App";
 import { isFramed } from "./frame-guard";
 import { clearStoredHistory } from "./history-store";
+import { openLastAgent } from "./landing";
 import { clearLegacyRefreshTokens, relayOAuthCallback } from "./oauth-signin";
 import "@fontsource/instrument-sans/400.css";
 import "@fontsource/instrument-sans/500.css";
@@ -32,6 +33,7 @@ import "./styles/index.css";
 if (!isFramed() && !relayOAuthCallback()) {
   clearLegacyRefreshTokens();
   clearStoredHistory();
+  openLastAgent();
 
   const container = document.getElementById("root");
   if (container !== null) {
