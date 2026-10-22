@@ -93,3 +93,38 @@ describe("a server that needs a key", () => {
     expect(keyed.filter(({ auth }) => auth.description.trim() === "").map(({ id }) => id)).toEqual([]);
   });
 });
+
+describe("Canva", () => {
+  const canva = DIRECTORY_ENTRIES.find((entry) => entry.id === "canva");
+
+  it("is listed with Canva's own remote server and its documentation", () => {
+    expect(canva?.title).toBe("Canva");
+    expect(canva?.url).toBe("https://mcp.canva.com/mcp");
+    expect(canva?.publisher).toBe("canva.com");
+    expect(canva?.docsUrl).toBe("https://www.canva.dev/docs/mcp/");
+  });
+
+  it("signs in at Canva's own sign-in server", () => {
+    expect(canva?.auth).toMatchObject({
+      type: "oauth2",
+      authorizeUrl: "https://mcp.canva.com/authorize",
+      tokenUrl: "https://mcp.canva.com/token",
+    });
+  });
+
+  it("gets a client id by a client ID metadata document, or by registering when that is not offered", () => {
+    expect(canva?.auth).toMatchObject({ clientIdMetadata: true, registrationUrl: "https://mcp.canva.com/register" });
+  });
+
+  it("asks for the scopes the server lists, including the ones that let designs be edited", () => {
+    const scopes = canva?.auth.type === "oauth2" ? (canva.auth.scopes ?? []) : [];
+    expect(scopes).toHaveLength(16);
+    expect(scopes).toEqual(expect.arrayContaining(["profile:read", "design:content:read", "design:content:write", "asset:write"]));
+  });
+
+  it("sits in alphabetical order among its neighbours", () => {
+    const at = ids.indexOf("canva");
+    expect(ids[at - 1]! < "canva").toBe(true);
+    expect(ids[at + 1]! > "canva").toBe(true);
+  });
+});
