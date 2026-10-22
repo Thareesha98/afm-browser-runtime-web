@@ -14,7 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import type { OAuthProviderRef } from "@afm/adapter-auth";
+import { authorizationCodeRefreshKey, type OAuthProviderRef } from "@afm/adapter-auth";
+import { passkey } from "@afm/adapter-secret";
 import type { ClientMessage, SignInVetting } from "./protocol";
 
 export type PopupResult = { code: string; state: string; iss?: string } | { error: string; state: string; iss?: string };
@@ -96,6 +97,7 @@ export function clearLegacyRefreshTokens(): void {
 interface Flow {
   popup: Window;
   provider: OAuthProviderRef;
+  remember: boolean;
   state?: string;
   resolve: (outcome: SignInOutcome) => void;
 }
@@ -105,7 +107,7 @@ export interface OAuthSignInDeps {
 }
 
 export interface OAuthSignIns {
-  start(provider: OAuthProviderRef, vetting: SignInVetting): Promise<SignInOutcome>;
+  start(provider: OAuthProviderRef, vetting: SignInVetting, remember?: boolean): Promise<SignInOutcome>;
   onAuthorizeUrl(id: string, url: string): void;
   onConfirm(id: string, host: string): void;
   onDone(id: string, ok: boolean, error?: string): void;
@@ -115,14 +117,14 @@ export function createOAuthSignIns(deps: OAuthSignInDeps): OAuthSignIns {
   const flows = new Map<string, Flow>();
 
   return {
-    start(provider, vetting) {
+    start(provider, vetting, remember = false) {
       const popup = openSignInPopup();
       if (popup === null) {
         return Promise.resolve<SignInOutcome>({ status: "failed", reason: "Allow pop-ups for this site to sign in." });
       }
       const id = crypto.randomUUID();
       return new Promise<SignInOutcome>((resolve) => {
-        flows.set(id, { popup, provider, resolve });
+        flows.set(id, { popup, provider, remember, resolve });
         deps.post({ type: "oauth-signin-start", id, provider, ...vetting });
 
         awaitCallback(() => flows.get(id)?.state).then(
@@ -156,6 +158,7 @@ export function createOAuthSignIns(deps: OAuthSignInDeps): OAuthSignIns {
       flows.delete(id);
       if (flow === undefined) return;
       if (!flow.popup.closed) flow.popup.close();
+      if (ok && flow.remember) void passkey.seal(deps.post, authorizationCodeRefreshKey(flow.provider));
       flow.resolve(ok ? { status: "signed-in" } : { status: "failed", reason: error === undefined ? undefined : `Sign-in failed: ${error}` });
     },
   };

@@ -15,8 +15,16 @@
 // under the License.
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { authorizationCodeRefreshKey } from "@afm/adapter-auth";
 import { clearLegacyRefreshTokens, createOAuthSignIns, relayOAuthCallback } from "./oauth-signin";
 import type { ClientMessage } from "./protocol";
+
+const { seal } = vi.hoisted(() => ({ seal: vi.fn(async () => true) }));
+
+vi.mock("@afm/adapter-secret", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@afm/adapter-secret")>();
+  return { ...original, passkey: { ...original.passkey, seal } };
+});
 
 describe("clearLegacyRefreshTokens", () => {
   function fakeLocalStorage(initial: Record<string, string>) {
@@ -188,7 +196,7 @@ describe("createOAuthSignIns", () => {
   const provider = { authorizeUrl: "https://auth.example.com/authorize", tokenUrl: "https://auth.example.com/token", clientId: "c" };
   const AUTHORIZE = "https://auth.example.com/authorize?state=s";
 
-  function setup() {
+  function setup(remember?: boolean) {
     const popup = fakePopup();
     const win = fakeWindow();
     win.open.mockReturnValue(popup);
@@ -196,7 +204,7 @@ describe("createOAuthSignIns", () => {
     const posted: ClientMessage[] = [];
     const deps = { post: (message: ClientMessage) => void posted.push(message) };
     const signIns = createOAuthSignIns(deps);
-    const result = signIns.start(provider, { listed: true });
+    const result = signIns.start(provider, { listed: true }, remember);
     const startId = (posted[0] as { id: string }).id;
     signIns.onAuthorizeUrl(startId, AUTHORIZE);
     return { popup, win, posted, deps, signIns, result, startId };
@@ -208,6 +216,7 @@ describe("createOAuthSignIns", () => {
     vi.unstubAllGlobals();
     FakeChannel.all = [];
     vi.stubGlobal("BroadcastChannel", FakeChannel);
+    seal.mockClear();
   });
 
   it("sends the popup to the address the worker built, and relays the code back", async () => {
@@ -220,6 +229,27 @@ describe("createOAuthSignIns", () => {
 
     signIns.onDone(startId, true);
     expect(await result).toEqual({ status: "signed-in" });
+  });
+
+  it("seals the refresh token under the passkey once a remembered sign-in is done", async () => {
+    const { deps, signIns, result, startId } = setup(true);
+    signIns.onDone(startId, true);
+    await result;
+    expect(seal).toHaveBeenCalledWith(deps.post, authorizationCodeRefreshKey(provider));
+  });
+
+  it("seals nothing when the sign-in was not to be remembered", async () => {
+    const { signIns, result, startId } = setup();
+    signIns.onDone(startId, true);
+    await result;
+    expect(seal).not.toHaveBeenCalled();
+  });
+
+  it("seals nothing when a remembered sign-in fails", async () => {
+    const { signIns, result, startId } = setup(true);
+    signIns.onDone(startId, false, "OAuth2 sign-in state mismatch");
+    await result;
+    expect(seal).not.toHaveBeenCalled();
   });
 
   it("tells the worker whether the server is in the directory and which host the user agreed to", async () => {
