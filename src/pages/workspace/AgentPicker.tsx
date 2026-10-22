@@ -30,9 +30,10 @@ interface Props {
   currentId: string | null;
   onPick: (agent: SavedAgent) => void;
   onNew: () => void;
+  onRemoved: (agent: SavedAgent) => void;
 }
 
-export function AgentPicker({ currentId, onPick, onNew }: Props) {
+export function AgentPicker({ currentId, onPick, onNew, onRemoved }: Props) {
   const library = useAgentsLibrary();
   const history = useHistory();
   const permissions = usePermissionsLedger();
@@ -117,6 +118,7 @@ export function AgentPicker({ currentId, onPick, onNew }: Props) {
                           permissions.reset(permissionScopeFor(agent.id, agent.source));
                           library.remove(agent.id);
                           setUndo({ agent, conversations });
+                          onRemoved(agent);
                         }}
                       >
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"
