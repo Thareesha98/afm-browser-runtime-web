@@ -17,7 +17,9 @@
 
 import { describe, expect, it } from "vitest";
 import type { AgentMetadata } from "@afm/engine";
-import { linkedFileHost, serverTools } from "./TrustScreen";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { TrustScreen, linkedFileHost, serverTools } from "./TrustScreen";
 
 const withServers = (mcp: unknown[]) => ({ name: "A", tools: { mcp } }) as AgentMetadata;
 
@@ -72,5 +74,39 @@ describe("linkedFileHost", () => {
   it("is nothing for a link that is not an https address", () => {
     expect(linkedFileHost("http://files.example.com/a.afm.md")).toBeNull();
     expect(linkedFileHost("not a url")).toBeNull();
+  });
+});
+
+const SOURCE = `---
+name: A
+model:
+  provider: openai
+  name: gpt-4o
+  authentication:
+    type: api-key
+    api_key: \${env:OPENAI_API_KEY}
+---
+
+# Role
+r
+`;
+
+describe("the keys a shared agent needs", () => {
+  const screen = (savedSecrets: string[]) =>
+    renderToStaticMarkup(
+      createElement(TrustScreen, {
+        metadata: { name: "A", model: { provider: "openai", name: "gpt-4o" } } as AgentMetadata,
+        source: SOURCE,
+        savedSecrets,
+        fileUrl: null,
+        onRun: () => {},
+        onOpenBuilder: () => {},
+      }),
+    );
+
+  it("marks a key Entered or Not entered, with a capital letter", () => {
+    expect(screen([])).toContain("Not entered");
+    expect(screen(["OPENAI_API_KEY"])).toContain(">Entered<");
+    expect(screen(["OPENAI_API_KEY"])).not.toContain("Not entered");
   });
 });

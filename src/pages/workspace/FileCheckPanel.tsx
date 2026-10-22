@@ -39,7 +39,7 @@ export function FileCheckPanel({ issues, plain = false, onFix }: Props) {
     <div className="u-issues">
       {issues.map((issue, index) => {
         const said = inPlainWords(issue);
-        const where = [issue.line === null ? null : `line ${issue.line}`, issue.field === "" ? null : issue.field]
+        const where = [issue.line === null ? null : `Line ${issue.line}`, issue.field === "" ? null : issue.field]
           .filter((part) => part !== null)
           .join(" · ");
         return (

@@ -118,7 +118,7 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
                   <span key={name}>
                     <code>{name}</code>{" "}
                     <span className={`tag ${savedSecrets.includes(name) ? "ok" : ""}`}>
-                      {savedSecrets.includes(name) ? "entered" : "not entered"}
+                      {savedSecrets.includes(name) ? "Entered" : "Not entered"}
                     </span>{" "}
                   </span>
                 ))

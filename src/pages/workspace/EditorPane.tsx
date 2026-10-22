@@ -136,7 +136,7 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
   );
 }
 
-function RawEditor({
+export function RawEditor({
   content,
   onChange,
   issues,
@@ -152,10 +152,7 @@ function RawEditor({
           <div className="u-checks">
             <span className="u-chip ok">
               <span className="u-dot" aria-hidden="true" />
-              no problems
-            </span>
-            <span className="u-hint" style={{ margin: 0 }}>
-              This file will run.
+              No problems
             </span>
           </div>
         ) : (
