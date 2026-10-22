@@ -17,13 +17,13 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { StartDialog } from "./StartDialog";
+import { DialogFrame } from "./DialogFrame";
 
-type Props = Parameters<typeof StartDialog>[0];
+type Props = Parameters<typeof DialogFrame>[0];
 
 function render(props: Partial<Props> = {}): string {
   return renderToStaticMarkup(
-    createElement(StartDialog, {
+    createElement(DialogFrame, {
       title: "Start a new agent",
       footer: "A footer sentence.",
       focusKey: "menu",
@@ -34,7 +34,7 @@ function render(props: Partial<Props> = {}): string {
   );
 }
 
-describe("the Start dialog frame", () => {
+describe("the dialog frame", () => {
   it("is a modal dialog named by its title", () => {
     const html = render();
     expect(html).toContain('role="dialog"');
