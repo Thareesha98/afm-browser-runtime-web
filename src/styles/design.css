@@ -46,11 +46,11 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .u-btn.sm{height:28px;padding:0 11px;font-size:12.5px;border-radius:8px}
 .u-btn.wide{width:100%;justify-content:center}
 .u-btn[disabled]{opacity:.45}
-.u-ico{width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:none;display:grid;place-items:center;color:var(--muted);cursor:pointer;flex:none;font-family:inherit}
+.u-ico{width:30px;height:30px;border-radius:10px;border:1px solid transparent;background:none;display:grid;place-items:center;color:var(--muted);cursor:pointer;flex:none;font-family:inherit}
 .u-ico svg{width:16px;height:16px}
 .u-ico:hover{background:var(--sunk)}
 .u-ico.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
-.u-bar .u-ico.on{background:var(--accent);color:var(--accent-contrast)}
+.u-bar .u-ico.on{background:var(--accent);color:var(--accent-contrast);box-shadow:0 1px 3px color-mix(in srgb,var(--accent) 30%,transparent)}
 .u-bar .u-ico.on:hover{background:color-mix(in srgb,var(--accent) 86%,var(--surface))}
 .u-play{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid currentColor}
 

@@ -205,7 +205,8 @@
   white-space: pre;
 }
 .u-rawwrap .code-editor:focus-within {
-  border-color: var(--accent);
+  border-color: var(--line-hover);
+  box-shadow: 0 0 0 1px var(--line-hover);
 }
 .code-editor-face {
   position: absolute;
@@ -932,8 +933,8 @@ label.u-group {
   border-color: var(--line-strong);
 }
 .u-desc-box:focus-within {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-soft);
+  border-color: var(--line-hover);
+  box-shadow: 0 0 0 1px var(--line-hover);
 }
 .u-desc-box.is-off {
   background: var(--sunk);
@@ -1387,7 +1388,8 @@ label.u-group {
   background: var(--sunk);
 }
 .xc-edit:focus-within {
-  border-color: var(--ink);
+  border-color: var(--line-hover);
+  box-shadow: 0 0 0 1px var(--line-hover);
 }
 .xc-edit-field {
   width: 100%;
@@ -1704,14 +1706,9 @@ label.u-group {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
-/* The API key box: a little lower under its label, and a softer line while typing than the page-wide focus ring. */
+/* The API key box sits a little lower under its label. */
 .u-key-input {
   margin-top: 5px;
-}
-.u-key-input:focus-visible {
-  outline: none;
-  border-color: var(--ink2);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 8%, transparent);
 }
 
 /* The line under the editor keeps its space (so the card keeps its size) but goes quiet while the chip says the same thing. */
@@ -1773,8 +1770,5 @@ label.u-group {
 
 /* dark theme: the soft band round the field being typed in was too faint to see */
 [data-theme="dark"] .u-field:focus-within::after {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent);
-}
-[data-theme="dark"] .u-key-input:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent);
 }
