@@ -39,6 +39,8 @@ export interface SetupRow extends RowResult {
   url?: string;
 }
 
+export type KeysState = "none" | "opening" | "opened" | "declined";
+
 export const MODEL_ROW = "model";
 
 export interface Issue {
@@ -189,8 +191,9 @@ export interface Summary {
   text: string;
 }
 
-export function summaryOf(rows: SetupRow[]): Summary {
-  if (rows.some((row) => row.state === "checking")) {
+export function summaryOf(rows: SetupRow[], keys: KeysState = "none"): Summary {
+  if (keys === "declined") return { tone: "neutral", chip: "Waiting", text: "Nothing was opened and nothing was sent." };
+  if (keys === "opening" || rows.some((row) => row.state === "checking")) {
     return { tone: "neutral", chip: "Checking", text: "Everything this agent needs, checked at once." };
   }
   const attention = attentionCount(rows);
