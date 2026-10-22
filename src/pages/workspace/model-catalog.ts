@@ -37,6 +37,12 @@ export const MODEL_PROVIDERS: ProviderOption[] = [
     host: "api.openai.com",
     secretName: "OPENAI_API_KEY",
     models: [
+      { id: "gpt-6.1-sol", label: "GPT-6.1 Sol", short: "GPT-6.1 Sol", note: "balanced" },
+      { id: "gpt-6-astra", label: "GPT-6 Astra", short: "GPT-6 Astra", note: "most capable" },
+      { id: "gpt-6-sol", label: "GPT-6 Sol", short: "GPT-6 Sol", note: "coding and agents" },
+      { id: "gpt-6-luna", label: "GPT-6 Luna", short: "GPT-6 Luna", note: "fast, lowest cost" },
+      { id: "gpt-5.6-sol", label: "GPT-5.6 Sol", short: "GPT-5.6 Sol", note: "complex work" },
+      { id: "gpt-5.6-terra", label: "GPT-5.6 Terra", short: "GPT-5.6 Terra", note: "balanced cost" },
       { id: "gpt-4o", label: "GPT-4o", short: "GPT-4o", note: "general purpose" },
       { id: "gpt-4o-mini", label: "GPT-4o mini", short: "GPT-4o mini", note: "faster, lower cost" },
       { id: "gpt-4.1", label: "GPT-4.1", short: "GPT-4.1" },

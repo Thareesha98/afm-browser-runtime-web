@@ -14,8 +14,9 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { modelFromMetadata } from "./model-factory";
+import { findProvider } from "./pages/workspace/model-catalog";
 
 describe("modelFromMetadata", () => {
   it("builds an OpenAI model port", async () => {
@@ -57,5 +58,45 @@ describe("modelFromMetadata", () => {
     await expect(
       modelFromMetadata({ provider: "gemini", authentication: { type: "api-key", api_key: "k" } }),
     ).rejects.toThrow(/provider/i);
+  });
+});
+
+describe("every OpenAI model in the list", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const request = {
+    system: "You are helpful.",
+    messages: [{ role: "user" as const, content: "hi" }],
+    tools: [{ name: "search", description: "Search", inputSchema: { type: "object" as const, properties: { q: { type: "string" } } } }],
+  };
+
+  it("is sent by its own name to OpenAI's Responses endpoint, streaming, with the tools", async () => {
+    const openai = findProvider("openai")!;
+    for (const { id } of openai.models) {
+      const seen: { url: string; body: Record<string, unknown> }[] = [];
+      vi.stubGlobal("fetch", async (url: string, init?: RequestInit) => {
+        seen.push({ url: String(url), body: JSON.parse(String(init?.body ?? "{}")) });
+        return new Response("data: [DONE]\n\n", { status: 200, headers: { "content-type": "text/event-stream" } });
+      });
+      const port = await modelFromMetadata({ provider: "openai", name: id, authentication: { type: "api-key", api_key: "sk-1" } });
+      for await (const event of port.stream(request as never, new AbortController().signal)) void event;
+      expect(seen[0]?.url).toBe("https://api.openai.com/v1/responses");
+      expect(seen[0]?.body.model).toBe(id);
+      expect(seen[0]?.body.stream).toBe(true);
+      expect(seen[0]?.body.tools).toHaveLength(1);
+    }
+  });
+
+  it("is sent without settings that the newest models turn down", async () => {
+    let body: Record<string, unknown> = {};
+    vi.stubGlobal("fetch", async (_url: string, init?: RequestInit) => {
+      body = JSON.parse(String(init?.body ?? "{}"));
+      return new Response("data: [DONE]\n\n", { status: 200, headers: { "content-type": "text/event-stream" } });
+    });
+    const port = await modelFromMetadata({ provider: "openai", name: "gpt-6-astra", authentication: { type: "api-key", api_key: "sk-1" } });
+    for await (const event of port.stream(request as never, new AbortController().signal)) void event;
+    for (const setting of ["temperature", "top_p", "max_tokens", "max_completion_tokens", "max_output_tokens"]) {
+      expect(body).not.toHaveProperty(setting);
+    }
   });
 });
