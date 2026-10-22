@@ -24,7 +24,7 @@ import { usableSecrets, type ChatState } from "../../chat-state";
 import { KeepOnDevice } from "./KeepOnDevice";
 import { resolveContent, normalizeAgentFileUrl } from "../../load-paths";
 import { McpProxyRequiredError, agentFileFetch } from "../../tool-factory";
-import { StartDialog } from "./StartDialog";
+import { DialogFrame } from "./DialogFrame";
 import { START_CARDS, START_FOOTERS, START_SUBTITLES, START_TITLES, templatesNote } from "./start-copy";
 import type { StartStage } from "./start-copy";
 import { canClose, escapeAction, outsideClickAction, stageOf } from "./start-flow";
@@ -249,7 +249,7 @@ export function StartHere({
       );
     }
     return (
-      <StartDialog
+      <DialogFrame
         title={START_TITLES[which]}
         subtitle={START_SUBTITLES[which]}
         footer={START_FOOTERS[which]}
@@ -261,7 +261,7 @@ export function StartHere({
         onOutside={outsideClickAction(which) === "close" ? onBlank : undefined}
       >
         {content}
-      </StartDialog>
+      </DialogFrame>
     );
   }
 
