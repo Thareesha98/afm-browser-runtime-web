@@ -20,6 +20,7 @@ import { modelFromMetadata, checkModelFromMetadata } from "./model-factory";
 import { mcpServerPort, toolsFromMetadata, defaultMcpProxyConfig, proxyAwareFetch } from "./tool-factory";
 import { createOAuthManager } from "./oauth-manager";
 import type { OAuthProviderRef } from "@afm/adapter-auth";
+import { authorizationCodeRefreshKey } from "@afm/adapter-auth";
 import { createWorkerSecretStore } from "./worker-secret-store";
 import type { ClientMessage, ServerMessage } from "./protocol";
 import { permissionKey } from "./protocol";
@@ -50,14 +51,20 @@ function gatedVault(uses: () => SecretUse[] = () => secretUses): SecretPort {
 
 const secrets = gatedVault();
 
+function signOutOAuth(provider: OAuthProviderRef): void {
+  oauth.signOut(provider);
+  store.forgetSealed(authorizationCodeRefreshKey(provider));
+}
+
 const oauthDeps = {
   getInteractiveToken: (provider: OAuthProviderRef) => oauth.getAccessToken(provider),
-  onInteractiveAuthRejected: (provider: OAuthProviderRef) => oauth.signOut(provider),
+  onInteractiveAuthRejected: signOutOAuth,
 };
 
 async function probeServer(probeId: string, server: AgentMetadata["tools"]): Promise<void> {
   let port: ToolPort | null = null;
   try {
+    await store.opened();
     const resolved = await resolveProbeAuth(server, gatedVault(() => probeToolUses(server)));
     const entry = resolved?.mcp?.[0];
     port = entry === undefined ? null : mcpServerPort(entry, defaultMcpProxyConfig, oauthDeps, { setupTimeoutMs: PROBE_TIMEOUT_MS });
@@ -88,6 +95,7 @@ async function probeModel(probeId: string, model: AgentMetadata["model"]): Promi
 }
 
 async function withResolvedKey(model: AgentMetadata["model"]): Promise<AgentMetadata["model"]> {
+  await store.opened();
   const rawKey = model?.authentication?.api_key;
   const placeholder = typeof rawKey === "string" ? /^\$\{(?:env:)?([^}]+)\}$/.exec(rawKey) : null;
   if (placeholder === null) return model;
@@ -163,7 +171,7 @@ scope.addEventListener("message", (event) => {
       for (const name of message.permissionSeed ?? []) alwaysAllow.add(name);
       for (const name of FILE_TOOL_NAMES) alwaysAllow.add(permissionKey(undefined, name));
       attachedFiles.clear();
-      void session.load(message.content, message.seedHistory);
+      void store.opened().then(() => session.load(message.content, message.seedHistory));
       break;
     case "attach-files":
       for (const file of message.files) {
@@ -185,8 +193,23 @@ scope.addEventListener("message", (event) => {
     case "cancel":
       session.cancel();
       break;
+    case "unlock-secret":
+      store.acceptUnlock(message.name, message.key);
+      break;
     case "set-secret":
       store.set(message.name, message.value, message.address);
+      break;
+    case "passkey-remember":
+      store.seal(message.name, message.key, message.credentialId, message.salt);
+      break;
+    case "passkey-reseal":
+      store.reseal(message.name, message.from, message.to, message.credentialId, message.salt);
+      break;
+    case "passkey-forget":
+      store.forgetSealed(message.name);
+      break;
+    case "list-passkeys":
+      store.postSealedNames();
       break;
     case "list-secrets":
       store.postNames();
@@ -210,7 +233,7 @@ scope.addEventListener("message", (event) => {
       oauth.declineSignIn(message.id, message.error, message.state, message.iss);
       break;
     case "oauth-sign-out":
-      oauth.signOut(message.provider);
+      signOutOAuth(message.provider);
       break;
     case "probe-server":
       void probeServer(message.id, message.server);
