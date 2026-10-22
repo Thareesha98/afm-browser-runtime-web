@@ -305,6 +305,16 @@ export function WorkspacePage() {
   const toggleLeft = (next: LeftPanel) => (left === next ? setLeft(null) : openLeft(next));
   const closeLeft = () => setLeft(null);
 
+  function resetToBlank() {
+    closeSide();
+    setSearchParams({}, { replace: true });
+    setContent(EMPTY_TEMPLATE);
+    setSavedContent(EMPTY_TEMPLATE);
+    setAgentId(null);
+    loadedIdentityRef.current = "blank";
+    session.clearAgent();
+  }
+
   const startDialog = left === "start" && !compact;
   const leftPanel = startDialog ? null : left;
   const startHere = (dialog: boolean) => (
@@ -397,14 +407,11 @@ export function WorkspacePage() {
                     setSearchParams({ agentId: saved.id }, { replace: true });
                   }}
                   onNew={() => {
-                    closeSide();
-                    setSearchParams({}, { replace: true });
-                    setContent(EMPTY_TEMPLATE);
-                    setSavedContent(EMPTY_TEMPLATE);
-                    setAgentId(null);
-                    loadedIdentityRef.current = "blank";
-                    session.clearAgent();
+                    resetToBlank();
                     openLeft("start");
+                  }}
+                  onRemoved={(removed) => {
+                    if (removed.id === agentId) resetToBlank();
                   }}
                 />
               )}
