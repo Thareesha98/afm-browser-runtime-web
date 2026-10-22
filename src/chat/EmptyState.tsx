@@ -15,6 +15,7 @@
 // under the License.
 
 import { useEffect, useState } from "react";
+import { brief } from "../brief-error";
 import type { AgentStatus } from "../chat-state";
 import type { LoadStep } from "../protocol";
 import { ThreadHead } from "./ThreadHead";
@@ -44,7 +45,7 @@ export function LoadChecklist({ steps }: { steps: LoadStep[] }) {
             {step.state === "active" && <span className="load-step-dots">{dots}</span>}
           </span>
           {step.state === "failed" && step.note !== undefined && (
-            <span className="load-step-note">{step.note}</span>
+            <span className="load-step-note">{brief(step.note)}</span>
           )}
         </li>
       ))}
@@ -80,7 +81,7 @@ export function NotReadyReason({
 }) {
   return (
     <>
-      <p className="not-ready-reason">{notReady ?? "Something went wrong while starting the agent."}</p>
+      <p className="not-ready-reason">{notReady === null ? "Something went wrong while starting the agent." : brief(notReady)}</p>
       <div className="not-ready-actions">
         {rejectedKey(notReady) && onReplaceKey !== undefined && (
           <button className="u-btn primary" onClick={onReplaceKey}>

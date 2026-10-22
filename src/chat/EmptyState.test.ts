@@ -50,8 +50,14 @@ describe("NotReadyReason", () => {
   it("says why the agent did not start, and offers to try again", () => {
     const out = html("Could not resolve variable '${env:OPENAI_API_KEY}'");
     expect(out).toContain("not-ready-reason");
-    expect(out).toContain("OPENAI_API_KEY");
+    expect(out).toContain("Key not accepted");
     expect(out).toContain("Try again");
+  });
+
+  it("keeps the long technical text off the screen", () => {
+    const out = html("No MCP proxy is configured. AFM does not connect to external servers directly from the browser - set an MCP proxy (VITE_MCP_PROXY_URL) before connecting tools.");
+    expect(out).toContain("MCP error");
+    expect(out).not.toContain("VITE_MCP_PROXY_URL");
   });
 
   it("falls back to a plain sentence when no reason came with the failure", () => {

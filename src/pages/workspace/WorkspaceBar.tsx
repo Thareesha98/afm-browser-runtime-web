@@ -41,21 +41,24 @@ function Ico({
   label,
   on = false,
   onClick,
-  disabled = false,
+  blocked,
 }: {
   children: ReactNode;
   label: string;
   on?: boolean;
   onClick: () => void;
-  disabled?: boolean;
+  // why it cannot be used yet; the button stays reachable so this can be shown and read out
+  blocked?: string;
 }) {
   return (
     <button
-      className={`u-ico ${on ? "on" : ""}`}
-      data-tip={label}
+      className={`u-ico ${on ? "on" : ""}${blocked === undefined ? "" : " is-blocked"}`}
+      data-tip={blocked ?? label}
       aria-label={label}
-      onClick={onClick}
-      disabled={disabled}
+      aria-disabled={blocked === undefined ? undefined : true}
+      onClick={() => {
+        if (blocked === undefined) onClick();
+      }}
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
         strokeLinejoin="round" aria-hidden="true">
@@ -72,7 +75,12 @@ interface ToolProps {
 
 export function ShareButton({ open, onToggle, canAct }: ToolProps & { canAct: boolean }) {
   return (
-    <Ico label="Share this agent" on={open === "share"} disabled={!canAct} onClick={() => onToggle("share")}>
+    <Ico
+      label="Share this agent"
+      on={open === "share"}
+      blocked={canAct ? undefined : "Build the agent before sharing"}
+      onClick={() => onToggle("share")}
+    >
       <circle cx="18" cy="5" r="3" />
       <circle cx="6" cy="12" r="3" />
       <circle cx="18" cy="19" r="3" />

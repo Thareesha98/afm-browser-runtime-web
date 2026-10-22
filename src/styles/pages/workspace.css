@@ -1718,3 +1718,63 @@ label.u-group {
 .u-stage-foot.is-covered .u-ready {
   visibility: hidden;
 }
+
+/* ---- Polish after review ---- */
+
+/* an icon button that cannot be used yet still shows why; it only looks switched off */
+.u-ico.is-blocked {
+  opacity: 0.45;
+  cursor: default;
+}
+.u-ico.is-blocked:hover {
+  background: none;
+}
+
+/* a small loading note and a small red error beside a field's "required" */
+.u-spinner.sm {
+  width: 12px;
+  height: 12px;
+  border-width: 1.6px;
+}
+.u-loading,
+.u-field-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.u-loading {
+  color: var(--muted);
+}
+.u-field-error {
+  color: var(--bad);
+  font-weight: 600;
+}
+.u-field-error svg {
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+/* a darker grey line when the pointer is on a Model or Tools box, and while its settings window is open */
+.u-node:hover {
+  border-color: var(--line-hover);
+}
+.u-node.is-open {
+  box-shadow: 0 0 0 1px var(--line-hover);
+}
+.u-node.is-open:not(.bad) {
+  border-color: var(--line-hover);
+}
+.u-node-add-sm.is-open {
+  box-shadow: 0 0 0 1px var(--line-hover);
+}
+
+/* dark theme: the soft band round the field being typed in was too faint to see */
+[data-theme="dark"] .u-field:focus-within::after {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent);
+}
+[data-theme="dark"] .u-key-input:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent);
+}

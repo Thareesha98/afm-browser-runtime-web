@@ -46,7 +46,7 @@ describe("a thread whose agent did not start", () => {
     const out = list("not-ready", THREAD, "'OPENAI_API_KEY' is not in the host config");
     expect(out).toContain("Hi there");
     expect(out).toContain("xc-notready");
-    expect(out).toContain("OPENAI_API_KEY");
+    expect(out).toContain("Key not accepted");
     expect(out).toContain("Try again");
   });
 

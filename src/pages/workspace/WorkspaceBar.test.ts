@@ -19,7 +19,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { WorkspaceBar } from "./WorkspaceBar";
 
-function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean; runTip?: string; compact?: boolean }): string {
+function bar(state: { canRun: boolean; running: boolean; agentsOpen?: boolean; runTip?: string; compact?: boolean; canAct?: boolean }): string {
   return renderToStaticMarkup(
     createElement(WorkspaceBar, {
       agentName: "Demo",
@@ -112,5 +112,19 @@ describe("the header on a narrow window", () => {
 
   it("lets a long agent name shrink without losing the arrow", () => {
     expect(bar({ canRun: true, running: false })).toContain('class="u-agentname-text"');
+  });
+});
+
+describe("the Share button", () => {
+  it("is ready to use once the agent is built", () => {
+    const html = bar({ canRun: true, running: false, canAct: true });
+    expect(html).toContain('data-tip="Share this agent"');
+    expect(html).not.toContain("Build the agent before sharing");
+  });
+
+  it("says why it cannot be used while the agent is not built yet", () => {
+    const html = bar({ canRun: false, running: false, canAct: false });
+    expect(html).toContain('data-tip="Build the agent before sharing"');
+    expect(html).toContain('aria-label="Share this agent"');
   });
 });

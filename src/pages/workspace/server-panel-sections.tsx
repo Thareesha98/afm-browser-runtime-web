@@ -24,12 +24,14 @@ interface AuthFieldsProps {
   secretEdits: Record<string, string>;
   saved: (key: string) => boolean;
   rejected: boolean;
+  // the client id of a directory server is being looked up, or could not be
+  clientIdState?: "idle" | "loading" | "failed";
   onValue: (key: string, value: string) => void;
   onSecretEdit: (key: string, value: string) => void;
   onSecretBlur: () => void;
 }
 
-export function AuthFields({ fields, values, secretEdits, saved, rejected, onValue, onSecretEdit, onSecretBlur }: AuthFieldsProps) {
+export function AuthFields({ fields, values, secretEdits, saved, rejected, clientIdState = "idle", onValue, onSecretEdit, onSecretBlur }: AuthFieldsProps) {
   return (
     <>
       {fields.map((field) =>
@@ -65,6 +67,21 @@ export function AuthFields({ fields, values, secretEdits, saved, rejected, onVal
             <span className="u-label-row">
               <span className="u-label">{field.name}</span>
               <span className="u-row-meta">{field.required ? "required" : "optional"}</span>
+              {field.key === "client_id" && clientIdState === "loading" && (
+                <span className="u-loading" role="status">
+                  <span className="u-spinner sm" aria-hidden="true" />
+                  Loading…
+                </span>
+              )}
+              {field.key === "client_id" && clientIdState === "failed" && (values.client_id ?? "") === "" && (
+                <span className="u-field-error" role="alert">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7.5v5.5M12 16.5h.01" />
+                  </svg>
+                  Cannot obtain Client ID
+                </span>
+              )}
             </span>
             <input
               className="u-input mono"

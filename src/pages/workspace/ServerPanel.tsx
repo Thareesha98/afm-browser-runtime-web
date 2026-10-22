@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { serverAddress } from "@afm/engine";
+import { brief, logDetails } from "../../brief-error";
 import type { AgentMetadata } from "@afm/engine";
 import type { ProbeResult } from "../../worker-client/useStandaloneSession";
 import { removeMcpServer } from "./agent-source-edit";
@@ -111,6 +112,8 @@ export function ServerPanel({
     return seed;
   });
   const [probing, setProbing] = useState(false);
+  // the client id of a directory server is looked up when it is picked, which takes a moment and can fail
+  const [clientIdState, setClientIdState] = useState<"idle" | "loading" | "failed">("idle");
   const [found, setFound] = useState<ToolInfo[] | null>(null);
   const [probedUrl, setProbedUrl] = useState("");
   const [error, setError] = useState<string | null>(issue?.text ?? null);
@@ -162,11 +165,19 @@ export function ServerPanel({
   }, [pendingDirectoryProbe]);
 
   async function prepareSignIn(auth: OAuthSignIn, pick: number) {
-    setProbing(true);
-    const { clientId } = await resolveDirectoryClient(auth);
-    if (pick !== latestDirectoryPick.current) return;
-    setValues(signInValues(auth, clientId));
-    setProbing(false);
+    setClientIdState("loading");
+    try {
+      const { clientId } = await resolveDirectoryClient(auth);
+      if (pick !== latestDirectoryPick.current) return;
+      setValues(signInValues(auth, clientId));
+      // the lookup answers with an empty id when the server would not give one
+      if (clientId === "") logDetails(`No client ID could be obtained for ${auth.authorizeUrl} (registration: ${auth.registrationUrl ?? "none"})`);
+      setClientIdState(clientId === "" ? "failed" : "idle");
+    } catch (failure) {
+      if (pick !== latestDirectoryPick.current) return;
+      logDetails(failure instanceof Error ? failure.message : String(failure));
+      setClientIdState("failed");
+    }
   }
 
   function connectFromDirectory(entry: DirectoryEntry) {
@@ -180,6 +191,7 @@ export function ServerPanel({
     setProbedUrl("");
     setAllowed([]);
     setProbing(false);
+    setClientIdState("idle");
     if (entry.auth.type === "none") setPendingDirectoryProbe(true);
     if (entry.auth.type === "oauth2") void prepareSignIn(entry.auth, pick);
   }
@@ -236,7 +248,7 @@ export function ServerPanel({
       } catch (refusal) {
         if (refusal instanceof SignInRefusedError) {
           setProbing(false);
-          setError(refusal.message);
+          setError(brief(refusal.message));
           return;
         }
       }
@@ -404,6 +416,7 @@ export function ServerPanel({
                       secretEdits={secretEdits}
                       saved={secretStored}
                       rejected={rejected}
+                      clientIdState={clientIdState}
                       onValue={(key, value) => setValues((current) => ({ ...current, [key]: value }))}
                       onSecretEdit={(key, value) => setSecretEdits((current) => ({ ...current, [key]: value }))}
                       onSecretBlur={() => hasTypedSecret && void probe(true)}
@@ -412,12 +425,11 @@ export function ServerPanel({
                       <div className="u-signin-row">
                         <button
                           className="u-btn primary"
-                          disabled={incomplete}
+                          disabled={incomplete || clientIdState === "loading"}
                           onClick={() => signIn()}
                         >
                           Sign in
                         </button>
-                        <span className="u-row-meta">Opens the provider in a pop-up</span>
                       </div>
                     )}
                     {signInNote?.status === "confirm" && (
@@ -437,7 +449,7 @@ export function ServerPanel({
                     )}
                     {signInNote?.status === "failed" && signInNote.reason !== undefined && (
                       <div className="repair" ref={signInNoteRef}>
-                        <p className="repair-what">{signInNote.reason}</p>
+                        <p className="repair-what">{brief(signInNote.reason)}</p>
                       </div>
                     )}
                   </div>

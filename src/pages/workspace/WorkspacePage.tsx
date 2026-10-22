@@ -53,6 +53,7 @@ import { agentBrief, getSection } from "./agent-source-edit";
 import { useSettled } from "./use-settled";
 import { useThemeContext } from "../../app/ThemeContext";
 import { useMediaQuery } from "../../app/use-media-query";
+import { logDetails } from "../../brief-error";
 
 // below this width the header keeps only Run, Chat and Settings; Share and About sit beside Build / Raw
 const COMPACT_QUERY = "(max-width: 640px)";
@@ -151,7 +152,8 @@ export function WorkspacePage() {
       })
       .catch((error: unknown) => {
         if (cancelled) return;
-        setFileError(error instanceof Error ? error.message : String(error));
+        logDetails(error instanceof Error ? error.message : String(error));
+        setFileError("Couldn't load that file");
       })
       .finally(() => {
         if (!cancelled) setFileLoading(false);
@@ -332,7 +334,7 @@ export function WorkspacePage() {
       {fileLoading && <div className="draft-banner">Loading the agent file…</div>}
       {fileError !== null && (
         <div className="draft-banner draft-banner-error">
-          <span>Couldn't load that file: {fileError}</span>
+          <span>{fileError}</span>
         </div>
       )}
 
@@ -416,6 +418,11 @@ export function WorkspacePage() {
               openSide("tools");
             }}
             showRaw={rawRequest}
+            openPanel={{
+              model: overPanel === "model",
+              server: overPanel === "tools" ? serverEditing : null,
+              adding: overPanel === "tools" && serverEditing === null,
+            }}
             onOpenPanel={(panel) => openSide(panel)}
             chip={needs === null ? undefined : { needs, phase: chipPhase, onHold: setChipHeld }}
             toolbarExtras={
