@@ -29,7 +29,7 @@ describe("headerStatus", () => {
   });
 
   it("names the server while one of its tools runs", () => {
-    expect(headerStatus("streaming", "tool", "huggingface")).toEqual({ tone: "warn", label: "Using huggingface" });
+    expect(headerStatus("streaming", "tool", "huggingface")).toEqual({ tone: "warn", label: "Using Huggingface" });
     expect(headerStatus("streaming", "tool")?.label).toBe("Using a tool");
   });
 

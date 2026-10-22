@@ -16,6 +16,7 @@
 
 import type { AgentMetadata } from "@afm/engine";
 import type { AfmIssue } from "../../agent-validation";
+import { displayName } from "./setup-check";
 
 export type ReadyFix = "model" | "tools" | "settings" | "raw" | "chat";
 
@@ -100,7 +101,7 @@ export function readiness(input: ReadinessInput): Readiness {
       return {
         tone: "bad",
         lead: "Running - ",
-        subject: `${serverNameByUrl.get(broken) ?? broken} did not answer`,
+        subject: `${nameOf(serverNameByUrl, broken)} did not answer`,
         fix: "tools",
       };
     }
@@ -136,6 +137,11 @@ export function readiness(input: ReadinessInput): Readiness {
 }
 
 type McpServers = NonNullable<NonNullable<AgentMetadata["tools"]>["mcp"]>;
+
+function nameOf(names: Map<string, string>, url: string): string {
+  const name = names.get(url);
+  return name === undefined ? url : displayName(name);
+}
 
 export function serverNameByUrl(servers: McpServers): Map<string, string> {
   const byUrl = new Map<string, string>();
