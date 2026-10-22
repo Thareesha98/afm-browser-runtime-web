@@ -17,6 +17,7 @@
 import type { AgentStatus } from "../../chat-state";
 import { AgentAvatar } from "../../chat/AgentAvatar";
 import type { ActivityPhase } from "./agent-activity";
+import { displayName } from "./setup-check";
 
 export interface ChatStatus {
   tone: "ok" | "warn" | "bad";
@@ -32,7 +33,7 @@ const IDLE: Record<Exclude<AgentStatus, "streaming">, ChatStatus | null> = {
 
 export function headerStatus(status: AgentStatus, phase: ActivityPhase, server?: string): ChatStatus | null {
   if (status !== "streaming") return IDLE[status];
-  if (phase === "tool") return { tone: "warn", label: server === undefined ? "Using a tool" : `Using ${server}` };
+  if (phase === "tool") return { tone: "warn", label: server === undefined ? "Using a tool" : `Using ${displayName(server)}` };
   return phase === "answering" ? { tone: "ok", label: "Answering" } : { tone: "warn", label: "Thinking" };
 }
 

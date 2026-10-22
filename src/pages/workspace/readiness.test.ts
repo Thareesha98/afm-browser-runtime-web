@@ -104,7 +104,7 @@ describe("readiness", () => {
       }),
     );
     expect(r.tone).toBe("bad");
-    expect(sentence(r)).toBe("Running - github did not answer");
+    expect(sentence(r)).toBe("Running - Github did not answer");
   });
 
   it("says it is running once the agent on screen has started", () => {

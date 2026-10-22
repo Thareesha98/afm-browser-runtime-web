@@ -24,6 +24,7 @@ import { shortModelLabel, findProvider } from "./model-catalog";
 import { ProviderMark } from "./ProviderMark";
 import type { ActivityPhase, AgentActivity } from "./agent-activity";
 import { markColour, providerColour } from "./mark-colour";
+import { displayName } from "./setup-check";
 
 type McpServer = NonNullable<NonNullable<AgentMetadata["tools"]>["mcp"]>[number];
 
@@ -54,7 +55,7 @@ function serverSummary(server: McpServer): { tools: string; state: "ready" | "si
   const allowed = server.tool_filter?.allow?.length;
   const auth = server.transport.type === "http" ? server.transport.authentication : undefined;
   return {
-    tools: allowed === undefined ? "all tools" : `${allowed} tool${allowed === 1 ? "" : "s"}`,
+    tools: allowed === undefined ? "All tools" : `${allowed} tool${allowed === 1 ? "" : "s"}`,
     state: isInteractiveOAuth(auth) ? "sign-in" : "ready",
   };
 }
@@ -203,7 +204,7 @@ export function BuildPane({
                 <span className="u-node-name">{modelLabel}</span>
                 <span className="u-node-sub">
                   {step("model") !== null
-                    ? "choose one"
+                    ? "Choose one"
                     : (findProvider(metadata.model?.provider ?? "")?.label ?? metadata.model?.provider ?? "")}
                 </span>
               </span>
@@ -240,9 +241,9 @@ export function BuildPane({
                   {server.name.trim().charAt(0).toUpperCase()}
                 </span>
                 <span className="u-node-body">
-                  <span className="u-node-name">{server.name}</span>
+                  <span className="u-node-name">{displayName(server.name)}</span>
                   <span className={`u-node-sub ${state === "failed" || brokenServer(server) ? "bad" : ""}`}>
-                    {state === "failed" ? reach.failed[urlOf(server)!] : brokenServer(server) ? "no answer" : summary.tools}
+                    {state === "failed" ? reach.failed[urlOf(server)!] : brokenServer(server) ? "No answer" : summary.tools}
                   </span>
                 </span>
               </button>

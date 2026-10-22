@@ -19,6 +19,7 @@ import { MessageList } from "../../chat/MessageList";
 import { Composer } from "../../chat/Composer";
 import { PermissionRequestModal } from "../../overlay/PermissionRequestModal";
 import type { useStandaloneSession } from "../../worker-client/useStandaloneSession";
+import { displayName } from "./setup-check";
 
 const WAITING_PLACEHOLDER: Partial<Record<AgentStatus, string>> = {
   "no-agent": "Press Run to start…",
@@ -80,7 +81,10 @@ export function ChatPane({
           onRegenerate={regenerate}
           onEdit={editMessage}
           onDetachFile={detachFile}
-          serverOf={(toolName) => serverNameByUrl.get(state.tools.find((tool) => tool.name === toolName)?.serverId ?? "")}
+          serverOf={(toolName) => {
+            const name = serverNameByUrl.get(state.tools.find((tool) => tool.name === toolName)?.serverId ?? "");
+            return name === undefined ? undefined : displayName(name);
+          }}
         />
       )}
 

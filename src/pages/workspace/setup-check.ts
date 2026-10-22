@@ -48,6 +48,8 @@ export interface Issue {
 
 export const displayName = (name: string): string => name.charAt(0).toUpperCase() + name.slice(1);
 
+export const rowLabel = (row: Pick<SetupRow, "kind" | "name">): string => (row.kind === "server" ? displayName(row.name) : row.name);
+
 export const serverRowId = (name: string): string => `server:${name}`;
 
 export function credentialOf(server: McpServer): Credential {
