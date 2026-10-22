@@ -35,6 +35,14 @@ interface Props {
   onOpenServer: (name: string | null) => void;
   activity: AgentActivity;
   reach: ServerReach;
+  openPanel?: OpenPanel;
+}
+
+// Which box has its settings window open, so it stays outlined while you are away
+export interface OpenPanel {
+  model: boolean;
+  server: string | null;
+  adding: boolean;
 }
 
 export interface ServerReach {
@@ -78,6 +86,7 @@ export function BuildPane({
   onOpenServer,
   activity,
   reach,
+  openPanel,
 }: Props) {
   const [focus, setFocus] = useState<"Role" | "Instructions" | null>(null);
   const { phase } = activity;
@@ -183,7 +192,7 @@ export function BuildPane({
               className={lead(phase === "thinking", phase === "from-model" || phase === "answering", activity.modelBroken)}
             />
             <button
-              className={`u-node ${modelLive ? "live" : ""} ${activity.modelBroken ? "bad" : ""}`}
+              className={`u-node ${modelLive ? "live" : ""} ${activity.modelBroken ? "bad" : ""} ${openPanel?.model === true ? "is-open" : ""}`}
               onClick={onOpenModel}
               title={activity.modelBroken ? `${modelName} - this call did not come back` : modelName}
             >
@@ -207,7 +216,7 @@ export function BuildPane({
           <div className="u-rail-label">
             TOOLS
             {servers.length > 0 && (
-              <button className="u-node-add-sm" onClick={() => onOpenServer(null)} data-tip="Connect tools"
+              <button className={`u-node-add-sm${openPanel?.adding === true ? " is-open" : ""}`} onClick={() => onOpenServer(null)} data-tip="Connect tools"
                 aria-label="Connect tools">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"
                   aria-hidden="true">
@@ -224,7 +233,7 @@ export function BuildPane({
             <div className="u-rail-row" key={server.name}>
               <span className={lead(onServer(server, "tool"), onServer(server, "from-tool"), brokenServer(server))} />
               <button
-                className={`u-node ${nodeTone(summary.state, state)} ${onServer(server, "tool") ? "live" : ""}`}
+                className={`u-node ${nodeTone(summary.state, state)} ${onServer(server, "tool") ? "live" : ""} ${openPanel?.server === server.name ? "is-open" : ""}`}
                 onClick={() => onOpenServer(server.name)}
               >
                 <span className="u-mk" style={{ background: markColour(server.name) }}>
@@ -244,7 +253,7 @@ export function BuildPane({
         {servers.length === 0 && (
           <div className="u-rail-row">
             <span className="u-lead" />
-            <button className="u-node add" onClick={() => onOpenServer(null)}>
+            <button className={`u-node add${openPanel?.adding === true ? " is-open" : ""}`} onClick={() => onOpenServer(null)}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
                 strokeLinejoin="round" aria-hidden="true" width="13" height="13">
                 <path d="M12 5v14M5 12h14" />

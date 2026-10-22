@@ -43,7 +43,7 @@ function SignInFact({ auth, title }: { auth: DirectoryAuth; title: string }) {
   return (
     <Fact label="Sign-in">
       {auth.type === "oauth2"
-        ? `You sign in with ${title} in a pop-up, and AFM never sees your password.`
+        ? `You will sign in with ${title}.`
         : "None. This server answers without signing in."}
     </Fact>
   );

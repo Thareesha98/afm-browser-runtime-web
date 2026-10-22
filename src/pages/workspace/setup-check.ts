@@ -17,6 +17,7 @@ import { isInteractiveOAuth } from "@afm/adapter-auth";
 import type { AgentMetadata } from "@afm/engine";
 import type { Failure, FailureKind } from "../../failure";
 import type { ProbeResult } from "../../worker-client/useStandaloneSession";
+import { logDetails } from "../../brief-error";
 import { findProvider, shortModelLabel } from "./model-catalog";
 
 type McpServer = NonNullable<NonNullable<AgentMetadata["tools"]>["mcp"]>[number];
@@ -62,6 +63,14 @@ const WAITING_NOTE: Record<Credential, string> = {
   key: "",
 };
 
+// An error with no known cause: a short label on the screen, the full text in the console.
+const OTHER_NOTE: Record<Credential, string> = {
+  none: "MCP error",
+  token: "MCP error",
+  signin: "MCP error",
+  key: "Model error",
+};
+
 const SENTENCE: Record<FailureKind, (who: string, credential: Credential, message: string) => string> = {
   missing: (who, credential) => (credential === "signin" ? `${who} needs you to sign in.` : `${who} needs a ${credential === "key" ? "key" : "token"}.`),
   signin: (who) => `${who}'s sign-in has ended. Sign in to carry on.`,
@@ -71,7 +80,7 @@ const SENTENCE: Record<FailureKind, (who: string, credential: Credential, messag
   busy: (who) => `${who} is busy right now. Try again in a moment.`,
   unreachable: (who) => `${who} can't be reached from this browser. Check the address, or try again.`,
   redirected: (who) => `${who} answered with a redirect, which AFM does not follow. Use the address it redirects to.`,
-  other: (_who, _credential, message) => message,
+  other: (_who, credential) => OTHER_NOTE[credential],
 };
 
 export function issueSentence(kind: FailureKind, who: string, credential: Credential, message = ""): string {
@@ -149,7 +158,11 @@ function failureResult(failure: Failure, { credential, hadSignIn }: Context): Ro
   if (kind === "missing" || (kind === "signin" && !hadSignIn)) return { state: "needs", note: MISSING_NOTE[credential], failure: "missing" };
   if (kind === "signin") return { state: "failed", note: REFUSED_NOTE.signin, failure: kind };
   if (kind === "rejected") return { state: "failed", note: REFUSED_NOTE[credential], failure: kind };
-  return { state: "failed", note: kind === "other" ? message : FAILURE_NOTE[kind], failure: kind };
+  if (kind === "other") {
+    logDetails(message);
+    return { state: "failed", note: OTHER_NOTE[credential], failure: kind };
+  }
+  return { state: "failed", note: FAILURE_NOTE[kind], failure: kind };
 }
 
 export function resultOf(probe: ProbeResult, context: Context): RowResult {

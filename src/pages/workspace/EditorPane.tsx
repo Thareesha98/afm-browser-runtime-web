@@ -20,7 +20,7 @@ import { BuildPane } from "./BuildPane";
 import { ReadinessChip, chipAnnouncement } from "./ReadinessChip";
 import type { Needs } from "./readiness";
 import type { ChipPhase } from "./use-ready-chip";
-import type { ServerReach } from "./BuildPane";
+import type { OpenPanel, ServerReach } from "./BuildPane";
 import type { AgentActivity } from "./agent-activity";
 import { buildableAgent, collectAfmIssues } from "../../agent-validation";
 import { ModeSwitch } from "./ViewControls";
@@ -47,6 +47,7 @@ interface Props extends EditableProps {
   chip?: { needs: Needs; phase: ChipPhase; onHold: (held: boolean) => void };
   // buttons that sit at the end of the Build / Raw row on a narrow window (they are in the header otherwise)
   toolbarExtras?: ReactNode;
+  openPanel?: OpenPanel;
 }
 
 function agentFilename(content: string): string | undefined {
@@ -59,7 +60,7 @@ function agentFilename(content: string): string | undefined {
   return `${slug === "" ? "agent" : slug}.afm.md`;
 }
 
-export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, onOpenPanel, chip, toolbarExtras }: Props) {
+export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, onOpenPanel, chip, toolbarExtras, openPanel }: Props) {
   const [mode, setMode] = useState<EditorMode>("simple");
   const firstRaw = useRef(showRaw);
   useEffect(() => {
@@ -128,6 +129,7 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
           reach={reach}
           onOpenModel={onOpenModel}
           onOpenServer={onOpenServer}
+          openPanel={openPanel}
         />
       )}
     </>
@@ -174,6 +176,7 @@ function SimpleEditor({
   onOpenModel,
   onOpenServer,
   onFix,
+  openPanel,
 }: EditableProps & {
   buildable: BuildableAgent;
   issues: ReturnType<typeof collectAfmIssues>;
@@ -182,6 +185,7 @@ function SimpleEditor({
   onOpenModel: () => void;
   onOpenServer: (name: string | null) => void;
   onFix: (target: import("./issue-words").IssueTarget) => void;
+  openPanel?: OpenPanel;
 }) {
   if (!buildable.ok) {
     return (
@@ -212,6 +216,7 @@ function SimpleEditor({
           onOpenServer={onOpenServer}
           activity={activity}
           reach={reach}
+          openPanel={openPanel}
       />
     </div>
   );

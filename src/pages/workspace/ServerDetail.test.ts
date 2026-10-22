@@ -43,9 +43,9 @@ describe("a server's detail", () => {
     expect(html).toContain('target="_blank"');
   });
 
-  it("says a provider sign-in happens in a pop-up and never reaches AFM", () => {
+  it("says who you will sign in with", () => {
     const html = detail("notion");
-    expect(html).toContain("You sign in with Notion in a pop-up, and AFM never sees your password.");
+    expect(html).toContain("You will sign in with Notion.");
     expect(html).not.toContain("Needs a key");
   });
 

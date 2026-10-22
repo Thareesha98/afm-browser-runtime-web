@@ -108,8 +108,12 @@ describe("resultOf", () => {
     expect(resultOf({ failure: { kind: "redirected", message: "" } }, context)).toMatchObject({ state: "failed", note: "Redirects elsewhere", failure: "redirected" });
   });
 
-  it("keeps the server's own words for anything it cannot place", () => {
-    expect(resultOf({ failure: { kind: "other", message: "Odd reply" } }, context)).toMatchObject({ state: "failed", note: "Odd reply" });
+  it("says MCP error for anything it cannot place, and keeps the long text off the screen", () => {
+    expect(resultOf({ failure: { kind: "other", message: "Odd reply" } }, context)).toMatchObject({ state: "failed", note: "MCP error" });
+  });
+
+  it("says Model error when it is the model that failed", () => {
+    expect(resultOf({ failure: { kind: "other", message: "Odd reply" } }, { ...context, credential: "key" })).toMatchObject({ state: "failed", note: "Model error" });
   });
 });
 
@@ -129,7 +133,7 @@ describe("issueSentence", () => {
     expect(issueSentence("rejected", "api.openai.com", "key")).toBe("api.openai.com did not accept this key. Paste a new one.");
     expect(issueSentence("missing", "Notion", "signin")).toBe("Notion needs you to sign in.");
     expect(issueSentence("redirected", "Notion", "token")).toBe("Notion answered with a redirect, which AFM does not follow. Use the address it redirects to.");
-    expect(issueSentence("other", "Notion", "signin", "Odd reply")).toBe("Odd reply");
+    expect(issueSentence("other", "Notion", "signin", "Odd reply")).toBe("MCP error");
   });
 });
 

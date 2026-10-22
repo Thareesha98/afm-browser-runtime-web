@@ -16,6 +16,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { brief } from "../../brief-error";
 import { EXAMPLES } from "../../examples";
 import { MODEL_PROVIDERS, findProvider } from "./model-catalog";
 import type { AgentModelRef } from "../../protocol";
@@ -138,7 +139,7 @@ export function StartHere({
       }
       onUseSource(text);
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : String(error));
+      setImportError(brief(error instanceof Error ? error.message : String(error)));
     } finally {
       setFetching(false);
     }
@@ -395,7 +396,7 @@ export function StartHere({
             {writing ? "Writing the file…" : "Write the agent file"}
           </button>
         </form>
-        {state.draftError !== null && <p className="u-errcard">{state.draftError}</p>}
+        {state.draftError !== null && <p className="u-errcard">{brief(state.draftError)}</p>}
       </SetupColumn>
     );
   }

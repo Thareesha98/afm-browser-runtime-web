@@ -1257,3 +1257,23 @@
     display: none;
   }
 }
+
+/* Model and Tools as cards: the card carries the hover and "settings are open" outline */
+@media (max-width: 860px) {
+  .u-node:hover,
+  .u-node.is-open,
+  .u-node.is-open:not(.bad) {
+    border-color: transparent;
+    box-shadow: none;
+  }
+  .u-rail-group:has(.u-node:hover),
+  .u-rail-group:has(.u-node.is-open) {
+    border-color: var(--line-hover);
+  }
+  .u-rail-group:has(.u-node.is-open) {
+    box-shadow: 0 0 0 1px var(--line-hover);
+  }
+  [data-theme="dark"] .u-field-text:focus {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent);
+  }
+}
