@@ -17,6 +17,7 @@
 import { useEffect, useReducer, useRef } from "react";
 import { chatReducer, initialChatState } from "../chat-state";
 import type { OAuthProviderRef } from "@afm/adapter-auth";
+import { passkey } from "@afm/adapter-secret";
 import type { ClientMessage, ServerMessage, AgentModelRef, ImageAttachment, SignInVetting, ToolInfo } from "../protocol";
 import type { AgentMetadata } from "@afm/engine";
 import { MAX_TOTAL_BYTES, extractFiles } from "../attachments";
@@ -107,6 +108,7 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
         started.addEventListener("message", onMessage);
         for (const queued of outboxRef.current.splice(0)) started.postMessage(queued);
         started.postMessage({ type: "list-secrets" } satisfies ClientMessage);
+        started.postMessage({ type: "list-passkeys" } satisfies ClientMessage);
       },
       (error: unknown) => {
         if (live) dispatch({ type: "server", message: { type: "error", message: `The agent could not be started: ${describeError(error)}` } });
@@ -206,12 +208,25 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
     post({ type: "remove-secret", name });
   }
 
-  function storeSecret(name: string, value: string, address?: string): void {
+  async function storeSecret(name: string, value: string, keep: boolean, address?: string): Promise<boolean> {
     post({ type: "set-secret", name, value, address });
+    return keep ? rememberWithPasskey(name) : false;
   }
 
-  function startOAuthSignIn(provider: OAuthProviderRef, vetting: SignInVetting): Promise<SignInOutcome> {
-    return oauth.start(provider, vetting);
+  function rememberWithPasskey(name: string): Promise<boolean> {
+    return passkey.seal(post, name);
+  }
+
+  function forgetPasskey(name: string): void {
+    post({ type: "passkey-forget", name });
+  }
+
+  function openKeys(): Promise<boolean> {
+    return passkey.unlockAll(post);
+  }
+
+  function startOAuthSignIn(provider: OAuthProviderRef, vetting: SignInVetting, remember = false): Promise<SignInOutcome> {
+    return oauth.start(provider, vetting, remember);
   }
 
   function signOutOAuth(provider: OAuthProviderRef): void {
@@ -270,6 +285,9 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
     regenerate,
     editMessage,
     storeSecret,
+    rememberWithPasskey,
+    forgetPasskey,
+    openKeys,
     removeSecret,
     startOAuthSignIn,
     signOutOAuth,

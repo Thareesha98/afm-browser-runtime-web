@@ -45,7 +45,7 @@ interface Props {
   onProbe: (server: NonNullable<AgentMetadata["tools"]>) => Promise<ProbeResult>;
   onSignIn: (provider: OAuthProviderRef, vetting: SignInVetting) => Promise<SignInOutcome>;
   onSignOut: (provider: OAuthProviderRef) => void;
-  onStoreSecret: (name: string, value: string, address?: string) => void;
+  onStoreSecret: (name: string, value: string, keep: boolean, address?: string) => void;
   knownSecrets: string[];
   issue: Issue | null;
   onBack?: () => void;
@@ -297,7 +297,7 @@ export function ServerPanel({
       allowed,
     });
     for (const secret of next.secrets) {
-      onStoreSecret(secret.name, secret.value, serverAddress(url.trim()));
+      onStoreSecret(secret.name, secret.value, false, serverAddress(url.trim()));
     }
     onApply(next.content);
     if (existingUrl !== "" && existingUrl !== url.trim()) onServerDropped(existingUrl);

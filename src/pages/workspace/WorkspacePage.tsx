@@ -398,7 +398,7 @@ export function WorkspacePage() {
                   }}
                   onBlank={closeLeft}
                   onGenerate={(prompt, model, final) => session.generateDraft(prompt, model, final)}
-                  onSaveKey={session.storeSecret}
+                  onSaveKey={(name, value) => void session.storeSecret(name, value, false)}
                   onDismissDraft={session.dismissDraft}
                 />
               )}
@@ -516,7 +516,7 @@ export function WorkspacePage() {
                     setContent(next);
                     setup.changed(MODEL_ROW);
                   }}
-                  onSaveKey={session.storeSecret}
+                  onSaveKey={(name, value) => void session.storeSecret(name, value, false)}
                   onBack={backToSetup ? leavePanel : undefined}
                   onClose={leavePanel}
                 />
