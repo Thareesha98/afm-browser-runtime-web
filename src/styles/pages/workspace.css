@@ -1772,3 +1772,27 @@ label.u-group {
 [data-theme="dark"] .u-field:focus-within::after {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent);
 }
+
+/* The Model window: a little more room between its parts */
+.u-panel-body.is-model .u-group {
+  margin-bottom: 22px;
+}
+.u-panel-body.is-model .u-label {
+  margin-bottom: 10px;
+}
+.u-panel-body.is-model .u-label-row {
+  margin-bottom: 10px;
+}
+.u-panel-body.is-model .u-pills {
+  gap: 8px;
+}
+.u-panel-body.is-model .u-row {
+  padding: 12px 13px;
+  gap: 12px;
+}
+.u-panel-body.is-model .u-key-input {
+  margin-top: 0;
+}
+.u-panel-body.is-model .u-hint {
+  margin-top: 10px;
+}
