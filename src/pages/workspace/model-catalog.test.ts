@@ -40,4 +40,32 @@ describe("the model catalogue", () => {
     expect(shortModelLabel("gpt-4o-mini")).toBe("GPT-4o mini");
     expect(shortModelLabel("some-new-model")).toBe("some-new-model");
   });
+
+  describe("OpenAI", () => {
+    const openai = findProvider("openai")!;
+    const ids = openai.models.map((model) => model.id);
+
+    it("lists the six newest models first, the balanced one leading", () => {
+      expect(ids.slice(0, 6)).toEqual(["gpt-6.1-sol", "gpt-6-astra", "gpt-6-sol", "gpt-6-luna", "gpt-5.6-sol", "gpt-5.6-terra"]);
+    });
+
+    it("starts from the balanced model wherever the first model is the default", () => {
+      expect(openai.models[0]?.id).toBe("gpt-6.1-sol");
+    });
+
+    it("still lists the older models, so an agent that names one keeps its label", () => {
+      expect(ids).toEqual(expect.arrayContaining(["gpt-4o", "gpt-4o-mini", "gpt-4.1", "gpt-4.1-mini"]));
+      expect(shortModelLabel("gpt-4o")).toBe("GPT-4o");
+    });
+
+    it("gives each new model a label that reads like its id", () => {
+      expect(shortModelLabel("gpt-6-astra")).toBe("GPT-6 Astra");
+      expect(shortModelLabel("gpt-6.1-sol")).toBe("GPT-6.1 Sol");
+      expect(shortModelLabel("gpt-5.6-terra")).toBe("GPT-5.6 Terra");
+    });
+
+    it("writes every id in a form a file and an address can carry", () => {
+      for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/);
+    });
+  });
 });
