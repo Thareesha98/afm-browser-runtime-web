@@ -14,12 +14,29 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createOAuthManager, type OAuthManagerDeps } from "./oauth-manager";
 import { authorizationCodeRefreshKey, type KeyValueStore, type OAuthProviderRef } from "@afm/adapter-auth";
 import { SignInRequiredError } from "./failure";
 import type { ServerMessage } from "./protocol";
+import type { passkey } from "@afm/adapter-secret";
 import { createWorkerSecretStore } from "./worker-secret-store";
+
+const { sealedDisk } = vi.hoisted(() => ({ sealedDisk: new Map<string, passkey.StoredSecret>() }));
+
+vi.mock("@afm/adapter-secret", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@afm/adapter-secret")>();
+  return {
+    ...actual,
+    passkey: {
+      ...actual.passkey,
+      saveBlob: async (name: string, blob: passkey.StoredSecret) => void sealedDisk.set(name, blob),
+      loadBlob: async (name: string) => sealedDisk.get(name) ?? null,
+      removeBlob: async (name: string) => void sealedDisk.delete(name),
+      listNames: async () => [...sealedDisk.keys()],
+    },
+  };
+});
 
 const MCP = "https://mcp.example.com/mcp";
 
@@ -118,6 +135,39 @@ describe("createOAuthManager", () => {
     await manager.completeSignIn("id-team", "the-code", new URL(emitted.url!.url).searchParams.get("state")!);
     expect(await manager.getAccessToken(team)).toBe("at");
     await expect(manager.getAccessToken(other)).rejects.toBeInstanceOf(SignInRequiredError);
+  });
+
+  it("picks a saved sign-in up again with no new sign-in, once the page has reloaded", async () => {
+    const refreshStore = memoryStore();
+    refreshStore.set(authorizationCodeRefreshKey(provider), "saved-rt");
+    const bodies: string[] = [];
+    const token = (init?: RequestInit) => {
+      bodies.push(String(init?.body));
+      return Response.json(issued);
+    };
+    const { manager } = makeManager({ refreshStore, fetchFn: authServerFetch({ token }) });
+
+    expect(await manager.getAccessToken(provider)).toBe("at");
+    expect(new URLSearchParams(bodies[0]).get("refresh_token")).toBe("saved-rt");
+    expect(refreshStore.get(authorizationCodeRefreshKey(provider))).toBe("rt");
+  });
+
+  it("asks for a new sign-in when the saved one has been turned down", async () => {
+    const refreshStore = memoryStore();
+    refreshStore.set(authorizationCodeRefreshKey(provider), "revoked-rt");
+    const token = () => Response.json({ error: "invalid_grant" }, { status: 400 });
+    const { manager } = makeManager({ refreshStore, fetchFn: authServerFetch({ token }) });
+
+    await expect(manager.getAccessToken(provider)).rejects.toBeInstanceOf(SignInRequiredError);
+  });
+
+  it("asks for a new sign-in when the server's sign-in details cannot be found", async () => {
+    const refreshStore = memoryStore();
+    refreshStore.set(authorizationCodeRefreshKey(provider), "saved-rt");
+    const { manager } = makeManager({ refreshStore, fetchFn: authServerFetch({ as: null }) });
+
+    await expect(manager.getAccessToken(provider)).rejects.toBeInstanceOf(SignInRequiredError);
+    expect(refreshStore.get(authorizationCodeRefreshKey(provider))).toBe("saved-rt");
   });
 
   it("reports a state mismatch as a failed sign-in rather than throwing", async () => {
@@ -309,6 +359,7 @@ describe("a sign-in held by the real worker secret store", () => {
   function rotatingServer() {
     let n = 0;
     const valid = new Set<string>();
+    let revoked = false;
     return ((init) => {
       const body = new URLSearchParams(String((init as RequestInit).body));
       if (body.get("grant_type") === "authorization_code") {
@@ -317,7 +368,10 @@ describe("a sign-in held by the real worker secret store", () => {
         return Response.json({ access_token: "at", refresh_token: token, expires_in: 0 });
       }
       const refreshToken = body.get("refresh_token")!;
-      if (!valid.has(refreshToken)) return Response.json({ error: "invalid_grant" }, { status: 400 });
+      if (revoked || !valid.has(refreshToken)) {
+        revoked = true;
+        return Response.json({ error: "invalid_grant" }, { status: 400 });
+      }
       valid.delete(refreshToken);
       const next = `R${n++}`;
       valid.add(next);
@@ -325,22 +379,36 @@ describe("a sign-in held by the real worker secret store", () => {
     }) as (init?: RequestInit) => Response;
   }
 
-  async function signedInTab() {
+  function tab(token = rotatingServer()) {
     const posted: ServerMessage[] = [];
     const store = createWorkerSecretStore((message) => posted.push(message));
     let authorizeUrl = "";
     const manager = createOAuthManager({
-      fetchFn: authServerFetch({ token: rotatingServer() }),
+      fetchFn: authServerFetch({ token }),
       redirectUri: "https://afm.example/",
       refreshStore: store.refreshStore,
       emitAuthorizeUrl: (_id, url) => (authorizeUrl = url),
       emitSignInConfirm: () => {},
       emitSignInResult: () => {},
     });
-    await manager.startSignIn("s1", provider, listed);
-    await manager.completeSignIn("s1", "code", new URL(authorizeUrl).searchParams.get("state")!);
-    return { store, manager, posted };
+    return { store, manager, posted, state: () => new URL(authorizeUrl).searchParams.get("state")! };
   }
+
+  async function signedInTab(token?: ReturnType<typeof rotatingServer>) {
+    const signedIn = tab(token);
+    await signedIn.manager.startSignIn("s1", provider, listed);
+    await signedIn.manager.completeSignIn("s1", "code", signedIn.state());
+    return signedIn;
+  }
+
+  async function sealedTab(token: ReturnType<typeof rotatingServer>, key: CryptoKey) {
+    const first = await signedInTab(token);
+    first.store.seal(authorizationCodeRefreshKey(provider), key, new Uint8Array([1]), new Uint8Array([2]));
+    await vi.waitFor(() => expect(sealedDisk.has(authorizationCodeRefreshKey(provider))).toBe(true));
+    return first;
+  }
+
+  const newKey = () => crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 
   it("keeps the newest refresh token in memory as the server rotates it, and tells the page only its name", async () => {
     const { store, manager, posted } = await signedInTab();
@@ -355,5 +423,51 @@ describe("a sign-in held by the real worker secret store", () => {
     manager.signOut(provider);
     expect(store.refreshStore.get(authorizationCodeRefreshKey(provider))).toBeNull();
     await expect(manager.getAccessToken(provider)).rejects.toBeInstanceOf(SignInRequiredError);
+  });
+
+  it("restores a rotated refresh token after a reload, with no sign-in needed", async () => {
+    sealedDisk.clear();
+    const token = rotatingServer();
+    const key = await newKey();
+    const first = await sealedTab(token, key);
+
+    await first.manager.getAccessToken(provider);
+    await first.manager.getAccessToken(provider);
+
+    const second = tab(token);
+    second.store.acceptUnlock(authorizationCodeRefreshKey(provider), key);
+    await second.store.opened();
+    await expect(second.manager.getAccessToken(provider)).resolves.toBe("at");
+  });
+
+  it("restores once when several calls arrive together after a reload", async () => {
+    sealedDisk.clear();
+    const token = rotatingServer();
+    const key = await newKey();
+    await sealedTab(token, key);
+
+    const second = tab(token);
+    second.store.acceptUnlock(authorizationCodeRefreshKey(provider), key);
+    await second.store.opened();
+    const together = await Promise.all([second.manager.getAccessToken(provider), second.manager.getAccessToken(provider), second.manager.getAccessToken(provider)]);
+
+    expect(together).toEqual(["at", "at", "at"]);
+    await expect(second.manager.getAccessToken(provider)).resolves.toBe("at");
+  });
+
+  it("needs a sign-in again once the session and its sealed copy are forgotten", async () => {
+    sealedDisk.clear();
+    const token = rotatingServer();
+    const key = await newKey();
+    const first = await sealedTab(token, key);
+
+    first.manager.signOut(provider);
+    first.store.forgetSealed(authorizationCodeRefreshKey(provider));
+    await vi.waitFor(() => expect(sealedDisk.has(authorizationCodeRefreshKey(provider))).toBe(false));
+
+    const second = tab(token);
+    second.store.acceptUnlock(authorizationCodeRefreshKey(provider), key);
+    await second.store.opened();
+    await expect(second.manager.getAccessToken(provider)).rejects.toBeInstanceOf(SignInRequiredError);
   });
 });

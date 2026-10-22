@@ -46,6 +46,7 @@ export interface OAuthManager {
 export function createOAuthManager(deps: OAuthManagerDeps): OAuthManager {
   const sessions = new Map<string, AuthorizationCodeSession>();
   const inFlight = new Map<string, OAuthProviderRef>();
+  const restoring = new Map<string, Promise<void>>();
 
   function sessionFor(provider: OAuthProviderRef): AuthorizationCodeSession {
     const key = authorizationCodeProviderKey(provider);
@@ -57,9 +58,27 @@ export function createOAuthManager(deps: OAuthManagerDeps): OAuthManager {
     return session;
   }
 
+  function restoreSaved(provider: OAuthProviderRef, session: AuthorizationCodeSession): Promise<void> {
+    const key = authorizationCodeProviderKey(provider);
+    let restore = restoring.get(key);
+    if (restore === undefined) {
+      restore = discoverSignInServer(provider, deps)
+        .then((server) => session.restore(server, deps.fetchFn))
+        .then(
+          () => undefined,
+          () => undefined,
+        )
+        .finally(() => restoring.delete(key));
+      restoring.set(key, restore);
+    }
+    return restore;
+  }
+
   return {
     async getAccessToken(provider) {
-      const token = await sessionFor(provider).getAccessToken(deps.fetchFn);
+      const session = sessionFor(provider);
+      if (session.hasSavedSession()) await restoreSaved(provider, session);
+      const token = await session.getAccessToken(deps.fetchFn);
       if (token !== null) return token;
       throw new SignInRequiredError();
     },
