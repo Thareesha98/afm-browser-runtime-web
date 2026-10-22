@@ -16,13 +16,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { brief } from "../../brief-error";
+import { brief, logDetails } from "../../brief-error";
 import { EXAMPLES } from "../../examples";
 import { MODEL_PROVIDERS, findProvider } from "./model-catalog";
 import type { AgentModelRef } from "../../protocol";
 import type { ChatState } from "../../chat-state";
 import { resolveContent, normalizeAgentFileUrl } from "../../load-paths";
-import { agentFileFetch } from "../../tool-factory";
+import { McpProxyRequiredError, agentFileFetch } from "../../tool-factory";
 
 function SetupColumn({ children, slide = false }: { children: ReactNode; slide?: boolean }) {
   return (
@@ -139,7 +139,13 @@ export function StartHere({
       }
       onUseSource(text);
     } catch (error) {
-      setImportError(brief(error instanceof Error ? error.message : String(error)));
+      if (error instanceof McpProxyRequiredError) {
+        // opening a link needs the proxy; this is not an MCP problem, so it does not say MCP
+        logDetails(error.message);
+        setImportError("Can't open links on this site");
+      } else {
+        setImportError(brief(error instanceof Error ? error.message : String(error)));
+      }
     } finally {
       setFetching(false);
     }
