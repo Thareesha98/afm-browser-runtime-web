@@ -43,7 +43,7 @@ import { LEFT_TITLE, NOTHING_OPEN, SIDE_TITLE, closePanel, openOver, openPanel, 
 import type { LeftPanel, SideState, SidePanel } from "./workspace-view";
 import { resolveContent } from "../../load-paths";
 import { agentFileFetch } from "../../tool-factory";
-import { EMPTY_TEMPLATE, initialContent, identityFor, openedFromLink } from "./workspace-content";
+import { EMPTY_TEMPLATE, autosaveDue, initialContent, identityFor, openedFromLink } from "./workspace-content";
 import { useAgentsLibrary } from "../../agents/AgentsLibraryContext";
 import { useHistory } from "../../history/HistoryContext";
 import { permissionScopeFor, grantsToRevoke } from "../../permissions-store";
@@ -273,10 +273,10 @@ export function WorkspacePage() {
 
   const settledContent = useSettled(content, 700);
   useEffect(() => {
-    if (settledContent === savedContent) return;
+    if (!autosaveDue(settledContent, content, savedContent)) return;
     if (!buildableAgent(settledContent).ok) return;
     persistToLibrary(settledContent);
-  }, [settledContent, savedContent]);
+  }, [settledContent, content, savedContent]);
 
   function show(next: SideState) {
     setNav(next);

@@ -15,7 +15,7 @@
 // under the License.
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { EMPTY_TEMPLATE, identityFor, initialContent, openedFromLink } from "./workspace-content";
+import { EMPTY_TEMPLATE, autosaveDue, identityFor, initialContent, openedFromLink } from "./workspace-content";
 import { encodeInlineAfm } from "../../load-paths";
 import { previewAgent } from "../../agent-validation";
 
@@ -147,5 +147,23 @@ describe("identityFor", () => {
     expect(identityFor(params("agentId=&code=fixture&state=fixture"), "", undefined)).toBe("");
     expect(identityFor(params("code=fixture&state=fixture"), "", undefined)).toBe("blank");
     expect(identityFor(params("agentId=a1&agentId=a2&code=fixture&state=fixture"), "", undefined)).toBe("a1");
+  });
+});
+
+describe("autosaveDue", () => {
+  it("is due once typing has settled on text that is not saved yet", () => {
+    expect(autosaveDue("new text", "new text", "old text")).toBe(true);
+  });
+
+  it("is not due while the settled text is still catching up with what was typed", () => {
+    expect(autosaveDue("old text", "new text", "older text")).toBe(false);
+  });
+
+  it("is not due when the settled text is already saved", () => {
+    expect(autosaveDue("same", "same", "same")).toBe(false);
+  });
+
+  it("never saves the previous agent under a new one that was just started", () => {
+    expect(autosaveDue("previous agent", EMPTY_TEMPLATE, EMPTY_TEMPLATE)).toBe(false);
   });
 });

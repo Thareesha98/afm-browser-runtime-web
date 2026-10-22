@@ -51,6 +51,10 @@ export function initialContent(searchParams: URLSearchParams, hash: string, draf
   return EMPTY_TEMPLATE;
 }
 
+export function autosaveDue(settled: string, current: string, saved: string): boolean {
+  return settled === current && settled !== saved;
+}
+
 export function openedFromLink(searchParams: URLSearchParams, hash: string, draftSource: string | undefined): boolean {
   return draftSource === undefined && (searchParams.get("file") !== null || inlineAfmParam(searchParams, hash) !== null);
 }
