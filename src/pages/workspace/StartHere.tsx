@@ -24,6 +24,10 @@ import { usableSecrets, type ChatState } from "../../chat-state";
 import { KeepOnDevice } from "./KeepOnDevice";
 import { resolveContent, normalizeAgentFileUrl } from "../../load-paths";
 import { McpProxyRequiredError, agentFileFetch } from "../../tool-factory";
+import { StartDialog } from "./StartDialog";
+import { START_CARDS, START_FOOTERS, START_SUBTITLES, START_TITLES, templatesNote } from "./start-copy";
+import type { StartStage } from "./start-copy";
+import { canClose, escapeAction, outsideClickAction, stageOf } from "./start-flow";
 
 function SetupColumn({ children, slide = false }: { children: ReactNode; slide?: boolean }) {
   return (
@@ -65,10 +69,61 @@ function StartOption({ icon, name, desc, onClick, on = false }: { icon: ReactNod
   );
 }
 
-type View = "menu" | "templates" | "prompt" | "import";
+export type StartView = "menu" | "templates" | "prompt" | "import";
+
+interface CardItem {
+  key: string;
+  icon: ReactNode;
+  name: string;
+  desc: string;
+  onPick: () => void;
+}
+
+function Cards({ items, row = false }: { items: CardItem[]; row?: boolean }) {
+  const [active, setActive] = useState(0);
+  const cards = useRef<(HTMLButtonElement | null)[]>([]);
+
+  function move(from: number, key: string) {
+    const to = key === "ArrowRight" ? from + 1 : key === "ArrowLeft" ? from - 1 : key === "ArrowDown" ? from + 2 : from - 2;
+    if (to >= 0 && to < items.length) cards.current[to]?.focus();
+  }
+
+  return (
+    <div className="u-dlg-grid">
+      {items.map((item, index) => (
+        <button
+          key={item.key}
+          ref={(element) => {
+            cards.current[index] = element;
+          }}
+          className={`u-dlg-card${row ? " row" : ""}${index === active ? " on" : ""}`}
+          data-autofocus={index === 0 ? "" : undefined}
+          onMouseEnter={() => setActive(index)}
+          onFocus={() => setActive(index)}
+          onKeyDown={(event) => {
+            if (!event.key.startsWith("Arrow")) return;
+            event.preventDefault();
+            move(index, event.key);
+          }}
+          onClick={item.onPick}
+        >
+          <span className="u-dlg-ico" aria-hidden="true">
+            {item.icon}
+          </span>
+          <span>
+            <span className="u-dlg-name">{item.name}</span>
+            <span className="u-dlg-desc">{item.desc}</span>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
 
 interface Props {
   state: ChatState;
+  dialog?: boolean;
+  initialView?: StartView;
   onUseSource: (source: string) => void;
   onGenerate: (prompt: string, model: AgentModelRef, final?: boolean) => void;
   onDismissDraft: () => void;
@@ -85,8 +140,10 @@ export function StartHere({
   onOpenKeys,
   onDismissDraft,
   onBlank,
+  dialog = false,
+  initialView = "menu",
 }: Props) {
-  const [view, setView] = useState<View>("menu");
+  const [view, setView] = useState<StartView>(initialView);
   const [prompt, setPrompt] = useState("");
   const [providerId, setProviderId] = useState(MODEL_PROVIDERS[0]!.id);
   const [modelId, setModelId] = useState(MODEL_PROVIDERS[0]!.models[0]!.id);
@@ -157,11 +214,60 @@ export function StartHere({
     }
   }
 
-  if (view === "import") {
+  const stage = stageOf(view, {
+    writing,
+    hasDraft: state.generatedDraft !== null,
+    hasQuestions: state.clarifyQuestions.length > 0,
+  });
+
+  function escape() {
+    const action = escapeAction(stage);
+    if (action === "close") onBlank();
+    else if (action === "back") setView("menu");
+    else if (action === "restart") {
+      onDismissDraft();
+      setView("prompt");
+    }
+  }
+
+  const actions = dialog ? "u-dlg-actions" : "u-panel-foot";
+
+  function frame(
+    which: StartStage,
+    content: ReactNode,
+    sheet: { title?: string; note?: ReactNode; slide?: boolean; back?: boolean },
+    narrow = false,
+  ) {
+    if (!dialog) {
+      return (
+        <SetupColumn slide={sheet.slide}>
+          {sheet.back === true && <BackLink onClick={() => setView("menu")} />}
+          {sheet.title !== undefined && <h3 className="u-setup-title">{sheet.title}</h3>}
+          {sheet.note}
+          {content}
+        </SetupColumn>
+      );
+    }
     return (
-      <SetupColumn slide>
-        <BackLink onClick={() => setView("menu")} />
-        <h3 className="u-setup-title">Import a file</h3>
+      <StartDialog
+        title={START_TITLES[which]}
+        subtitle={START_SUBTITLES[which]}
+        footer={START_FOOTERS[which]}
+        narrow={narrow}
+        focusKey={which}
+        onBack={sheet.back === true ? () => setView("menu") : undefined}
+        onClose={canClose(which) ? onBlank : undefined}
+        onEscape={escape}
+        onOutside={outsideClickAction(which) === "close" ? onBlank : undefined}
+      >
+        {content}
+      </StartDialog>
+    );
+  }
+
+  if (view === "import") {
+    return frame("import", (
+      <>
         <div
           className={`u-drop ${dropping ? "on" : ""}`}
           onDragOver={(event) => {
@@ -214,53 +320,52 @@ export function StartHere({
           className="visually-hidden"
           onChange={(event) => void openFile(event.target.files?.[0])}
         />
-      </SetupColumn>
-    );
+      </>
+    ), { title: "Import a file", slide: true, back: true }, true);
   }
 
   if (view === "templates") {
-    return (
-      <SetupColumn slide>
-        <BackLink onClick={() => setView("menu")} />
-        <h3 className="u-setup-title">Pick a starting point</h3>
-        <div className="u-start-list">
-          {EXAMPLES.map((example) => (
-            <StartOption
-              key={example.title}
-              icon={example.icon}
-              name={example.title}
-              desc={example.description}
-              onClick={() => onUseSource(example.content)}
-            />
-          ))}
-        </div>
-      </SetupColumn>
-    );
+    return frame("templates", dialog ? (
+      <Cards
+        row
+        items={EXAMPLES.map((example) => ({
+          key: example.title,
+          icon: example.icon,
+          name: example.title,
+          desc: example.description,
+          onPick: () => onUseSource(example.content),
+        }))}
+      />
+    ) : (
+      <div className="u-start-list">
+        {EXAMPLES.map((example) => (
+          <StartOption
+            key={example.title}
+            icon={example.icon}
+            name={example.title}
+            desc={example.description}
+            onClick={() => onUseSource(example.content)}
+          />
+        ))}
+      </div>
+    ), { title: "Pick a starting point", slide: true, back: true });
   }
 
   if (writing) {
-    return (
-      <SetupColumn>
-        <h3 className="u-setup-title">Writing the file</h3>
-        <p className="u-generating">
-          <span className="u-spinner" aria-hidden="true" />
-          Generating…
-        </p>
-      </SetupColumn>
-    );
+    return frame("writing", (
+      <p className="u-generating">
+        <span className="u-spinner" aria-hidden="true" />
+        Generating…
+      </p>
+    ), { title: "Writing the file" }, true);
   }
 
   if (state.generatedDraft !== null) {
     const draft = state.generatedDraft;
-    return (
-      <SetupColumn>
-        <h3 className="u-setup-title">Here is the file it wrote</h3>
-        <p className="u-setup-note">
-          Nothing has been changed yet. Using it puts this in the editor, where you can read it and
-          edit it before pressing Run.
-        </p>
+    return frame("draft", (
+      <>
         <pre className="u-draft">{draft}</pre>
-        <div className="u-panel-foot">
+        <div className={actions}>
           <button
             className="u-btn ghost"
             onClick={() => {
@@ -274,14 +379,21 @@ export function StartHere({
             Use this file
           </button>
         </div>
-      </SetupColumn>
-    );
+      </>
+    ), {
+      title: "Here is the file it wrote",
+      note: (
+        <p className="u-setup-note">
+          Nothing has been changed yet. Using it puts this in the editor, where you can read it and
+          edit it before pressing Run.
+        </p>
+      ),
+    });
   }
 
   if (state.clarifyQuestions.length > 0) {
-    return (
-      <SetupColumn>
-        <h3 className="u-setup-title">A couple of questions first</h3>
+    return frame("questions", (
+      <>
         <ul className="u-rows">
           {state.clarifyQuestions.map((question) => (
             <li key={question}>{question}</li>
@@ -304,7 +416,7 @@ export function StartHere({
             rows={4}
             autoFocus
           />
-          <div className="u-panel-foot">
+          <div className={actions}>
             <button
               className="u-btn ghost"
               type="button"
@@ -321,20 +433,14 @@ export function StartHere({
             </button>
           </div>
         </form>
-      </SetupColumn>
-    );
+      </>
+    ), { title: "A couple of questions first" }, true);
   }
 
   if (view === "prompt") {
     const canWrite = prompt.trim() !== "" && (keySaved || key.trim() !== "") && !writing;
-    return (
-      <SetupColumn slide>
-        <BackLink onClick={() => setView("menu")} />
-        <h3 className="u-setup-title">Describe the agent you want</h3>
-        <p className="u-setup-note">
-          Say what it should do and how it should behave. The file appears in the editor for you to read
-          before anything runs.
-        </p>
+    return frame("prompt", (
+      <>
         <form
           onSubmit={(event) => {
             event.preventDefault();
@@ -412,8 +518,31 @@ export function StartHere({
           </button>
         </form>
         {state.draftError !== null && <p className="u-errcard">{brief(state.draftError)}</p>}
-      </SetupColumn>
-    );
+      </>
+    ), {
+      title: "Describe the agent you want",
+      note: (
+        <p className="u-setup-note">
+          Say what it should do and how it should behave. The file appears in the editor for you to read
+          before anything runs.
+        </p>
+      ),
+      slide: true,
+      back: true,
+    });
+  }
+
+  if (dialog) {
+    return frame("menu", (
+      <Cards
+        items={[
+          { key: "blank", icon: <Glyph path={ICON_PATHS.blank} />, name: "Blank", desc: START_CARDS.blank, onPick: onBlank },
+          { key: "generate", icon: <Glyph path={ICON_PATHS.generate} />, name: "Generate with AI", desc: START_CARDS.generate, onPick: () => setView("prompt") },
+          { key: "templates", icon: <Glyph path={ICON_PATHS.template} />, name: "From a template", desc: templatesNote(EXAMPLES.length), onPick: () => setView("templates") },
+          { key: "import", icon: <Glyph path={ICON_PATHS.file} />, name: "Import a file", desc: START_CARDS.import, onPick: () => setView("import") },
+        ]}
+      />
+    ), {});
   }
 
   return (
