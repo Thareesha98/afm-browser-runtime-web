@@ -304,6 +304,29 @@ export function WorkspacePage() {
   const toggleLeft = (next: LeftPanel) => (left === next ? setLeft(null) : openLeft(next));
   const closeLeft = () => setLeft(null);
 
+  const startDialog = left === "start" && !compact;
+  const leftPanel = startDialog ? null : left;
+  const startHere = (dialog: boolean) => (
+    <StartHere
+      dialog={dialog}
+      state={session.state}
+      onUseSource={(source) => {
+        setContent(source);
+        setSavedContent(source);
+        setAgentId(null);
+        setSearchParams({}, { replace: true });
+        loadedIdentityRef.current = "blank";
+        session.clearAgent();
+        closeLeft();
+        closeSide();
+      }}
+      onBlank={closeLeft}
+      onGenerate={(prompt, model, final) => session.generateDraft(prompt, model, final)}
+      onSaveKey={session.storeSecret}
+      onDismissDraft={session.dismissDraft}
+    />
+  );
+
   const overPanel = side !== null && side !== "chat" ? side : null;
   const showTrust = !trusted && !fileLoading;
   const reachedServerIds = [
@@ -339,7 +362,7 @@ export function WorkspacePage() {
       )}
 
       <div
-        className={`u-body ${side !== null ? "has-side" : ""} ${left !== null ? "has-left" : ""} ${
+        className={`u-body ${side !== null ? "has-side" : ""} ${leftPanel !== null ? "has-left" : ""} ${
           chatFull ? "is-chat-full" : ""
         } ${showTrust ? "is-trust" : ""}`}
       >
@@ -360,10 +383,10 @@ export function WorkspacePage() {
             }}
           />
         )}
-        <aside className="u-side-left" aria-hidden={left === null}>
-          {left !== null && (
-            <SidePane key={left} title={LEFT_TITLE[left]} onClose={closeLeft} flush={left === "agents"}>
-              {left === "agents" && (
+        <aside className="u-side-left" aria-hidden={leftPanel === null}>
+          {leftPanel !== null && (
+            <SidePane key={leftPanel} title={LEFT_TITLE[leftPanel]} onClose={closeLeft} flush={leftPanel === "agents"}>
+              {leftPanel === "agents" && (
                 <AgentPicker
                   currentId={agentId}
                   onPick={(saved) => {
@@ -383,25 +406,7 @@ export function WorkspacePage() {
                   }}
                 />
               )}
-              {left === "start" && (
-                <StartHere
-                  state={session.state}
-                  onUseSource={(source) => {
-                    setContent(source);
-                    setSavedContent(source);
-                    setAgentId(null);
-                    setSearchParams({}, { replace: true });
-                    loadedIdentityRef.current = "blank";
-                    session.clearAgent();
-                    closeLeft();
-                    closeSide();
-                  }}
-                  onBlank={closeLeft}
-                  onGenerate={(prompt, model, final) => session.generateDraft(prompt, model, final)}
-                  onSaveKey={session.storeSecret}
-                  onDismissDraft={session.dismissDraft}
-                />
-              )}
+              {leftPanel === "start" && startHere(false)}
             </SidePane>
           )}
         </aside>
@@ -445,6 +450,8 @@ export function WorkspacePage() {
             }}
           />
         </div>
+
+        {startDialog && startHere(true)}
 
         <div className="u-float-scrim" onClick={side !== null ? leavePanel : closeLeft} role="presentation" />
 
