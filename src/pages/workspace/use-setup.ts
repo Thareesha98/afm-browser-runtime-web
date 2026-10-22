@@ -16,6 +16,7 @@
 import { useState } from "react";
 import { authorizationCodeRefreshKey, oauthProviderFrom } from "@afm/adapter-auth";
 import type { AgentMetadata } from "@afm/engine";
+import { lockedSecrets, usableSecrets } from "../../chat-state";
 import type { useStandaloneSession } from "../../worker-client/useStandaloneSession";
 import { findProvider } from "./model-catalog";
 import {
@@ -31,6 +32,7 @@ import {
   resultOf,
   serverRowId,
   type Issue,
+  type KeysState,
   type RowResult,
   type SetupRow,
 } from "./setup-check";
@@ -39,6 +41,7 @@ type Session = ReturnType<typeof useStandaloneSession>;
 
 export function useSetup(session: Session, metadata: AgentMetadata | null) {
   const [results, setResults] = useState<Record<string, RowResult>>({});
+  const [keys, setKeys] = useState<KeysState>("none");
 
   const rows: SetupRow[] = (metadata === null ? [] : plannedRows(metadata)).map((row) => ({ ...row, ...results[row.id] }));
 
@@ -60,22 +63,37 @@ export function useSetup(session: Session, metadata: AgentMetadata | null) {
 
   function run(targets: SetupRow[]): void {
     if (metadata === null) return;
-    const usable = session.state.savedSecrets;
+    const usable = usableSecrets(session.state);
     for (const row of targets) {
       if (row.id === MODEL_ROW && (metadata.model?.name ?? "") === "") continue;
       void check(row, metadata, usable);
     }
   }
 
+  function openKeys(): void {
+    setKeys("opening");
+    void session.openKeys().then((opened) => {
+      setKeys(opened ? "opened" : "declined");
+      if (opened) run(rows);
+    });
+  }
+
   function start(): void {
     setResults({});
+    if (lockedSecrets(session.state).length > 0) {
+      openKeys();
+      return;
+    }
+    setKeys("none");
     run(rows);
   }
 
   return {
     rows,
-    ready: everyRowReady(rows),
+    keys,
+    ready: everyRowReady(rows) && (keys === "none" || keys === "opened"),
     start,
+    retryKeys: openKeys,
     recheck: () => run(rows.filter((row) => row.state !== "ready")),
     changed: (id: string) => settle(id, changedResult),
     issueOf: (id: string): Issue | null => {

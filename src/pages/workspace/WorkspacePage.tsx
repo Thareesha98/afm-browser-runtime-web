@@ -502,10 +502,12 @@ export function WorkspacePage() {
               {overPanel === "setup" && (
                 <SetupPane
                   rows={setup.rows}
+                  keys={setup.keys}
                   provider={readable.ok ? (readable.metadata.model?.provider ?? "") : ""}
                   ready={setup.ready}
                   onConfigure={configure}
                   onCheckAgain={setup.recheck}
+                  onRetryKeys={setup.retryKeys}
                   onRun={runAgent}
                 />
               )}

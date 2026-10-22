@@ -183,6 +183,9 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .u-run-sum{display:flex;flex-direction:column;gap:6px;align-items:flex-start;margin-bottom:14px;font-size:12.5px;color:var(--muted);line-height:1.5}
 .u-run-row{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:9px 10px}
 .u-run-row{margin-bottom:7px;background:var(--surface)}
+.u-run-keys{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:9px 10px;background:var(--sunk);margin-bottom:14px}
+.u-run-keys.is-bad{border-color:var(--bad);background:var(--bad-soft)}.u-run-keys.is-bad .u-run-name{color:var(--bad)}
+.u-run-ico{width:28px;height:28px;border-radius:8px;background:var(--surface);box-shadow:0 0 0 1px var(--line);display:grid;place-items:center;flex:none;color:var(--ink)}
 .u-run-row.is-bad{border-color:var(--bad)}.u-run-row.is-bad .u-run-note{color:var(--bad)}
 .u-run-row.is-need{border-color:color-mix(in srgb,var(--warn) 55%,var(--line))}.u-run-row.is-need .u-run-note{color:var(--warn)}
 .u-run-row.is-changed{border-style:dashed}
