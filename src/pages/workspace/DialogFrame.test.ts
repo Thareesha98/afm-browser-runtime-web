@@ -73,4 +73,26 @@ describe("the dialog frame", () => {
     expect(render({ narrow: true })).toContain('class="u-dlg narrow"');
     expect(render()).toContain('class="u-dlg"');
   });
+
+  it("can show an icon beside the title", () => {
+    const html = render({ icon: createElement("i", null, "ICON") });
+    expect(html).toContain("u-dlg-tile");
+    expect(html).toContain("ICON");
+    expect(render()).not.toContain("u-dlg-tile");
+  });
+
+  it("can put buttons in the footer beside its sentence", () => {
+    const html = render({ actions: createElement("button", null, "Run it") });
+    expect(html).toContain("u-dlg-foot act");
+    expect(html).toContain("A footer sentence.");
+    expect(html.indexOf("A footer sentence.")).toBeLessThan(html.indexOf("Run it"));
+    expect(render()).not.toContain("u-dlg-foot act");
+  });
+
+  it("can be tall, and can be a sheet from the bottom on a phone", () => {
+    expect(render({ tall: true })).toContain('class="u-dlg tall"');
+    expect(render({ narrow: true, tall: true })).toContain('class="u-dlg narrow tall"');
+    expect(render({ sheet: true })).toContain("u-dlg-scrim is-sheet");
+    expect(render()).not.toContain("is-sheet");
+  });
 });
