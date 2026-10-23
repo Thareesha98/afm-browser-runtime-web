@@ -19,7 +19,7 @@ import { describe, expect, it } from "vitest";
 import type { AgentMetadata } from "@afm/engine";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TrustScreen, linkedFileHost, serverTools } from "./TrustScreen";
+import { TRUST_COPY, TrustScreen, filterTools, linkedFileHost, serverTools, toolCount } from "./TrustScreen";
 
 const withServers = (mcp: unknown[]) => ({ name: "A", tools: { mcp } }) as AgentMetadata;
 
@@ -77,11 +77,13 @@ describe("linkedFileHost", () => {
   });
 });
 
+const TOOLS = ["notion-search", "notion-fetch", "notion-create-pages", "notion-update-page"];
+
 const SOURCE = `---
-name: A
+name: Interview partner
 model:
   provider: openai
-  name: gpt-4o
+  name: gpt-6.1-sol
   authentication:
     type: api-key
     api_key: \${env:OPENAI_API_KEY}
@@ -91,22 +93,161 @@ model:
 r
 `;
 
-describe("the keys a shared agent needs", () => {
-  const screen = (savedSecrets: string[]) =>
-    renderToStaticMarkup(
-      createElement(TrustScreen, {
-        metadata: { name: "A", model: { provider: "openai", name: "gpt-4o" } } as AgentMetadata,
-        source: SOURCE,
-        savedSecrets,
-        fileUrl: null,
-        onRun: () => {},
-        onOpenBuilder: () => {},
-      }),
-    );
+const agent = (servers: unknown[], extra: Record<string, unknown> = {}) =>
+  ({ name: "Interview partner", model: { provider: "openai", name: "gpt-6.1-sol" }, tools: { mcp: servers }, ...extra }) as AgentMetadata;
 
-  it("marks a key Entered or Not entered, with a capital letter", () => {
-    expect(screen([])).toContain("Not entered");
-    expect(screen(["OPENAI_API_KEY"])).toContain(">Entered<");
-    expect(screen(["OPENAI_API_KEY"])).not.toContain("Not entered");
+const notion = { name: "notion", transport: { type: "http", url: "https://mcp.notion.com/mcp" }, tool_filter: { allow: TOOLS } };
+
+function screen(options: { servers?: unknown[]; savedSecrets?: string[]; fileUrl?: string | null; initialTools?: string | null; source?: string } = {}): string {
+  return renderToStaticMarkup(
+    createElement(TrustScreen, {
+      metadata: agent(options.servers ?? [notion]),
+      source: options.source ?? SOURCE,
+      savedSecrets: options.savedSecrets ?? [],
+      fileUrl: options.fileUrl ?? null,
+      onRun: () => {},
+      onOpenBuilder: () => {},
+      initialTools: options.initialTools ?? null,
+    }),
+  );
+}
+
+describe("filterTools", () => {
+  it("keeps every tool for an empty or blank search", () => {
+    expect(filterTools(TOOLS, "")).toEqual(TOOLS);
+    expect(filterTools(TOOLS, "   ")).toEqual(TOOLS);
+  });
+
+  it("keeps the tools whose name has the word in it, whatever its case", () => {
+    expect(filterTools(TOOLS, "PAGE")).toEqual(["notion-create-pages", "notion-update-page"]);
+  });
+
+  it("keeps none when nothing matches", () => {
+    expect(filterTools(TOOLS, "calendar")).toEqual([]);
+  });
+});
+
+describe("toolCount", () => {
+  it("says tool once and tools otherwise", () => {
+    expect(toolCount(1)).toBe("1 tool");
+    expect(toolCount(0)).toBe("0 tools");
+    expect(toolCount(38)).toBe("38 tools");
+  });
+});
+
+describe("the window a shared agent opens in", () => {
+  it("is a dialog named by the agent, with the sentence that says what it is", () => {
+    const html = screen();
+    expect(html).toContain('role="dialog"');
+    expect(html).toContain("Interview partner");
+    expect(html).toContain(TRUST_COPY.lead);
+  });
+
+  it("shows the model with its provider written properly", () => {
+    const html = screen();
+    expect(html).toContain("GPT-6.1 Sol");
+    expect(html).toContain("OpenAI");
+    expect(html).not.toContain("· openai");
+  });
+
+  it("shows a server's tools as a count and a button, not as a flood of names", () => {
+    const html = screen();
+    expect(html).toContain("Notion");
+    expect(html).toContain("mcp.notion.com");
+    expect(html).toContain("4 tools");
+    expect(html).toContain("View tools");
+    for (const tool of TOOLS) expect(html).not.toContain(tool);
+  });
+
+  it("says a server with no listed tools has none, and gives it no button", () => {
+    const html = screen({ servers: [{ name: "github", transport: { type: "http", url: "https://api.githubcopilot.com/mcp" } }] });
+    expect(html).toContain("No tools listed");
+    expect(html).not.toContain("View tools");
+  });
+
+  it("gives each server with tools its own button", () => {
+    const html = screen({ servers: [notion, { ...notion, name: "linear", transport: { type: "http", url: "https://mcp.linear.app/mcp" } }] });
+    expect(html.match(/View tools/g)).toHaveLength(2);
+  });
+
+  it("says None when the file names no server", () => {
+    const html = screen({ servers: [] });
+    expect(html).toContain(">None<");
+    expect(html).not.toContain(TRUST_COPY.toolsNote);
+  });
+
+  it("puts the note about asking under the tool servers", () => {
+    expect(screen()).toContain(TRUST_COPY.toolsNote);
+  });
+
+  it("marks a key Entered or Not entered, with the note about keys under it", () => {
+    expect(screen()).toContain("Not entered");
+    expect(screen()).toContain(TRUST_COPY.keysNote);
+    expect(screen({ savedSecrets: ["OPENAI_API_KEY"] })).toContain(">Entered<");
+    expect(screen({ savedSecrets: ["OPENAI_API_KEY"] })).not.toContain("Not entered");
+  });
+
+  it("says Nothing when the file needs no key", () => {
+    const html = screen({ source: "---\nname: A\n---\n" });
+    expect(html).toContain(">Nothing<");
+    expect(html).not.toContain(TRUST_COPY.keysNote);
+  });
+
+  it("shows where the file came from when it was opened from a link", () => {
+    expect(screen({ fileUrl: "https://raw.githubusercontent.com/a/b/agent.afm.md" })).toContain("raw.githubusercontent.com");
+    expect(screen()).not.toContain("File from");
+  });
+
+  it("shows the step limit", () => {
+    expect(screen()).toContain("10 steps per answer");
+  });
+
+  it("keeps both buttons in the footer, beside the sentence that says nothing has run", () => {
+    const html = screen();
+    expect(html).toContain("u-dlg-foot act");
+    expect(html).toContain(TRUST_COPY.footer);
+    expect(html.indexOf(">Open in builder<")).toBeGreaterThan(html.indexOf(TRUST_COPY.footer));
+    expect(html.indexOf(">Run it<")).toBeGreaterThan(html.indexOf(">Open in builder<"));
+  });
+
+  it("has no Close button and no Back link, so the two buttons are the two choices", () => {
+    const html = screen();
+    expect(html).not.toContain('aria-label="Close"');
+    expect(html).not.toContain("u-dlg-back");
+  });
+
+  it("is a sheet from the bottom on a phone", () => {
+    expect(screen()).toContain("is-sheet");
+  });
+});
+
+describe("the list of a server's tools", () => {
+  it("names the server, counts its tools and has a way back", () => {
+    const html = screen({ initialTools: "notion" });
+    expect(html).toContain("Notion");
+    expect(html).toContain("4 tools run without asking in this file. Any other tool asks first.");
+    expect(html).toContain("u-dlg-back");
+  });
+
+  it("lists every tool name, with a search box", () => {
+    const html = screen({ initialTools: "notion" });
+    for (const tool of TOOLS) expect(html).toContain(tool);
+    expect(html).toContain('aria-label="Search tools"');
+  });
+
+  it("says a single tool runs, not run", () => {
+    const html = screen({ servers: [{ ...notion, tool_filter: { allow: ["notion-search"] } }], initialTools: "notion" });
+    expect(html).toContain("1 tool runs without asking in this file.");
+  });
+
+  it("ends with Done and the sentence that says what the list is", () => {
+    const html = screen({ initialTools: "notion" });
+    expect(html).toContain(TRUST_COPY.toolsFooter);
+    expect(html).toContain(">Done<");
+    expect(html).not.toContain(">Run it<");
+  });
+
+  it("falls back to the summary for a server the file does not have", () => {
+    expect(screen({ initialTools: "ghost" })).toContain(">Run it<");
   });
 });

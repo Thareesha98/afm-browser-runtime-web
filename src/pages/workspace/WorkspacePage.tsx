@@ -374,7 +374,7 @@ export function WorkspacePage() {
       <div
         className={`u-body ${side !== null ? "has-side" : ""} ${leftPanel !== null ? "has-left" : ""} ${
           chatFull ? "is-chat-full" : ""
-        } ${showTrust ? "is-trust" : ""}`}
+        }`}
       >
         {showTrust && readable.ok && (
           <TrustScreen
