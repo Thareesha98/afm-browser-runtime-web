@@ -1,211 +1,177 @@
 // Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
-//
-// WSO2 LLC. licenses this file to you under the Apache License,
-// Version 2.0 (the "License"); you may not use this file except
-// in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the License for the
-// specific language governing permissions and limitations
-// under the License.
+// Licensed under the Apache License, Version 2.0.
 
+import { Schema } from "prosemirror-model";
+import type { Node as DocumentNode } from "prosemirror-model";
+import { schema as markdownSchema, defaultMarkdownParser, defaultMarkdownSerializer, MarkdownParser, MarkdownSerializer } from "prosemirror-markdown";
+import { AllSelection, EditorState, TextSelection } from "prosemirror-state";
+import type { Command as EditorCommand } from "prosemirror-state";
+import { baseKeymap, chainCommands, lift, newlineInCode, setBlockType, toggleMark, wrapIn } from "prosemirror-commands";
+import { liftListItem, sinkListItem, splitListItem, wrapInList } from "prosemirror-schema-list";
+import { history, redo, undo } from "prosemirror-history";
+import { keymap } from "prosemirror-keymap";
+import { inputRules, textblockTypeInputRule, undoInputRule, wrappingInputRule } from "prosemirror-inputrules";
 
-export interface NodeLike {
-  nodeType: number;
-  nodeName: string;
-  textContent: string | null;
-  childNodes: ArrayLike<NodeLike>;
-  getAttribute?: (name: string) => string | null;
+export function safeHref(value: string): string | null {
+  const href = value.trim();
+  if (!href || /[\u0000-\u0020\u007f]/.test(href)) return null;
+  const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(href)?.[1]?.toLowerCase();
+  return scheme === undefined || ["http", "https", "mailto"].includes(scheme) ? href : null;
 }
 
-const ELEMENT = 1;
-const TEXT = 3;
+const linkSpec = markdownSchema.spec.marks.get("link")!;
+export const editorSchema = new Schema({
+  nodes: markdownSchema.spec.nodes
+    .update("list_item", { ...markdownSchema.spec.nodes.get("list_item")!, content: "paragraph block*" })
+    .update("image", {
+      ...markdownSchema.spec.nodes.get("image")!,
+      // Keep imported image Markdown without fetching remote content in an agent editor.
+      toDOM: (node) => ["span", { "data-markdown-image": "true", title: node.attrs.src }, `![${node.attrs.alt ?? ""}](${node.attrs.src})`],
+      parseDOM: [],
+    }),
+  marks: markdownSchema.spec.marks
+    .update("link", {
+      ...linkSpec,
+      parseDOM: [{ tag: "a[href]", getAttrs: (element) => {
+        const href = safeHref(element.getAttribute("href") ?? "");
+        return href === null ? false : { href, title: element.getAttribute("title") };
+      } }],
+      toDOM: (mark) => {
+        const href = safeHref(mark.attrs.href);
+        return href === null ? ["span", 0] : ["a", { href, title: mark.attrs.title, rel: "noopener noreferrer" }, 0];
+      },
+    })
+    .addBefore("code", "strike", {
+      parseDOM: [{ tag: "s" }, { tag: "del" }, { tag: "strike" }, { style: "text-decoration=line-through" }],
+      toDOM: () => ["s", 0],
+    }),
+});
 
-const INLINE_MARK: Record<string, string> = {
-  STRONG: "**",
-  B: "**",
-  EM: "*",
-  I: "*",
-  S: "~~",
-  STRIKE: "~~",
-  DEL: "~~",
-  CODE: "`",
-};
+const parser = new MarkdownParser(editorSchema, defaultMarkdownParser.tokenizer.enable("strikethrough"), {
+  ...defaultMarkdownParser.tokens,
+  s: { mark: "strike" },
+  // Preserve visible soft line breaks, including inside list items.
+  softbreak: { node: "hard_break" },
+});
 
-const HEADING_HASHES: Record<string, string> = { H1: "#", H2: "##", H3: "###", H4: "####" };
+const serializer = new MarkdownSerializer({
+  ...defaultMarkdownSerializer.nodes,
+  bullet_list: (state, node) => state.renderList(node, "  ", () => "- "),
+}, {
+  ...defaultMarkdownSerializer.marks,
+  strike: { open: "~~", close: "~~", mixable: true, expelEnclosingWhitespace: true },
+});
 
-function children(node: NodeLike): NodeLike[] {
-  return Array.from({ length: node.childNodes.length }, (_, i) => node.childNodes[i] as NodeLike);
-}
+export const parseMarkdown = (value: string): DocumentNode => parser.parse(value);
+export const serializeMarkdown = (doc: DocumentNode): string => serializer.serialize(doc);
 
-function escapeInline(text: string): string {
-  return text.replace(/([\\`*_[\]])/g, "\\$1");
-}
+export type Command =
+  | { kind: "inline"; command: string }
+  | { kind: "block"; tag: string }
+  | { kind: "list"; command: string }
+  | { kind: "code" }
+  | { kind: "link" }
+  | { kind: "clear" };
 
-function rawText(node: NodeLike): string {
-  if (node.nodeType === TEXT) return node.textContent ?? "";
-  return children(node).map(rawText).join("");
-}
-
-function inlineOf(node: NodeLike): string {
-  if (node.nodeType === TEXT) return escapeInline(node.textContent ?? "");
-  if (node.nodeType !== ELEMENT) return "";
-  if (node.nodeName === "BR") return "\n";
-  if (node.nodeName === "CODE") {
-    const code = rawText(node);
-    return code.trim() === "" ? code : `\`${code}\``;
+function ancestor(state: EditorState, names: string[]): number {
+  const { $from, $to } = state.selection;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if (names.includes($from.node(depth).type.name) && $to.pos <= $from.end(depth)) return depth;
   }
-
-  const inner = children(node).map(inlineOf).join("");
-  if (node.nodeName === "A") {
-    const href = node.getAttribute?.("href") ?? "";
-    return href === "" ? inner : `[${inner}](${href})`;
-  }
-  const mark = INLINE_MARK[node.nodeName];
-  if (mark !== undefined) return inner.trim() === "" ? inner : `${mark}${inner}${mark}`;
-  return inner;
+  return -1;
 }
 
-function listItems(node: NodeLike, ordered: boolean): string[] {
-  let n = 0;
-  return children(node)
-    .filter((child) => child.nodeName === "LI")
-    .map((item) => {
-      n += 1;
-      const text = children(item).map(inlineOf).join("").trim();
-      return ordered ? `${n}. ${text}` : `- ${text}`;
-    });
-}
-
-function blockOf(node: NodeLike): string[] {
-  if (node.nodeType === TEXT) {
-    const text = escapeInline(node.textContent ?? "").trim();
-    return text === "" ? [] : [text];
-  }
-  if (node.nodeType !== ELEMENT) return [];
-
-  const name = node.nodeName;
-  if (name === "UL" || name === "OL") {
-    const items = listItems(node, name === "OL");
-    return items.length === 0 ? [] : [items.join("\n")];
-  }
-  if (name === "BLOCKQUOTE") {
-    const text = children(node)
-      .flatMap(blockOf)
-      .join("\n\n")
-      .split("\n")
-      .map((line) => (line === "" ? ">" : `> ${line}`))
-      .join("\n");
-    return text.trim() === ">" || text === "" ? [] : [text];
-  }
-  const hashes = HEADING_HASHES[name];
-  if (hashes !== undefined) {
-    const text = children(node).map(inlineOf).join("").trim();
-    return text === "" ? [] : [`${hashes} ${text}`];
-  }
-  if (name === "P" || name === "DIV") {
-    const text = children(node).map(inlineOf).join("").replace(/[ \t]+$/gm, "");
-    return text.trim() === "" ? [] : [text];
-  }
-  const inline = inlineOf(node);
-  return inline.trim() === "" ? [] : [inline];
-}
-
-export function toMarkdown(root: NodeLike): string {
-  return children(root).flatMap(blockOf).join("\n\n").replace(/\n{3,}/g, "\n\n").trim();
-}
-
-const HTML_ESCAPES: Record<string, string> = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-};
-
-function escapeHtml(text: string): string {
-  return text.replace(/[&<>"]/g, (char) => HTML_ESCAPES[char] ?? char);
-}
-
-const LINK_SCHEMES = new Set(["http", "https", "mailto"]);
-
-function hrefIsSafe(href: string): boolean {
-  const scheme = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(href.replace(/[\u0000-\u0020\u007f]/g, ""))?.[1];
-  return scheme === undefined || LINK_SCHEMES.has(scheme.toLowerCase());
-}
-
-function inlineHtml(text: string): string {
-  const held: string[] = [];
-  const withHolds = text.replace(/\\([\\`*_[\]])/g, (_, char: string) => {
-    held.push(char);
-    return `\u0000${held.length - 1}\u0000`;
-  });
-
-  const html = escapeHtml(withHolds)
-    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_whole, label: string, href: string) =>
-      hrefIsSafe(href) ? `<a href="${href}">${label}</a>` : label,
-    )
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/~~([^~]+)~~/g, "<s>$1</s>")
-    .replace(/(^|[^*])\*([^*]+)\*/g, "$1<em>$2</em>");
-
-  return html.replace(/\u0000(\d+)\u0000/g, (_, index: string) => escapeHtml(held[Number(index)] ?? ""));
-}
-
-export function toHtml(markdown: string): string {
-  const lines = markdown.split("\n");
-  const out: string[] = [];
-  let list: { ordered: boolean; items: string[] } | null = null;
-  let quote: string[] = [];
-  let para: string[] = [];
-
-  const flush = () => {
-    if (list !== null) {
-      const items = list.items.map((item) => `<li>${inlineHtml(item)}</li>`).join("");
-      out.push(list.ordered ? `<ol>${items}</ol>` : `<ul>${items}</ul>`);
-      list = null;
-    }
-    if (quote.length > 0) {
-      out.push(`<blockquote>${quote.map((line) => `<p>${inlineHtml(line)}</p>`).join("")}</blockquote>`);
-      quote = [];
-    }
-    if (para.length > 0) {
-      out.push(`<p>${para.map(inlineHtml).join("<br>")}</p>`);
-      para = [];
-    }
+function toggleList(name: "bullet_list" | "ordered_list"): EditorCommand {
+  return (state, dispatch) => {
+    const depth = ancestor(state, ["bullet_list", "ordered_list"]);
+    const type = editorSchema.nodes[name]!;
+    if (depth < 0) return wrapInList(type, { tight: true })(state, dispatch);
+    const current = state.selection.$from.node(depth);
+    if (current.type === type) return liftListItem(editorSchema.nodes.list_item!)(state, dispatch);
+    dispatch?.(state.tr.setNodeMarkup(state.selection.$from.before(depth), type, { ...current.attrs, tight: true }).scrollIntoView());
+    return true;
   };
+}
 
-  for (const line of lines) {
-    const heading = /^(#{1,4})\s+(.*)$/.exec(line);
-    const bullet = /^\s*[-*]\s+(.*)$/.exec(line);
-    const numbered = /^\s*\d+\.\s+(.*)$/.exec(line);
-    const quoted = /^>\s?(.*)$/.exec(line);
+function textSelection(state: EditorState): EditorState {
+  if (!(state.selection instanceof AllSelection)) return state;
+  const from = TextSelection.atStart(state.doc).from;
+  const to = TextSelection.atEnd(state.doc).to;
+  return state.apply(state.tr.setSelection(TextSelection.create(state.doc, from, to)));
+}
 
-    if (heading !== null) {
-      flush();
-      out.push(`<h${heading[1]!.length}>${inlineHtml(heading[2]!)}</h${heading[1]!.length}>`);
-    } else if (bullet !== null || numbered !== null) {
-      const ordered = numbered !== null;
-      if (list === null || list.ordered !== ordered) {
-        flush();
-        list = { ordered, items: [] };
-      }
-      list.items.push((bullet?.[1] ?? numbered?.[1]) as string);
-    } else if (quoted !== null) {
-      if (list !== null || para.length > 0) flush();
-      quote.push(quoted[1] ?? "");
-    } else if (line.trim() === "") {
-      flush();
-    } else {
-      if (list !== null || quote.length > 0) flush();
-      para.push(line);
-    }
+export function commandFor(command: Command, href?: string): EditorCommand {
+  const run = documentCommand(command, href);
+  return (state, dispatch, view) => run(textSelection(state), dispatch, view);
+}
+
+function documentCommand(command: Command, href?: string): EditorCommand {
+  if (command.kind === "inline" || command.kind === "code") {
+    const name = command.kind === "code" ? "code" : { bold: "strong", italic: "em", strikeThrough: "strike" }[command.command];
+    return name === undefined ? () => false : toggleMark(editorSchema.marks[name]!);
   }
-  flush();
-  return out.length === 0 ? "<p><br></p>" : out.join("");
+  if (command.kind === "list") return toggleList(command.command === "insertOrderedList" ? "ordered_list" : "bullet_list");
+  if (command.kind === "block") {
+    if (command.tag === "blockquote") return (state, dispatch) =>
+      ancestor(state, ["blockquote"]) >= 0 ? lift(state, dispatch) : wrapIn(editorSchema.nodes.blockquote!)(state, dispatch);
+    const level = Number(command.tag.slice(1));
+    return (state, dispatch) => {
+      const same = state.selection.$from.parent.type.name === "heading" && state.selection.$from.parent.attrs.level === level;
+      return setBlockType(same ? editorSchema.nodes.paragraph! : editorSchema.nodes.heading!, same ? undefined : { level })(state, dispatch);
+    };
+  }
+  if (command.kind === "link") return (state, dispatch) => {
+    const url = safeHref(href ?? "");
+    if (url === null || state.selection.empty) return false;
+    dispatch?.(state.tr.addMark(state.selection.from, state.selection.to, editorSchema.marks.link!.create({ href: url })).scrollIntoView());
+    return true;
+  };
+  return (state, dispatch) => {
+    dispatch?.(state.tr.removeMark(state.selection.from, state.selection.to).setStoredMarks([]));
+    return true;
+  };
+}
+
+export function activeFormats(state: EditorState): Record<string, boolean> {
+  state = textSelection(state);
+  const { from, to, empty, $from } = state.selection;
+  const active = (name: string) => empty
+    ? editorSchema.marks[name]!.isInSet(state.storedMarks ?? $from.marks()) !== undefined
+    : state.doc.rangeHasMark(from, to, editorSchema.marks[name]!);
+  return {
+    bold: active("strong"), italic: active("em"), strike: active("strike"), code: active("code"), link: active("link"),
+    h2: $from.parent.type.name === "heading" && $from.parent.attrs.level === 2,
+    h3: $from.parent.type.name === "heading" && $from.parent.attrs.level === 3,
+    quote: ancestor(state, ["blockquote"]) >= 0,
+    bullet: ancestor(state, ["bullet_list"]) >= 0,
+    number: ancestor(state, ["ordered_list"]) >= 0,
+  };
+}
+
+export function createEditorState(value: string): EditorState {
+  const nodes = editorSchema.nodes;
+  return EditorState.create({
+    doc: parseMarkdown(value),
+    plugins: [
+      inputRules({ rules: [
+        wrappingInputRule(/^\s*([-+*])\s$/, nodes.bullet_list!, { tight: true }),
+        wrappingInputRule(/^(\d+)\.\s$/, nodes.ordered_list!, (match) => ({ order: Number(match[1]), tight: true })),
+        wrappingInputRule(/^\s*>\s$/, nodes.blockquote!),
+        textblockTypeInputRule(/^(#{2,6})\s$/, nodes.heading!, (match) => ({ level: match[1]!.length })),
+        textblockTypeInputRule(/^```$/, nodes.code_block!),
+      ] }),
+      keymap({
+        "Mod-b": toggleMark(editorSchema.marks.strong!), "Mod-i": toggleMark(editorSchema.marks.em!),
+        "Mod-`": toggleMark(editorSchema.marks.code!),
+        "Mod-z": undo, "Shift-Mod-z": redo, "Mod-y": redo, Backspace: undoInputRule,
+        Enter: chainCommands(newlineInCode, splitListItem(nodes.list_item!), baseKeymap.Enter!),
+        "Shift-Enter": (state, dispatch) => {
+          dispatch?.(state.tr.replaceSelectionWith(nodes.hard_break!.create()).scrollIntoView());
+          return true;
+        },
+        Tab: sinkListItem(nodes.list_item!), "Shift-Tab": liftListItem(nodes.list_item!),
+      }),
+      keymap(baseKeymap), history(),
+    ],
+  });
 }

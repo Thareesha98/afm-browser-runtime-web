@@ -16,11 +16,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { RichText, applyCommand } from "./RichText";
+import { RichText } from "./RichText";
+import type { RichTextHandle } from "./RichText";
+import type { SelectionBookmark } from "prosemirror-state";
+import { safeHref } from "./rich-text";
 import { WriteModeSwitch } from "./ViewControls";
 import type { WriteMode } from "./ViewControls";
 import { tidyIntoBullets, canTidy } from "./tidy-text";
-import type { Command } from "./RichText";
+import type { Command } from "./rich-text";
 
 interface Props {
   title: string;
@@ -73,7 +76,9 @@ export function FocusEditor({ title, hint, value, placeholder, onChange, onClose
   const [mode, setMode] = useState<WriteMode>("rich");
   const [linking, setLinking] = useState(false);
   const [href, setHref] = useState("");
-  const savedRange = useRef<Range | null>(null);
+  const editor = useRef<RichTextHandle>(null);
+  const savedRange = useRef<SelectionBookmark | null>(null);
+  const [formats, setFormats] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -105,20 +110,15 @@ export function FocusEditor({ title, hint, value, placeholder, onChange, onClose
   }, []);
 
   function startLink() {
-    const selection = window.getSelection();
-    savedRange.current = selection !== null && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+    savedRange.current = editor.current?.bookmark() ?? null;
     setHref("");
     setLinking(true);
   }
 
   function finishLink() {
-    const range = savedRange.current;
-    if (range !== null) {
-      const selection = window.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    }
-    applyCommand({ kind: "link" }, href);
+    if (safeHref(href) === null) return;
+    editor.current?.restore(savedRange.current);
+    editor.current?.command({ kind: "link" }, href);
     setLinking(false);
   }
 
@@ -152,7 +152,8 @@ export function FocusEditor({ title, hint, value, placeholder, onChange, onClose
                   key={tool.key}
                   className="u-tbtn"
                   onMouseDown={(event) => event.preventDefault()}
-                  onClick={() => applyCommand(tool.command)}
+                  onClick={() => editor.current?.command(tool.command)}
+                  aria-pressed={formats[tool.key] ?? false}
                   data-tip={tool.label}
                   aria-label={tool.label}
                 >
@@ -183,7 +184,7 @@ export function FocusEditor({ title, hint, value, placeholder, onChange, onClose
           <button
             className="u-btn ghost sm"
             onMouseDown={(event) => event.preventDefault()}
-            onClick={() => onChange(tidyIntoBullets(value))}
+            onClick={() => editor.current?.replaceMarkdown(tidyIntoBullets(value))}
             disabled={!canTidy(value)}
             title="Put each sentence on its own line. Your words are not changed."
           >
@@ -211,18 +212,23 @@ export function FocusEditor({ title, hint, value, placeholder, onChange, onClose
               placeholder="https://…"
               onChange={(event) => setHref(event.target.value)}
             />
-            <button className="u-btn primary" type="submit" disabled={href.trim() === ""}>
+            <button className="u-btn primary" type="submit" disabled={safeHref(href) === null}>
               Link it
             </button>
-            <button className="u-btn ghost" type="button" onClick={() => setLinking(false)}>
+            <button className="u-btn ghost" type="button" onClick={() => {
+              setLinking(false);
+              editor.current?.restore(savedRange.current);
+            }}>
               Cancel
             </button>
           </form>
         )}
 
         <div className="u-focus-scroll">
-          {mode === "rich" ? (
-            <RichText
+          <RichText
+              ref={editor}
+              hidden={mode !== "rich"}
+              onFormats={setFormats}
               value={value}
               placeholder={placeholder}
               className="u-focus-body"
@@ -230,7 +236,7 @@ export function FocusEditor({ title, hint, value, placeholder, onChange, onClose
               ariaLabel={title}
               onChange={onChange}
             />
-          ) : (
+          {mode === "raw" && (
             <textarea
               className="u-focus-body u-focus-raw"
               value={value}

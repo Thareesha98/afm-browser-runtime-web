@@ -29,9 +29,10 @@ import { ToolNameError, compositeToolPort, namespacedToolName } from "@afm/adapt
 import type { ServerMessage, ImageAttachment } from "./protocol";
 import { permissionKey, serverMessageFromLoopEvent } from "./protocol";
 import { userContent } from "./message-content";
+import { runtimeSystemPrompt } from "./runtime-guidance";
 
-const MAX_TOKENS_PER_TURN = 250_000;
-const MAX_WALL_CLOCK_MS = 180_000;
+const MAX_TOKENS_PER_TURN = 1_000_000;
+const MAX_WALL_CLOCK_MS = 15 * 60_000;
 
 const STAGE_LABELS: Record<string, string> = {
   file: "Reading the agent file",
@@ -111,7 +112,7 @@ export class AgentSession {
       const previousTools = this.tools;
       this.loaded = {
         ...loaded,
-        systemPrompt: loaded.systemPrompt + FILES_SYSTEM_NOTE,
+        systemPrompt: runtimeSystemPrompt(loaded.systemPrompt + FILES_SYSTEM_NOTE),
       };
       this.allowed = listedAsAllowed(loaded.metadata);
       this.model = model;

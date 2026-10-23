@@ -202,8 +202,9 @@ describe("the window a shared agent opens in", () => {
     expect(screen()).not.toContain("File from");
   });
 
-  it("shows the step limit", () => {
-    expect(screen()).toContain("10 steps per answer");
+  it("omits the step limit from the shared-agent review", () => {
+    expect(screen()).not.toContain("Step limit");
+    expect(screen()).not.toContain("steps per answer");
   });
 
   it("keeps both buttons in the footer, beside the sentence that says nothing has run", () => {

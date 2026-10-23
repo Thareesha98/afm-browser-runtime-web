@@ -25,7 +25,7 @@ importers:
         version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth
       "@afm/adapter-model":
         specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/model
-        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)
+        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model(patch_hash=8bc02ba408043e420fbc54156c315284a91a4f2b143bba58d3dc853352d4588a)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)
       "@afm/adapter-secret":
         specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/secret
         version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/secret(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)
@@ -62,6 +62,33 @@ importers:
       remark-gfm:
         specifier: ^4.0.0
         version: 4.0.1
+      prosemirror-commands:
+        specifier: ^1.7.2
+        version: 1.7.2
+      prosemirror-history:
+        specifier: ^1.5.1
+        version: 1.5.1
+      prosemirror-inputrules:
+        specifier: ^1.5.1
+        version: 1.5.1
+      prosemirror-keymap:
+        specifier: ^1.2.3
+        version: 1.2.3
+      prosemirror-markdown:
+        specifier: ^1.13.8
+        version: 1.13.8
+      prosemirror-model:
+        specifier: ^1.25.12
+        version: 1.25.12
+      prosemirror-schema-list:
+        specifier: ^1.5.1
+        version: 1.5.1
+      prosemirror-state:
+        specifier: ^1.4.4
+        version: 1.4.4
+      prosemirror-view:
+        specifier: ^1.42.6
+        version: 1.42.6
     devDependencies:
       "@types/react":
         specifier: ^19.2.0
@@ -1881,12 +1908,14 @@ packages:
       gitHosted: true
       path: /typescript-interpreter/packages/adapters/auth
       tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
+      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
     version: 0.0.0
   "@afm/adapter-model@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model":
     resolution:
       gitHosted: true
       path: /typescript-interpreter/packages/adapters/model
       tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
+      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
     version: 0.0.0
     peerDependencies:
       "@afm/engine": 0.0.0
@@ -1895,6 +1924,7 @@ packages:
       gitHosted: true
       path: /typescript-interpreter/packages/adapters/secret
       tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
+      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
     version: 0.0.0
     peerDependencies:
       "@afm/engine": 0.0.0
@@ -1903,6 +1933,7 @@ packages:
       gitHosted: true
       path: /typescript-interpreter/packages/adapters/tool
       tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
+      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
     version: 0.0.0
     peerDependencies:
       "@afm/adapter-auth": 0.0.0
@@ -1912,7 +1943,82 @@ packages:
       gitHosted: true
       path: /typescript-interpreter/packages/engine
       tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
+      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
     version: 0.0.0
+  "@types/linkify-it@5.0.0":
+    resolution:
+      integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==
+  "@types/markdown-it@14.2.0":
+    resolution:
+      integrity: sha512-NoQ2yGlLWj4wpxMs+TYmRKk3thDrQ97agr7sFqfLsAlvoS8SNQuTrlObhFqG9iugdTtgOE9jpJ6FNM4ZGsa5xQ==
+  "@types/mdurl@2.0.0":
+    resolution:
+      integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==
+  argparse@2.0.1:
+    resolution:
+      integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==
+  entities@4.5.0:
+    resolution:
+      integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==
+    engines:
+      node: ">=0.12"
+  linkify-it@5.0.2:
+    resolution:
+      integrity: sha512-ONTm2jCMAVZjgQa/Fy1kScXsuOoF5NPTsoFBdE1KVIZ2vAh/r9+Bqo+0jINCBYnavTPQZz38QzFTme79ENoN3Q==
+  markdown-it@14.3.3:
+    resolution:
+      integrity: sha512-L//tDAkjTjJCU6pBUSBTgs3Kg4InVaZuUZog/b6V12UKhcDQ7S78877ibbCanRExwPuYP1CZD7Gd2dxSy1GXRg==
+    hasBin: true
+  mdurl@2.1.0:
+    resolution:
+      integrity: sha512-1+HBaOx0zi/dQWht8rNv9MYf9qqpqL/kxI0hXImU6Y547zM6Sni8BQibt7ifgMcYtQg41ao3Ivd6cnSM86inpg==
+  orderedmap@2.1.1:
+    resolution:
+      integrity: sha512-TvAWxi0nDe1j/rtMcWcIj94+Ffe6n7zhow33h40SKxmsmozs6dz/e+EajymfoFcHd7sxNn8yHM8839uixMOV6g==
+  prosemirror-commands@1.7.2:
+    resolution:
+      integrity: sha512-q6Q6szxqdu9Xd6EcdKsqXghu5nQdZTpB4Q9yd04WRc7/jt763e/rT60Owh0L1GYY+T46o5rD+9lEN36dZS43tw==
+  prosemirror-history@1.5.1:
+    resolution:
+      integrity: sha512-onlwnqKvgtFg6srZOmDOAhlAy1FIHQpOExORybX0S+DvJepE5tPALrB9iGet/2sqqqrelSnB10OoiOJqAvu2DA==
+  prosemirror-inputrules@1.5.1:
+    resolution:
+      integrity: sha512-7wj4uMjKaXWAQ1CDgxNzNtR9AlsuwzHfdFH1ygEHA2KHF2DOEaXl1CJfNPAKCg9qNEh4rum975QLaCiQPyY6Fw==
+  prosemirror-keymap@1.2.3:
+    resolution:
+      integrity: sha512-4HucRlpiLd1IPQQXNqeo81BGtkY8Ai5smHhKW9jjPKRc2wQIxksg7Hl1tTI2IfT2B/LgX6bfYvXxEpJl7aKYKw==
+  prosemirror-markdown@1.13.8:
+    resolution:
+      integrity: sha512-Zi43BXX28jmxDJKvk8TDS2gMkBY/mgP8ynd6l/Vxrv8rgNFs5hsV1G0VscxTID1UCzVPcidADP9fUOBY3xxUeA==
+  prosemirror-model@1.25.12:
+    resolution:
+      integrity: sha512-Ue2gTmXMa7EhpLNhC7J+h4+ykD8ha12K6rrZFFKKJHBForfIStw5gJ6Zrf1mqqAa9NmpmEB4wp9bKmA4eUVjWg==
+  prosemirror-schema-list@1.5.1:
+    resolution:
+      integrity: sha512-927lFx/uwyQaGwJxLWCZRkjXG0p48KpMj6ueoYiu4JX05GGuGcgzAy62dfiV8eFZftgyBUvLx76RsMe20fJl+Q==
+  prosemirror-state@1.4.4:
+    resolution:
+      integrity: sha512-6jiYHH2CIGbCfnxdHbXZ12gySFY/fz/ulZE333G6bPqIZ4F+TXo9ifiR86nAHpWnfoNjOb3o5ESi7J8Uz1jXHw==
+  prosemirror-transform@1.12.2:
+    resolution:
+      integrity: sha512-PE/aY0HEY4zczvmqrilgkUK/WautF0chvMqkmM/iN5/aPHvwrCWaQZjS6CIZp+K84YrvPFqrL+YArrfJX8xX7g==
+  prosemirror-view@1.42.6:
+    resolution:
+      integrity: sha512-3g25f6hKV2bBxo3puH3EcYWmmVNSH0iWmNsMVT7sugDSpA025jgpOLarcDWr39SdzPjYMaiYtRdNtXialPSjEQ==
+  punycode.js@2.3.1:
+    resolution:
+      integrity: sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==
+    engines:
+      node: ">=6"
+  rope-sequence@1.3.4:
+    resolution:
+      integrity: sha512-UT5EDe2cu2E/6O4igUr5PSFs23nvvukicWHx6GnOPlHAiiYbzNuCRQCuiUdHJQcqKalLKlrYJnjY0ySGsXNQXQ==
+  uc.micro@2.1.0:
+    resolution:
+      integrity: sha512-ARDJmphmdvUk6Glw7y9DQ2bFkKBHwQHLi2lsaH6PPmz/Ka9sFOBsBluozhDltWmnv9u/cF6Rt87znRTPV+yp/A==
+  w3c-keyname@2.2.8:
+    resolution:
+      integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==
 snapshots:
   "@ai-sdk/anthropic@3.0.122(zod@3.25.76)":
     dependencies:
@@ -3131,14 +3237,6 @@ snapshots:
   zod@3.25.76: {}
   zwitch@2.0.4: {}
   "@afm/adapter-auth@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth": {}
-  "@afm/adapter-model@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)":
-    dependencies:
-      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine
-      "@ai-sdk/anthropic": 3.0.122(zod@3.25.76)
-      "@ai-sdk/openai": 3.0.118(zod@3.25.76)
-      ai: 6.0.291(zod@3.25.76)
-    transitivePeerDependencies:
-      - zod
   "@afm/adapter-secret@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/secret(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)":
     dependencies:
       "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine
@@ -3155,3 +3253,83 @@ snapshots:
     dependencies:
       yaml: 2.9.0
       zod: 3.25.76
+  "@afm/adapter-model@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model(patch_hash=8bc02ba408043e420fbc54156c315284a91a4f2b143bba58d3dc853352d4588a)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)":
+    dependencies:
+      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine
+      "@ai-sdk/anthropic": 3.0.122(zod@3.25.76)
+      "@ai-sdk/openai": 3.0.118(zod@3.25.76)
+      ai: 6.0.291(zod@3.25.76)
+    transitivePeerDependencies:
+      - zod
+  "@types/linkify-it@5.0.0": {}
+  "@types/markdown-it@14.2.0":
+    dependencies:
+      "@types/linkify-it": 5.0.0
+      "@types/mdurl": 2.0.0
+  "@types/mdurl@2.0.0": {}
+  argparse@2.0.1: {}
+  entities@4.5.0: {}
+  linkify-it@5.0.2:
+    dependencies:
+      uc.micro: 2.1.0
+  markdown-it@14.3.3:
+    dependencies:
+      argparse: 2.0.1
+      entities: 4.5.0
+      linkify-it: 5.0.2
+      mdurl: 2.1.0
+      punycode.js: 2.3.1
+      uc.micro: 2.1.0
+  mdurl@2.1.0: {}
+  orderedmap@2.1.1: {}
+  prosemirror-commands@1.7.2:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.2
+  prosemirror-history@1.5.1:
+    dependencies:
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.2
+      prosemirror-view: 1.42.6
+      rope-sequence: 1.3.4
+  prosemirror-inputrules@1.5.1:
+    dependencies:
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.2
+  prosemirror-keymap@1.2.3:
+    dependencies:
+      prosemirror-state: 1.4.4
+      w3c-keyname: 2.2.8
+  prosemirror-markdown@1.13.8:
+    dependencies:
+      "@types/markdown-it": 14.2.0
+      markdown-it: 14.3.3
+      prosemirror-model: 1.25.12
+  prosemirror-model@1.25.12:
+    dependencies:
+      orderedmap: 2.1.1
+  prosemirror-schema-list@1.5.1:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.2
+  prosemirror-state@1.4.4:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-transform: 1.12.2
+      prosemirror-view: 1.42.6
+  prosemirror-transform@1.12.2:
+    dependencies:
+      prosemirror-model: 1.25.12
+  prosemirror-view@1.42.6:
+    dependencies:
+      prosemirror-model: 1.25.12
+      prosemirror-state: 1.4.4
+      prosemirror-transform: 1.12.2
+  punycode.js@2.3.1: {}
+  rope-sequence@1.3.4: {}
+  uc.micro@2.1.0: {}
+  w3c-keyname@2.2.8: {}
+patchedDependencies:
+  "@afm/adapter-model@0.0.0": 8bc02ba408043e420fbc54156c315284a91a4f2b143bba58d3dc853352d4588a

@@ -127,7 +127,7 @@ export function lastUserIndex(messages: UiMessage[]): number {
   return -1;
 }
 
-export function turnEndNotice(reason: TurnEndReason, maxIterations?: number): string | null {
+export function turnEndNotice(reason: TurnEndReason, maxIterations?: number, budget?: BudgetSnapshot | null): string | null {
   switch (reason) {
     case "stop":
       return null;
@@ -137,8 +137,16 @@ export function turnEndNotice(reason: TurnEndReason, maxIterations?: number): st
       const limit = maxIterations === undefined ? "its limit" : `${maxIterations} steps`;
       return `Stopped after ${limit} - the agent hit its iteration limit, so the answer above may be unfinished. Raise 'max_iterations' in the agent file to let it go further.`;
     }
-    case "budget":
-      return "Stopped at the token or time budget for this turn, so the answer above may be unfinished.";
+    case "budget": {
+      if (budget?.maxTokens !== undefined && budget.totalTokens >= budget.maxTokens) {
+        return `Stopped at this turn's token budget (${budget.totalTokens.toLocaleString("en-US")} of ${budget.maxTokens.toLocaleString("en-US")} tokens). Send a follow-up to continue from the completed tool results.`;
+      }
+      if (budget?.maxWallClockMs !== undefined) {
+        const minutes = budget.maxWallClockMs / 60_000;
+        return `Stopped at this turn's ${minutes}-minute time budget. Send a follow-up to continue from the completed tool results.`;
+      }
+      return "Stopped at the token or time budget for this turn. Send a follow-up to continue from the completed tool results.";
+    }
   }
 }
 
@@ -291,7 +299,7 @@ function applyServerMessage(state: ChatState, message: ServerMessage): ChatState
       };
     case "turn-finished": {
       const ready = { ...state, status: "ready" as const, pendingPermission: null };
-      const text = turnEndNotice(message.reason, state.budget?.maxIterations);
+      const text = turnEndNotice(message.reason, state.budget?.maxIterations, state.budget);
       return text === null ? ready : withMessage(ready, { kind: "notice", text });
     }
     case "permission-request":

@@ -28,3 +28,5 @@ allowBuilds:
   esbuild: true
 onlyBuiltDependencies:
   - esbuild
+patchedDependencies:
+  '@afm/adapter-model@0.0.0': patches/afm-adapter-model-continuity.patch

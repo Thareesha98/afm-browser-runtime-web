@@ -400,3 +400,28 @@ describe("lockedSecrets", () => {
     expect(lockedSecrets(initialChatState)).toEqual([]);
   });
 });
+
+
+describe("budget stop diagnostics", () => {
+  function stopped(totalTokens: number, elapsedMs: number) {
+    const state = chatReducer(initialChatState, {
+      type: "server",
+      message: {
+        type: "budget-update", totalTokens, inputTokens: totalTokens, outputTokens: 0,
+        maxTokens: 250_000, iteration: 2, maxIterations: 10,
+        elapsedMs, maxWallClockMs: 900_000,
+      },
+    });
+    return chatReducer(state, { type: "server", message: { type: "turn-finished", reason: "budget" } }).messages.filter((message) => message.kind === "notice");
+  }
+
+  it("identifies a token stop without calling it a timeout", () => {
+    const text = stopped(260_000, 20_000)[0]?.text;
+    expect(text).toContain("token budget (260,000 of 250,000 tokens)");
+    expect(text).not.toContain("time budget");
+  });
+
+  it("identifies the configured time limit when tokens remain", () => {
+    expect(stopped(100, 900_001)[0]?.text).toContain("15-minute time budget");
+  });
+});

@@ -906,3 +906,38 @@ i
     expect(emitted.some((message) => message.type === "agent-not-ready")).toBe(false);
   });
 });
+
+
+describe("research turn budget", () => {
+  it("can finish after tool context exceeds the former 250,000-token cap", async () => {
+    let calls = 0;
+    const emitted: ServerMessage[] = [];
+    const model: ModelPort = {
+      async *stream() {
+        calls += 1;
+        if (calls === 1) {
+          yield { type: "tool-call", id: "lookup-1", name: "lookup", args: {} };
+          yield { type: "usage", inputTokens: 250_000, outputTokens: 1 };
+          return;
+        }
+        yield { type: "text-delta", text: "Verified preparation summary" };
+        yield { type: "usage", inputTokens: 20, outputTokens: 5 };
+      },
+    };
+    const session = new AgentSession({
+      createModel: async () => model,
+      createTools: () => inPageToolPort([
+        { name: "lookup", inputSchema: { type: "object" }, run: () => "Verified evidence" },
+      ]),
+      filesTools: inPageToolPort([]),
+      describeAttachedFiles: () => "no files attached",
+      secrets: configSecretPort({}),
+      permission: allowAllPermissions,
+      emit: (message) => emitted.push(message),
+    });
+    await session.load(VALID);
+    await session.send("Prepare me");
+    expect(emitted).toContainEqual({ type: "text-delta", text: "Verified preparation summary" });
+    expect(emitted.at(-1)).toEqual({ type: "turn-finished", reason: "stop" });
+  });
+});

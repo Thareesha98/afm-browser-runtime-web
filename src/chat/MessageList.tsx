@@ -119,7 +119,14 @@ export function MessageList(props: Props) {
       <div className="xc-col">
         <div className="xc-thread">
           {messages.map((message, index) => {
-            if (message.kind === "tool") return null;
+            if (message.kind === "tool") {
+              if (isAttached(message, footnotes)) return null;
+              return (
+                <div className="xc-turn" key={message.id}>
+                  <ToolFootnote tool={message} server={serverOf?.(message.name)} />
+                </div>
+              );
+            }
             if (message.kind === "attachment") {
               return (
                 <div className="attachment-row" key={message.id} role="group" aria-label="Attached files">
@@ -176,12 +183,6 @@ export function MessageList(props: Props) {
               />
             );
           })}
-
-          {openTools.map((tool) => (
-            <div className="xc-turn" key={tool.id}>
-              <ToolFootnote tool={tool} server={serverOf?.(tool.name)} />
-            </div>
-          ))}
 
           {waiting && (
             <div className="xc-turn">

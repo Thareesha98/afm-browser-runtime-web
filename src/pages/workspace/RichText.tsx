@@ -1,180 +1,124 @@
 // Copyright (c) 2026, WSO2 LLC. (https://www.wso2.com).
-//
-// WSO2 LLC. licenses this file to you under the Apache License,
-// Version 2.0 (the "License"); you may not use this file except
-// in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied. See the License for the
-// specific language governing permissions and limitations
-// under the License.
+// Licensed under the Apache License, Version 2.0.
 
-import { useEffect, useRef } from "react";
-import { toHtml, toMarkdown } from "./rich-text";
+import { forwardRef, useImperativeHandle, useLayoutEffect, useRef } from "react";
+import { Slice } from "prosemirror-model";
+import { TextSelection } from "prosemirror-state";
+import type { SelectionBookmark } from "prosemirror-state";
+import { EditorView } from "prosemirror-view";
+import { activeFormats, commandFor, createEditorState, parseMarkdown, serializeMarkdown } from "./rich-text";
+import type { Command } from "./rich-text";
+import "prosemirror-view/style/prosemirror.css";
 
+export interface RichTextHandle {
+  command(command: Command, href?: string): void;
+  replaceMarkdown(value: string): void;
+  bookmark(): SelectionBookmark | null;
+  restore(bookmark: SelectionBookmark | null): void;
+}
 interface Props {
   value: string;
   placeholder: string;
   className?: string;
   onChange: (markdown: string) => void;
+  onFormats?: (formats: Record<string, boolean>) => void;
   docKey?: string;
   rewindOnBlur?: boolean;
   ariaLabel: string;
+  hidden?: boolean;
 }
 
-export function RichText({ value, placeholder, className = "", onChange, docKey = "", rewindOnBlur = false, ariaLabel }: Props) {
+export const RichText = forwardRef<RichTextHandle, Props>(function RichText(props, ref) {
   const box = useRef<HTMLDivElement>(null);
-  const lastEmitted = useRef<string | null>(null);
+  const editor = useRef<EditorView | null>(null);
+  const latest = useRef(props);
+  latest.current = props;
+  const lastEmitted = useRef(props.value);
 
-  function markOverflow() {
-    const node = box.current;
-    if (node === null) return;
-    const more = node.scrollHeight - node.scrollTop - node.clientHeight > 1;
-    node.classList.toggle("has-more", more);
+  function decorate(view: EditorView): void {
+    const node = view.dom;
+    node.classList.toggle("is-empty", view.state.doc.textContent === "" && view.state.doc.childCount === 1 && view.state.doc.firstChild?.type.name === "paragraph");
+    node.classList.toggle("has-more", node.scrollHeight - node.scrollTop - node.clientHeight > 1);
     node.classList.toggle("has-less", node.scrollTop > 1);
   }
 
-  // The placeholder shows only while there is no text at all. (A CSS :empty rule is not enough: the browser leaves a
-  // <br> behind, or a text node beside it, and then the example kept showing under what was typed.)
-  function markEmpty() {
-    const node = box.current;
-    if (node === null) return;
-    node.classList.toggle("is-empty", node.textContent === "");
-  }
+  useImperativeHandle(ref, () => ({
+    command(command, href) {
+      const view = editor.current;
+      if (view === null) return;
+      commandFor(command, href)(view.state, view.dispatch, view);
+      view.focus();
+    },
+    replaceMarkdown(value) {
+      const view = editor.current;
+      if (view === null) return;
+      view.dispatch(view.state.tr.replaceWith(0, view.state.doc.content.size, parseMarkdown(value).content));
+      view.focus();
+    },
+    bookmark: () => editor.current?.state.selection.getBookmark() ?? null,
+    restore(bookmark) {
+      const view = editor.current;
+      if (view === null || bookmark === null) return;
+      try { view.dispatch(view.state.tr.setSelection(bookmark.resolve(view.state.doc))); }
+      catch { view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc))); }
+    },
+  }), []);
 
-  useEffect(() => {
-    const node = box.current;
-    if (node === null) return;
-    if (value === lastEmitted.current) return;
-    node.innerHTML = toHtml(value);
-    lastEmitted.current = value;
-    markOverflow();
-    markEmpty();
-  }, [value, docKey]);
+  useLayoutEffect(() => {
+    if (box.current === null) return;
+    lastEmitted.current = latest.current.value;
+    const view: EditorView = new EditorView({ mount: box.current }, {
+      state: createEditorState(latest.current.value),
+      attributes: { role: "textbox", "aria-multiline": "true", "aria-label": latest.current.ariaLabel },
+      dispatchTransaction(transaction) {
+        const updated = view.state.applyTransaction(transaction);
+        view.updateState(updated.state);
+        decorate(view);
+        if (updated.transactions.some((change) => change.docChanged)) {
+          const value = serializeMarkdown(view.state.doc);
+          if (value !== lastEmitted.current) {
+            lastEmitted.current = value;
+            latest.current.onChange(value);
+          }
+        }
+        latest.current.onFormats?.(activeFormats(view.state));
+      },
+      clipboardTextParser(text, _context, plain): Slice {
+        if (plain) {
+          const paragraphs = text.split(/\r?\n/).map((line) => view.state.schema.nodes.paragraph!.create(null, line ? view.state.schema.text(line) : undefined));
+          return Slice.maxOpen(view.state.schema.nodes.doc!.create(null, paragraphs).content);
+        }
+        return Slice.maxOpen(parseMarkdown(text).content);
+      },
+      handleDOMEvents: {
+        blur() {
+          if (latest.current.rewindOnBlur) view.dom.scrollTop = 0;
+          decorate(view);
+          return false;
+        },
+        scroll() { decorate(view); return false; },
+        click(_view, event) {
+          if ((event.target as Element).closest("a")) event.preventDefault();
+          return false;
+        },
+      },
+    });
+    editor.current = view;
+    decorate(view);
+    latest.current.onFormats?.(activeFormats(view.state));
+    return () => { editor.current = null; view.destroy(); };
+  }, [props.docKey]);
 
-  function read() {
-    const node = box.current;
-    if (node === null) return;
-    const markdown = toMarkdown(node);
-    if (markdown === lastEmitted.current) return;
-    lastEmitted.current = markdown;
-    onChange(markdown);
-  }
+  useLayoutEffect(() => {
+    const view = editor.current;
+    if (view === null || props.value === lastEmitted.current) return;
+    lastEmitted.current = props.value;
+    const document = parseMarkdown(props.value);
+    if (!document.eq(view.state.doc)) view.updateState(createEditorState(props.value));
+    decorate(view);
+    latest.current.onFormats?.(activeFormats(view.state));
+  }, [props.value, props.docKey]);
 
-  return (
-    <div
-      ref={box}
-      className={`rich-text ${className}`}
-      contentEditable
-      suppressContentEditableWarning
-      role="textbox"
-      aria-multiline="true"
-      aria-label={ariaLabel}
-      data-placeholder={placeholder}
-      onInput={() => {
-        read();
-        markOverflow();
-        markEmpty();
-      }}
-      onScroll={markOverflow}
-      onBlur={() => {
-        read();
-        if (rewindOnBlur && box.current !== null) box.current.scrollTop = 0;
-        markOverflow();
-        markEmpty();
-      }}
-      onKeyDown={(event) => {
-        if (mergeIntoPreviousItem(event)) read();
-      }}
-      onPaste={(event) => {
-        event.preventDefault();
-        const text = event.clipboardData.getData("text/plain");
-        document.execCommand("insertText", false, text);
-      }}
-    />
-  );
-}
-
-export type Command =
-  | { kind: "inline"; command: string }
-  | { kind: "block"; tag: string }
-  | { kind: "list"; command: string }
-  | { kind: "code" }
-  | { kind: "link" }
-  | { kind: "clear" };
-
-export function applyCommand(command: Command, href?: string): void {
-  switch (command.kind) {
-    case "inline":
-      document.execCommand(command.command);
-      return;
-    case "block": {
-      const current = document.queryCommandValue("formatBlock").toLowerCase();
-      document.execCommand("formatBlock", false, current === command.tag ? "p" : command.tag);
-      return;
-    }
-    case "list":
-      document.execCommand(command.command);
-      return;
-    case "code": {
-      const selected = window.getSelection()?.toString() ?? "";
-      if (selected === "") return;
-      document.execCommand("insertHTML", false, `<code>${escapeForInsert(selected)}</code>`);
-      return;
-    }
-    case "link":
-      if (href === undefined || href.trim() === "") return;
-      document.execCommand("createLink", false, href.trim());
-      return;
-    case "clear":
-      document.execCommand("removeFormat");
-      document.execCommand("unlink");
-      return;
-  }
-}
-
-function escapeForInsert(text: string): string {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function mergeIntoPreviousItem(event: React.KeyboardEvent<HTMLDivElement>): boolean {
-  if (event.key !== "Backspace") return false;
-  const selection = window.getSelection();
-  if (selection === null || !selection.isCollapsed || selection.rangeCount === 0) return false;
-
-  const range = selection.getRangeAt(0);
-  const item = closestListItem(range.startContainer);
-  if (item === null || !atStartOf(item, range)) return false;
-
-  const previous = item.previousElementSibling;
-  if (previous === null || previous.tagName !== "LI") return false;
-
-  event.preventDefault();
-  const joinAt = previous.childNodes.length;
-  while (item.firstChild !== null) previous.appendChild(item.firstChild);
-  item.remove();
-
-  const merged = document.createRange();
-  merged.setStart(previous, joinAt);
-  merged.collapse(true);
-  selection.removeAllRanges();
-  selection.addRange(merged);
-  return true;
-}
-
-function closestListItem(node: Node): HTMLElement | null {
-  const start = node.nodeType === Node.ELEMENT_NODE ? (node as HTMLElement) : node.parentElement;
-  return start?.closest("li") ?? null;
-}
-
-function atStartOf(item: HTMLElement, range: Range): boolean {
-  const before = range.cloneRange();
-  before.selectNodeContents(item);
-  before.setEnd(range.startContainer, range.startOffset);
-  return before.toString() === "";
-}
+  return <div ref={box} className={`rich-text ${props.className ?? ""}`} hidden={props.hidden}
+    data-placeholder={props.placeholder} />;
+});

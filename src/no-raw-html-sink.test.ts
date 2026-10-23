@@ -20,7 +20,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SRC = fileURLToPath(new URL(".", import.meta.url));
-const ALLOWED = new Set(["pages/workspace/RichText.tsx"]);
+const ALLOWED = new Set<string>();
 const SINK = /\.innerHTML\s*=|dangerouslySetInnerHTML|\.outerHTML\s*=|insertAdjacentHTML|document\.write\(|[^a-zA-Z0-9_.]eval\(|new Function\(/;
 
 function sourceFiles(dir: string): string[] {

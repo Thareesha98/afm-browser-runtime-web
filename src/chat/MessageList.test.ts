@@ -64,3 +64,27 @@ describe("a thread whose agent did not start", () => {
     expect(out).not.toContain("xc-notready");
   });
 });
+
+
+describe("tool results without a final answer", () => {
+  const tool: UiMessage = {
+    kind: "tool", id: 2, callId: "read-1", name: "read_file",
+    args: {}, status: "ok", result: "Project evidence",
+  };
+
+  it("keeps completed research visible when a turn hits its budget", () => {
+    const out = list("ready", [
+      { kind: "user", id: 1, text: "Prepare me" },
+      tool,
+      { kind: "notice", id: 3, text: "Stopped at the token budget" },
+      { kind: "user", id: 4, text: "Continue" },
+    ]);
+    expect(out).toContain("read_file");
+    expect(out).toContain("Stopped at the token budget");
+  });
+
+  it("shows a tool once when it belongs to a final answer", () => {
+    const out = list("ready", [tool, { kind: "assistant", id: 3, text: "Here is your plan" }]);
+    expect(out.match(/xc-used-name/g)).toHaveLength(1);
+  });
+});

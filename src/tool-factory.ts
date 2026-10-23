@@ -18,6 +18,7 @@ import { compositeToolPort, mcpToolPort, mcpAuthHeaders, isDynamicAuthType, crea
 import type { McpDynamicAuthDeps } from "@afm/adapter-tool";
 import { isInteractiveOAuth, oauthProviderFrom } from "@afm/adapter-auth";
 import type { AgentMetadata, ToolPort } from "@afm/engine";
+import { canvaJobToolPort } from "./canva-jobs";
 import { proxySessionFetch, requestUrl } from "./proxy-session";
 import { MAX_AGENT_FILE_BYTES, limitBodies, limitResponses } from "./response-limit";
 
@@ -95,7 +96,7 @@ export function mcpServerPort(
   if (server.tool_filter !== undefined) {
     port = filteredToolPort(port, server.tool_filter);
   }
-  return port;
+  return canvaJobToolPort(port, transport.url);
 }
 
 export function toolsFromMetadata(

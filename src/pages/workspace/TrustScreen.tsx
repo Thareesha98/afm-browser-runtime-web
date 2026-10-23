@@ -16,7 +16,7 @@
 
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { DEFAULT_MAX_ITERATIONS, referencedSecretNames } from "@afm/engine";
+import { referencedSecretNames } from "@afm/engine";
 import type { AgentMetadata } from "@afm/engine";
 import { hostOf } from "../../load-paths";
 import { findProvider, shortModelLabel } from "./model-catalog";
@@ -52,7 +52,6 @@ const ICONS = {
   model: "M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z",
   tools: "M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z",
   key: "M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.78 7.78 5.5 5.5 0 017.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4",
-  steps: "M17 1l4 4-4 4M3 11V9a4 4 0 014-4h14M7 23l-4-4 4-4M21 13v2a4 4 0 01-4 4H3",
   link: "M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71",
   search: "M21 21l-4.3-4.3M11 18a7 7 0 100-14 7 7 0 000 14z",
 };
@@ -245,9 +244,6 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
               <span className="u-tr-note">{TRUST_COPY.keysNote}</span>
             </>
           )}
-        </Row>
-        <Row icon={ICONS.steps} label="Step limit">
-          <span className="u-tr-v">{metadata.max_iterations ?? DEFAULT_MAX_ITERATIONS} steps per answer</span>
         </Row>
       </div>
     </DialogFrame>
