@@ -322,14 +322,6 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .u-trust{width:100%;max-width:500px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px 20px}
 .u-trust h4{font-size:17px;font-weight:600;letter-spacing:-.01em}
 .u-trust > p{font-size:13px;color:var(--muted);line-height:1.55;margin-top:5px}
-.u-declare{border:1px solid var(--line);border-radius:11px;margin:15px 0 14px;overflow:hidden}
-.u-declare-row{display:flex;gap:12px;align-items:center;padding:10px 13px;font-size:13px;color:var(--ink2)}
-.u-declare-row + .u-declare-row{border-top:1px solid var(--line-2)}
-.u-declare-k{color:var(--muted);width:104px;flex:none;font-size:12px}
-.u-declare-row.top{align-items:flex-start}
-.u-declare-servers{display:flex;flex-direction:column;gap:12px;min-width:0;flex:1}
-.u-declare-tools{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.u-declare-tools .tag{font-weight:500}
 
 
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
