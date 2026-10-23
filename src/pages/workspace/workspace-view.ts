@@ -14,6 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { displayName } from "./setup-check";
+
 export type SidePanel = "chat" | "model" | "tools" | "share" | "settings" | "info" | "setup";
 
 export type LeftPanel = "agents" | "start";
@@ -27,6 +29,10 @@ export const SIDE_TITLE: Record<SidePanel, string> = {
   info: "About",
   setup: "Setup",
 };
+
+export function sideTitle(panel: SidePanel, editingServer: string | null): string {
+  return panel === "tools" && editingServer !== null ? displayName(editingServer) : SIDE_TITLE[panel];
+}
 
 export const LEFT_TITLE: Record<LeftPanel, string> = {
   agents: "Agents",

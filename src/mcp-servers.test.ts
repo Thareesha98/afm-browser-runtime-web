@@ -15,7 +15,8 @@
 // under the License.
 
 import { describe, it, expect } from "vitest";
-import { isListedServer, searchDirectory, resolveMcpServerAuth, resolveDirectoryAuth } from "./mcp-servers";
+import { isListedServer, listedServer, searchDirectory, resolveMcpServerAuth, resolveDirectoryAuth } from "./mcp-servers";
+import { nameFromUrl } from "./pages/workspace/server-config";
 import { DIRECTORY_ENTRIES } from "./mcp-directory";
 import type { DirectoryEntry, OAuthSignIn } from "./mcp-directory";
 
@@ -343,6 +344,40 @@ describe("isListedServer", () => {
 
   it("does not recognise an address that is not in the directory", () => {
     expect(isListedServer("https://mcp.example.com/mcp")).toBe(false);
+  });
+});
+
+describe("listedServer", () => {
+  it("finds the entry for the exact address of a directory server", () => {
+    expect(listedServer("https://ai.todoist.net/mcp")?.id).toBe("todoist");
+  });
+
+  it("finds nothing for an address that is not in the directory", () => {
+    expect(listedServer("https://mcp.example.com/mcp")).toBeUndefined();
+  });
+
+  it("finds each directory server by its own address", () => {
+    for (const entry of DIRECTORY_ENTRIES) expect(listedServer(entry.url)?.id).toBe(entry.id);
+  });
+});
+
+describe("the name a directory server is added under", () => {
+  it("is its directory id, for every server in the directory", () => {
+    for (const entry of DIRECTORY_ENTRIES) {
+      expect(nameFromUrl(entry.url, [], listedServer(entry.url)?.id)).toBe(entry.id);
+    }
+  });
+
+  it("is never a bare word taken from the front of the address", () => {
+    const names = DIRECTORY_ENTRIES.map((entry) => nameFromUrl(entry.url, [], listedServer(entry.url)?.id));
+    for (const bad of ["ai", "docs", "learn", "bindings", "knowledge-mcp", "netlify-mcp", "asset-management"]) {
+      expect(names).not.toContain(bad);
+    }
+  });
+
+  it("is different for every server, so adding two never makes one overwrite the other", () => {
+    const names = DIRECTORY_ENTRIES.map((entry) => nameFromUrl(entry.url, [], listedServer(entry.url)?.id));
+    expect(new Set(names).size).toBe(names.length);
   });
 });
 
