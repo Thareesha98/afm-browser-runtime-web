@@ -63,19 +63,26 @@ export const AUTH_METHODS: Method[] = [
   },
 ];
 
-export function nameFromUrl(url: string, taken: string[]): string {
+const GENERIC_HOST_WORDS = ["mcp", "api", "www", "ai", "app"];
+
+function freeName(base: string, taken: string[]): string {
+  if (!taken.includes(base)) return base;
+  for (let n = 2; ; n += 1) {
+    if (!taken.includes(`${base}-${n}`)) return `${base}-${n}`;
+  }
+}
+
+export function nameFromUrl(url: string, taken: string[], listedId?: string): string {
+  if (listedId !== undefined) return freeName(listedId, taken);
   let host = "";
   try {
     host = new URL(url).hostname;
   } catch {
     return "";
   }
-  const parts = host.split(".").filter((part) => !["mcp", "api", "www"].includes(part));
+  const parts = host.split(".").filter((part) => !GENERIC_HOST_WORDS.includes(part));
   const base = (parts[0] ?? host).replace(/[^a-z0-9-]/gi, "").toLowerCase() || "server";
-  if (!taken.includes(base)) return base;
-  for (let n = 2; ; n += 1) {
-    if (!taken.includes(`${base}-${n}`)) return `${base}-${n}`;
-  }
+  return freeName(base, taken);
 }
 
 interface ServerSave {

@@ -25,7 +25,7 @@ import { AUTH_METHODS, nameFromUrl, prepareServerSave } from "./server-config";
 import type { NewMcpServer } from "./agent-source-edit";
 import type { SignInVetting, ToolInfo } from "../../protocol";
 import type { SignInOutcome } from "../../oauth-signin";
-import { discoverMcpServerAuth, isListedServer, resolveDirectoryClient } from "../../mcp-servers";
+import { discoverMcpServerAuth, isListedServer, listedServer, resolveDirectoryClient } from "../../mcp-servers";
 import type { DiscoveredMcpAuth } from "../../mcp-servers";
 import { ToolTip, tipFor } from "./ToolTip";
 import type { TipTarget } from "./ToolTip";
@@ -152,7 +152,7 @@ export function ServerPanel({
   const tools: ToolInfo[] | null = live ? found : [...(existing?.tool_filter?.allow ?? []), ...denied].map((tool) => ({ name: tool }));
 
   const taken = (metadata.tools?.mcp ?? []).map((s) => s.name).filter((n) => n !== editing);
-  const name = editing ?? nameFromUrl(url, taken);
+  const name = editing ?? nameFromUrl(url, taken, listedServer(url.trim())?.id);
 
   useEffect(() => {
     signInNoteRef.current?.scrollIntoView({ block: "nearest" });

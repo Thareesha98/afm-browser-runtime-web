@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { describe, it, expect } from "vitest";
-import { NOTHING_OPEN, closePanel, openOver, openPanel, togglePanel } from "./workspace-view";
+import { NOTHING_OPEN, closePanel, openOver, openPanel, sideTitle, togglePanel } from "./workspace-view";
 import type { SideState } from "./workspace-view";
 
 const chat: SideState = { open: "chat", under: [] };
@@ -87,5 +87,18 @@ describe("the top bar's buttons", () => {
 
   it("close the chat itself when it is the one showing", () => {
     expect(togglePanel(chat, "chat")).toEqual(NOTHING_OPEN);
+  });
+});
+
+describe("sideTitle", () => {
+  it("is the panel's own title for most panels", () => {
+    expect(sideTitle("model", null)).toBe("Model");
+    expect(sideTitle("tools", null)).toBe("Connect tools");
+    expect(sideTitle("model", "notion")).toBe("Model");
+  });
+
+  it("is the server's name, starting with a capital letter, while a server is being edited", () => {
+    expect(sideTitle("tools", "todoist")).toBe("Todoist");
+    expect(sideTitle("tools", "githubcopilot")).toBe("Githubcopilot");
   });
 });

@@ -79,8 +79,20 @@ describe("nameFromUrl", () => {
     ["https://acme.example/mcp", ["acme", "acme-2"], "acme-3"],
     ["https://localhost:8080/mcp", [], "localhost"],
     ["https://www.mcp.api/mcp", [], "wwwmcpapi"],
+    ["https://ai.acme.example/mcp", [], "acme"],
+    ["https://app.acme.example/mcp", [], "acme"],
   ] as [string, string[], string][])("names %s without changing the URL rule", (url, taken, expected) => {
     expect(nameFromUrl(url, taken)).toBe(expected);
+  });
+
+  it("uses the directory's own id for a listed server, whatever its address looks like", () => {
+    expect(nameFromUrl("https://ai.todoist.net/mcp", [], "todoist")).toBe("todoist");
+    expect(nameFromUrl("https://mcp.ai.pulumi.com/mcp", [], "pulumi")).toBe("pulumi");
+  });
+
+  it("numbers a listed server's name when the agent already has one with that name", () => {
+    expect(nameFromUrl("https://ai.todoist.net/mcp", ["todoist"], "todoist")).toBe("todoist-2");
+    expect(nameFromUrl("https://ai.todoist.net/mcp", ["todoist", "todoist-2"], "todoist")).toBe("todoist-3");
   });
 });
 

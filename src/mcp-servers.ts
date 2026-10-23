@@ -32,8 +32,12 @@ export function searchDirectory(query: string, entries: readonly DirectoryEntry[
     .sort((a, b) => Number(inTitle(b)) - Number(inTitle(a)) || a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
 }
 
+export function listedServer(url: string): DirectoryEntry | undefined {
+  return DIRECTORY_ENTRIES.find((entry) => entry.url === url);
+}
+
 export function isListedServer(url: string): boolean {
-  return DIRECTORY_ENTRIES.some((entry) => entry.url === url);
+  return listedServer(url) !== undefined;
 }
 
 export interface DiscoveredMcpAuth {

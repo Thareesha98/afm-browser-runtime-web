@@ -39,7 +39,7 @@ import { StageFoot } from "./StageFoot";
 import { useAgentActivity } from "./agent-activity";
 import { StartHere } from "./StartHere";
 import { TrustScreen } from "./TrustScreen";
-import { LEFT_TITLE, NOTHING_OPEN, SIDE_TITLE, closePanel, openOver, openPanel, togglePanel } from "./workspace-view";
+import { LEFT_TITLE, NOTHING_OPEN, closePanel, openOver, openPanel, sideTitle, togglePanel } from "./workspace-view";
 import type { LeftPanel, SideState, SidePanel } from "./workspace-view";
 import { resolveContent } from "../../load-paths";
 import { agentFileFetch } from "../../tool-factory";
@@ -492,9 +492,7 @@ export function WorkspacePage() {
             <SidePane
               key={overPanel}
               over
-              title={
-                overPanel === "tools" && serverEditing !== null ? serverEditing : SIDE_TITLE[overPanel]
-              }
+              title={sideTitle(overPanel, serverEditing)}
               onClose={leavePanel}
               flush={overPanel === "model" || overPanel === "tools" || overPanel === "info" || overPanel === "share" || overPanel === "setup"}
             >
