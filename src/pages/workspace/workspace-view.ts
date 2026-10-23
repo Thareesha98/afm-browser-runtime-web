@@ -30,6 +30,10 @@ export const SIDE_TITLE: Record<SidePanel, string> = {
   setup: "Setup",
 };
 
+export function chatCloseAction(fullWindow: boolean, phone: boolean): "shrink" | "close" {
+  return fullWindow && !phone ? "shrink" : "close";
+}
+
 export function sideTitle(panel: SidePanel, editingServer: string | null): string {
   return panel === "tools" && editingServer !== null ? displayName(editingServer) : SIDE_TITLE[panel];
 }
