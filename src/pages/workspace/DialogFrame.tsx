@@ -24,7 +24,11 @@ interface Props {
   title: string;
   subtitle?: string;
   footer: string;
+  icon?: ReactNode;
+  actions?: ReactNode;
   narrow?: boolean;
+  tall?: boolean;
+  sheet?: boolean;
   focusKey: string;
   onBack?: () => void;
   onClose?: () => void;
@@ -42,7 +46,7 @@ function Icon({ path, size }: { path: string; size: number }) {
   );
 }
 
-export function DialogFrame({ title, subtitle, footer, narrow = false, focusKey, onBack, onClose, onEscape, onOutside, children }: Props) {
+export function DialogFrame({ title, subtitle, footer, icon, actions, narrow = false, tall = false, sheet = false, focusKey, onBack, onClose, onEscape, onOutside, children }: Props) {
   const titleId = useId();
   const subtitleId = useId();
   const panel = useRef<HTMLDivElement>(null);
@@ -78,14 +82,14 @@ export function DialogFrame({ title, subtitle, footer, narrow = false, focusKey,
 
   const dialog = (
     <div
-      className="u-dlg-scrim"
+      className={sheet ? "u-dlg-scrim is-sheet" : "u-dlg-scrim"}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onOutside?.();
       }}
     >
       <div
         ref={panel}
-        className={narrow ? "u-dlg narrow" : "u-dlg"}
+        className={["u-dlg", narrow ? "narrow" : "", tall ? "tall" : ""].filter((name) => name !== "").join(" ")}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -100,14 +104,23 @@ export function DialogFrame({ title, subtitle, footer, narrow = false, focusKey,
                 Back
               </button>
             )}
-            <h3 className="u-dlg-title" id={titleId}>
-              {title}
-            </h3>
-            {subtitle !== undefined && (
-              <p className="u-dlg-sub" id={subtitleId}>
-                {subtitle}
-              </p>
-            )}
+            <div className={icon === undefined ? undefined : "u-dlg-id"}>
+              {icon !== undefined && (
+                <span className="u-dlg-tile" aria-hidden="true">
+                  {icon}
+                </span>
+              )}
+              <div>
+                <h3 className="u-dlg-title" id={titleId}>
+                  {title}
+                </h3>
+                {subtitle !== undefined && (
+                  <p className="u-dlg-sub" id={subtitleId}>
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+            </div>
           </div>
           {onClose !== undefined && (
             <button className="u-dlg-x" aria-label="Close" onClick={onClose}>
@@ -116,7 +129,14 @@ export function DialogFrame({ title, subtitle, footer, narrow = false, focusKey,
           )}
         </div>
         <div className="u-dlg-body">{children}</div>
-        <p className="u-dlg-foot">{footer}</p>
+        {actions === undefined ? (
+          <p className="u-dlg-foot">{footer}</p>
+        ) : (
+          <div className="u-dlg-foot act">
+            <span>{footer}</span>
+            <span className="btns">{actions}</span>
+          </div>
+        )}
       </div>
     </div>
   );
