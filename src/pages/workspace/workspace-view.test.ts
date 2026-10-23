@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { describe, it, expect } from "vitest";
-import { NOTHING_OPEN, closePanel, openOver, openPanel, sideTitle, togglePanel } from "./workspace-view";
+import { NOTHING_OPEN, chatCloseAction, closePanel, openOver, openPanel, sideTitle, togglePanel } from "./workspace-view";
 import type { SideState } from "./workspace-view";
 
 const chat: SideState = { open: "chat", under: [] };
@@ -100,5 +100,20 @@ describe("sideTitle", () => {
   it("is the server's name, starting with a capital letter, while a server is being edited", () => {
     expect(sideTitle("tools", "todoist")).toBe("Todoist");
     expect(sideTitle("tools", "githubcopilot")).toBe("Githubcopilot");
+  });
+});
+
+describe("chatCloseAction", () => {
+  it("shrinks the whole-window chat back to the side window instead of closing it", () => {
+    expect(chatCloseAction(true, false)).toBe("shrink");
+  });
+
+  it("closes the side window chat", () => {
+    expect(chatCloseAction(false, false)).toBe("close");
+  });
+
+  it("closes the chat on a phone, where there is no separate side window to return to", () => {
+    expect(chatCloseAction(true, true)).toBe("close");
+    expect(chatCloseAction(false, true)).toBe("close");
   });
 });

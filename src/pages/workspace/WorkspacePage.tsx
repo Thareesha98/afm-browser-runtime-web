@@ -39,7 +39,7 @@ import { StageFoot } from "./StageFoot";
 import { useAgentActivity } from "./agent-activity";
 import { StartHere } from "./StartHere";
 import { TrustScreen } from "./TrustScreen";
-import { LEFT_TITLE, NOTHING_OPEN, closePanel, openOver, openPanel, sideTitle, togglePanel } from "./workspace-view";
+import { LEFT_TITLE, NOTHING_OPEN, chatCloseAction, closePanel, openOver, openPanel, sideTitle, togglePanel } from "./workspace-view";
 import type { LeftPanel, SideState, SidePanel } from "./workspace-view";
 import { resolveContent } from "../../load-paths";
 import { agentFileFetch } from "../../tool-factory";
@@ -472,7 +472,7 @@ export function WorkspacePage() {
                 <ChatHead name={agentLabel} iconUrl={agentIcon} status={chatState} />
               )
             }
-            onClose={closeSide}
+            onClose={() => (chatCloseAction(chatFull, compact) === "shrink" ? setChatFull(false) : closeSide())}
             onExpand={chatFull ? undefined : () => setChatFull(true)}
             floating={chatFull}
             flush
