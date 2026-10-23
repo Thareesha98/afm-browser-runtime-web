@@ -50,11 +50,6 @@
   width: 100%;
   border-left: none;
 }
-.u-body.is-trust .u-stage,
-.u-body.is-trust .u-side,
-.u-body.is-trust .u-side-left {
-  display: none;
-}
 
 .u-side-left {
   --slide-from: -8px;
