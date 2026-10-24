@@ -15,7 +15,7 @@
 // under the License.
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { BuildPane } from "./BuildPane";
 import { ReadinessChip, chipAnnouncement } from "./ReadinessChip";
 import type { Needs } from "./readiness";
@@ -25,7 +25,6 @@ import type { AgentActivity } from "./agent-activity";
 import { buildableAgent, collectAfmIssues } from "../../agent-validation";
 import { ModeSwitch } from "./ViewControls";
 import type { EditorMode } from "./ViewControls";
-import type { BuildableAgent } from "../../agent-validation";
 
 import { downloadAgentFile } from "../../download-agent-file";
 import { getFrontmatterScalar } from "./agent-source-edit";
@@ -43,7 +42,6 @@ interface Props extends EditableProps {
   onOpenModel: () => void;
   onOpenServer: (name: string | null) => void;
   showRaw?: number;
-  onOpenPanel?: (panel: "model" | "tools") => void;
   chip?: { needs: Needs; phase: ChipPhase; onHold: (held: boolean) => void };
   // buttons that sit at the end of the Build / Raw row on a narrow window (they are in the header otherwise)
   toolbarExtras?: ReactNode;
@@ -60,8 +58,10 @@ function agentFilename(content: string): string | undefined {
   return `${slug === "" ? "agent" : slug}.afm.md`;
 }
 
-export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, onOpenPanel, chip, toolbarExtras, openPanel }: Props) {
+export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, chip, toolbarExtras, openPanel }: Props) {
   const [mode, setMode] = useState<EditorMode>("simple");
+  const [asking, setAsking] = useState(false);
+  const wrap = useRef<HTMLSpanElement>(null);
   const firstRaw = useRef(showRaw);
   useEffect(() => {
     if (showRaw !== firstRaw.current) setMode("raw");
@@ -69,6 +69,15 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
   const buildable = buildableAgent(content);
   const issues = collectAfmIssues(content);
   const filename = agentFilename(content);
+
+  function changeMode(next: EditorMode) {
+    if (next === "simple" && mode === "raw" && !buildable.ok) {
+      setAsking(true);
+      return;
+    }
+    setAsking(false);
+    setMode(next);
+  }
 
   // The readiness chip floats in this row, centred over the card (or over the row when there is no card, as in Raw).
   const top = useRef<HTMLDivElement>(null);
@@ -92,7 +101,19 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
   return (
     <>
       <div className="u-stage-top" ref={top}>
-        <ModeSwitch mode={mode} onMode={setMode} />
+        <span className="u-mode-wrap" ref={wrap}>
+          <ModeSwitch mode={mode} onMode={changeMode} />
+          {asking && (
+            <InvalidSwitchNotice
+              wrap={wrap}
+              onSwitch={() => {
+                setAsking(false);
+                setMode("simple");
+              }}
+              onStay={() => setAsking(false)}
+            />
+          )}
+        </span>
         {mode === "raw" && (
           <>
             <span className="u-spacer" />
@@ -116,21 +137,21 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
       {mode === "raw" ? (
         <RawEditor content={content} onChange={onChange} issues={issues} />
       ) : (
-        <SimpleEditor
-          content={content}
-          onChange={onChange}
-          buildable={buildable}
-          issues={issues}
-          onFix={(target) => {
-            if (target === "model" || target === "tools") onOpenPanel?.(target);
-            else setMode("raw");
-          }}
-          activity={activity}
-          reach={reach}
-          onOpenModel={onOpenModel}
-          onOpenServer={onOpenServer}
-          openPanel={openPanel}
-        />
+        <>
+          {!buildable.ok && <InvalidBanner onView={() => setMode("raw")} />}
+          <div className="u-stage-canvas">
+            <BuildPane
+              content={content}
+              onChange={onChange}
+              metadata={buildable.ok ? buildable.metadata : null}
+              onOpenModel={onOpenModel}
+              onOpenServer={onOpenServer}
+              activity={activity}
+              reach={reach}
+              openPanel={openPanel}
+            />
+          </div>
+        </>
       )}
     </>
   );
@@ -163,58 +184,61 @@ export function RawEditor({
   );
 }
 
-function SimpleEditor({
-  content,
-  onChange,
-  buildable,
-  issues,
-  activity,
-  reach,
-  onOpenModel,
-  onOpenServer,
-  onFix,
-  openPanel,
-}: EditableProps & {
-  buildable: BuildableAgent;
-  issues: ReturnType<typeof collectAfmIssues>;
-  activity: AgentActivity;
-  reach: ServerReach;
-  onOpenModel: () => void;
-  onOpenServer: (name: string | null) => void;
-  onFix: (target: import("./issue-words").IssueTarget) => void;
-  openPanel?: OpenPanel;
+function InvalidBanner({ onView }: { onView: () => void }) {
+  return (
+    <div className="u-invalid" role="alert">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
+        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M12 9v5M12 17.4h.01" />
+        <path d="M10.3 3.9L2.4 17.4A2 2 0 004.1 20.5h15.8a2 2 0 001.7-3.1L13.7 3.9a2 2 0 00-3.4 0z" />
+      </svg>
+      <span className="u-invalid-text">Invalid AFM file</span>
+      <button className="u-btn primary sm" onClick={onView}>
+        View
+      </button>
+    </div>
+  );
+}
+
+function InvalidSwitchNotice({
+  wrap,
+  onSwitch,
+  onStay,
+}: {
+  wrap: RefObject<HTMLSpanElement | null>;
+  onSwitch: () => void;
+  onStay: () => void;
 }) {
-  if (!buildable.ok) {
-    return (
-      <div className="u-stage-canvas u-stage-canvas-centre">
-        <div className="fallback">
-          <span className="fallback-ico" aria-hidden="true">
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"
-              strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 9v5M12 17.4h.01" />
-              <path d="M10.3 3.9L2.4 17.4A2 2 0 004.1 20.5h15.8a2 2 0 001.7-3.1L13.7 3.9a2 2 0 00-3.4 0z" />
-            </svg>
-          </span>
-          <h4>The settings at the top can&apos;t be read</h4>
-          <p>Something in the block above <code>---</code> is not valid, so the diagram cannot be drawn from it. The rest of your writing is untouched.</p>
-        </div>
-        <FileCheckPanel issues={issues} plain onFix={onFix} />
-      </div>
-    );
-  }
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    box.current?.querySelector<HTMLButtonElement>(".primary")?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onStay();
+    };
+    const onPointer = (event: PointerEvent) => {
+      if (!(event.target instanceof Node) || wrap.current?.contains(event.target) === true) return;
+      onStay();
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, []);
 
   return (
-    <div className="u-stage-canvas">
-      <BuildPane
-          content={content}
-          onChange={onChange}
-          metadata={buildable.metadata}
-          onOpenModel={onOpenModel}
-          onOpenServer={onOpenServer}
-          activity={activity}
-          reach={reach}
-          openPanel={openPanel}
-      />
+    <div className="u-switch-note" role="dialog" aria-label="Invalid AFM file" ref={box}>
+      <b>Invalid AFM file</b>
+      <p>Build keeps the model and tools locked until it is fixed.</p>
+      <div className="u-switch-note-actions">
+        <button className="u-btn ghost sm" onClick={onSwitch}>
+          Switch to Build
+        </button>
+        <button className="u-btn primary sm" onClick={onStay}>
+          Stay in Raw
+        </button>
+      </div>
     </div>
   );
 }

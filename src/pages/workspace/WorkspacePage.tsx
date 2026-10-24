@@ -440,7 +440,6 @@ export function WorkspacePage() {
               server: overPanel === "tools" ? serverEditing : null,
               adding: overPanel === "tools" && serverEditing === null,
             }}
-            onOpenPanel={(panel) => openSide(panel)}
             chip={needs === null ? undefined : { needs, phase: chipPhase, onHold: setChipHeld }}
             toolbarExtras={
               compact ? (

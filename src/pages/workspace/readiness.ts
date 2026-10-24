@@ -26,7 +26,7 @@ export interface Readiness {
   subject?: string;
   tail?: string;
   fix?: ReadyFix;
-  // true when the readiness chip over the editor already says this, so the line under the editor can stay quiet
+  // true when the chip or banner over the editor already says this, so the line under the editor can stay quiet
   chip?: boolean;
 }
 
@@ -109,7 +109,7 @@ export function readiness(input: ReadinessInput): Readiness {
   }
 
   if (metadata === null) {
-    return { tone: "bad", lead: "The settings at the top of the file can’t be read - ", subject: "open the file", fix: "raw" };
+    return { tone: "bad", lead: "Invalid AFM file", fix: "raw", chip: true };
   }
 
   if ((metadata.model?.name ?? "") === "") {
