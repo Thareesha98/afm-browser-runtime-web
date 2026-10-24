@@ -63,8 +63,16 @@ describe("how a tool server's name is written", () => {
 
   it("starts the small lines under the names with a capital too", () => {
     expect(rail(["notion"])).toContain("All tools");
-    expect(rail(["notion"], false)).toContain("Choose one");
+    expect(rail(["notion"], false)).not.toContain("Choose one");
     expect(rail(["notion"])).not.toMatch(/>(all tools|choose one|no answer)</);
+  });
+
+  it("shows a model box with no model like the Connect tools box, with only Choose a model on it", () => {
+    const html = rail([], false);
+    expect(html).toContain("Choose a model</button>");
+    expect(html).toContain("Connect tools</button>");
+    expect(html.match(/<button class="u-node add"/g)).toHaveLength(2);
+    expect(html).not.toContain("Required");
   });
 
   it("is used in the list a shared agent shows before it runs", () => {
