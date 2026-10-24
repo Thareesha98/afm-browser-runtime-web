@@ -31,7 +31,7 @@ type McpServer = NonNullable<NonNullable<AgentMetadata["tools"]>["mcp"]>[number]
 interface Props {
   content: string;
   onChange: (content: string) => void;
-  metadata: AgentMetadata;
+  metadata: AgentMetadata | null;
   onOpenModel: () => void;
   onOpenServer: (name: string | null) => void;
   activity: AgentActivity;
@@ -82,6 +82,23 @@ function PlusMark({ size }: { size: number }) {
   );
 }
 
+function LockedNode({ name }: { name: string }) {
+  return (
+    <button className="u-node is-locked" disabled>
+      <span className="u-node-lock" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"
+          strokeLinejoin="round" width="13" height="13">
+          <path d="M7 11V8a5 5 0 0110 0v3M5 11h14v10H5z" />
+        </svg>
+      </span>
+      <span className="u-node-body">
+        <span className="u-node-name">{name}</span>
+        <span className="u-node-sub">Locked</span>
+      </span>
+    </button>
+  );
+}
+
 function nodeTone(state: "ready" | "sign-in", heard: "ok" | "failed" | "unknown"): string {
   if (heard === "failed") return "bad";
   if (state === "sign-in") return "";
@@ -100,7 +117,8 @@ export function BuildPane({
 }: Props) {
   const [focus, setFocus] = useState<"Role" | "Instructions" | null>(null);
   const { phase } = activity;
-  const servers = metadata.tools?.mcp ?? [];
+  const locked = metadata === null;
+  const servers = metadata?.tools?.mcp ?? [];
   const urlOf = (server: McpServer) => (server.transport.type === "http" ? server.transport.url : undefined);
 
   const agentLive = phase === "incoming" || phase === "from-model" || phase === "from-tool";
@@ -123,7 +141,7 @@ export function BuildPane({
     return "unknown";
   };
 
-  const modelName = metadata.model?.name ?? "";
+  const modelName = metadata?.model?.name ?? "";
   const modelLabel = shortModelLabel(modelName);
 
   const role = getSection(content, "Role");
@@ -192,7 +210,9 @@ export function BuildPane({
             <span
               className={lead(phase === "thinking", phase === "from-model" || phase === "answering", activity.modelBroken)}
             />
-            {modelName === "" ? (
+            {locked ? (
+              <LockedNode name="Model" />
+            ) : modelName === "" ? (
               <button className={`u-node add${openPanel?.model === true ? " is-open" : ""}`} onClick={onOpenModel}>
                 <PlusMark size={13} />
                 Choose a model
@@ -203,13 +223,13 @@ export function BuildPane({
                 onClick={onOpenModel}
                 title={activity.modelBroken ? `${modelName} - this call did not come back` : modelName}
               >
-                <span className="u-mk" style={{ background: providerColour(metadata.model?.provider ?? "") }}>
-                  <ProviderMark provider={metadata.model?.provider ?? ""} size={14} />
+                <span className="u-mk" style={{ background: providerColour(metadata?.model?.provider ?? "") }}>
+                  <ProviderMark provider={metadata?.model?.provider ?? ""} size={14} />
                 </span>
                 <span className="u-node-body">
                   <span className="u-node-name">{modelLabel}</span>
                   <span className="u-node-sub">
-                    {findProvider(metadata.model?.provider ?? "")?.label ?? metadata.model?.provider ?? ""}
+                    {findProvider(metadata?.model?.provider ?? "")?.label ?? metadata?.model?.provider ?? ""}
                   </span>
                 </span>
               </button>
@@ -259,10 +279,14 @@ export function BuildPane({
         {servers.length === 0 && (
           <div className="u-rail-row">
             <span className="u-lead" />
-            <button className={`u-node add${openPanel?.adding === true ? " is-open" : ""}`} onClick={() => onOpenServer(null)}>
-              <PlusMark size={13} />
-              Connect tools
-            </button>
+            {locked ? (
+              <LockedNode name="Connect tools" />
+            ) : (
+              <button className={`u-node add${openPanel?.adding === true ? " is-open" : ""}`} onClick={() => onOpenServer(null)}>
+                <PlusMark size={13} />
+                Connect tools
+              </button>
+            )}
           </div>
         )}
       </div>

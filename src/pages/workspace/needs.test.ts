@@ -125,11 +125,16 @@ describe("the line under the editor and the chip", () => {
     expect(readiness(input()).chip).toBe(true);
   });
 
+  it("stays quiet under the banner that says the file is invalid", () => {
+    const state = readiness(input({ metadata: null }));
+    expect(readinessSentence(state)).toBe("Invalid AFM file");
+    expect(state.chip).toBe(true);
+  });
+
   it("keeps speaking for everything the chip does not cover", () => {
     expect(readiness(input({ status: "streaming" })).chip).toBeUndefined();
     expect(readiness(input({ current: true })).chip).toBeUndefined();
     expect(readiness(input({ failed: true })).chip).toBeUndefined();
-    expect(readiness(input({ metadata: null })).chip).toBeUndefined();
     expect(readiness(input({ issues: [{ severity: "error", message: "x", field: "", line: null }] })).chip).toBeUndefined();
   });
 });
