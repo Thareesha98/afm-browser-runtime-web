@@ -73,6 +73,15 @@ function ExpandButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+function PlusMark({ size }: { size: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
+      strokeLinejoin="round" aria-hidden="true" width={size} height={size}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+
 function nodeTone(state: "ready" | "sign-in", heard: "ok" | "failed" | "unknown"): string {
   if (heard === "failed") return "bad";
   if (state === "sign-in") return "";
@@ -115,20 +124,11 @@ export function BuildPane({
   };
 
   const modelName = metadata.model?.name ?? "";
-  const modelLabel = modelName === "" ? "Choose a model" : shortModelLabel(modelName);
+  const modelLabel = shortModelLabel(modelName);
 
   const role = getSection(content, "Role");
   const instructions = getSection(content, "Instructions");
   const write = (heading: string) => (text: string) => onChange(setSection(content, heading, text));
-
-  const todo: string[] = [];
-  if (role.trim() === "") todo.push("role");
-  if (instructions.trim() === "") todo.push("instructions");
-  if (modelName === "") todo.push("model");
-  const step = (what: string) => {
-    const at = todo.indexOf(what);
-    return at === -1 ? null : at + 1;
-  };
 
   return (
     <div className="u-flow">
@@ -192,23 +192,28 @@ export function BuildPane({
             <span
               className={lead(phase === "thinking", phase === "from-model" || phase === "answering", activity.modelBroken)}
             />
-            <button
-              className={`u-node ${modelLive ? "live" : ""} ${activity.modelBroken ? "bad" : ""} ${openPanel?.model === true ? "is-open" : ""}`}
-              onClick={onOpenModel}
-              title={activity.modelBroken ? `${modelName} - this call did not come back` : modelName}
-            >
-              <span className="u-mk" style={{ background: providerColour(metadata.model?.provider ?? "") }}>
-                <ProviderMark provider={metadata.model?.provider ?? ""} size={14} />
-              </span>
-              <span className="u-node-body">
-                <span className="u-node-name">{modelLabel}</span>
-                <span className="u-node-sub">
-                  {step("model") !== null
-                    ? "Choose one"
-                    : (findProvider(metadata.model?.provider ?? "")?.label ?? metadata.model?.provider ?? "")}
+            {modelName === "" ? (
+              <button className={`u-node add${openPanel?.model === true ? " is-open" : ""}`} onClick={onOpenModel}>
+                <PlusMark size={13} />
+                Choose a model
+              </button>
+            ) : (
+              <button
+                className={`u-node ${modelLive ? "live" : ""} ${activity.modelBroken ? "bad" : ""} ${openPanel?.model === true ? "is-open" : ""}`}
+                onClick={onOpenModel}
+                title={activity.modelBroken ? `${modelName} - this call did not come back` : modelName}
+              >
+                <span className="u-mk" style={{ background: providerColour(metadata.model?.provider ?? "") }}>
+                  <ProviderMark provider={metadata.model?.provider ?? ""} size={14} />
                 </span>
-              </span>
-            </button>
+                <span className="u-node-body">
+                  <span className="u-node-name">{modelLabel}</span>
+                  <span className="u-node-sub">
+                    {findProvider(metadata.model?.provider ?? "")?.label ?? metadata.model?.provider ?? ""}
+                  </span>
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -255,16 +260,13 @@ export function BuildPane({
           <div className="u-rail-row">
             <span className="u-lead" />
             <button className={`u-node add${openPanel?.adding === true ? " is-open" : ""}`} onClick={() => onOpenServer(null)}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"
-                strokeLinejoin="round" aria-hidden="true" width="13" height="13">
-                <path d="M12 5v14M5 12h14" />
-              </svg>
+              <PlusMark size={13} />
               Connect tools
             </button>
           </div>
         )}
-        </div>
       </div>
+    </div>
 
       {focus !== null && (
         <FocusEditor
