@@ -40,6 +40,29 @@ function panel(savedSecrets: string[], issue: Issue | null = null): string {
   );
 }
 
+describe("a file with no model yet", () => {
+  const html = renderToStaticMarkup(
+    createElement(ModelPanel, {
+      content: "---\nname: Tester\n---\n\n# Role\nr\n",
+      savedSecrets: [],
+      issue: null,
+      onApply: () => {},
+      onSaveKey: () => {},
+      onClose: () => {},
+    }),
+  );
+
+  it("offers the providers and none of the models until one is chosen", () => {
+    expect(html).toContain("OpenAI");
+    expect(html).not.toContain("u-row");
+    expect(html).not.toContain("u-radio");
+  });
+
+  it("keeps Save off", () => {
+    expect(html).toMatch(/<button class="u-btn primary" disabled="">Save<\/button>/);
+  });
+});
+
 describe("the key chip in the Model window", () => {
   it("starts every status with a capital letter", () => {
     expect(panel([])).toContain("Not entered yet");

@@ -102,6 +102,11 @@ describe("EMPTY_TEMPLATE", () => {
     expect(preview.ok).toBe(false);
     expect(preview.ok ? "" : preview.error).toMatch(/Role/);
   });
+
+  it("names no model, so the person chooses one", () => {
+    expect(EMPTY_TEMPLATE).not.toMatch(/^model:/m);
+    expect(EMPTY_TEMPLATE).not.toContain("openai");
+  });
 });
 
 describe("openedFromLink", () => {

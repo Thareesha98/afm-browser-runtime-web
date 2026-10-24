@@ -1797,3 +1797,10 @@ label.u-group {
 .u-panel-body.is-model .u-hint {
   margin-top: 10px;
 }
+
+.u-input.is-placeholder {
+  color: var(--muted);
+}
+.u-input:disabled {
+  opacity: 0.6;
+}

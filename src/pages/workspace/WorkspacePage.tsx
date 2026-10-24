@@ -204,7 +204,12 @@ export function WorkspacePage() {
   const startedHere = chatStatus !== "no-agent" && session.state.agentSource === content;
   const failed = startedHere && chatStatus === "not-ready";
   const current = running && startedHere;
-  const canRun = preview.ok && preview.plan.runnable && !current;
+  const typedNeeds = needsToRun({
+    role: getSection(content, "Role"),
+    instructions: getSection(content, "Instructions"),
+    metadata: readable.ok ? readable.metadata : null,
+  });
+  const canRun = preview.ok && preview.plan.runnable && !current && typedNeeds?.allDone === true;
 
   const servers = readable.ok ? (readable.metadata.tools?.mcp ?? []) : [];
   const nameByUrl = serverNameByUrl(servers);
