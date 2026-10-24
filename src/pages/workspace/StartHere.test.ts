@@ -85,10 +85,13 @@ describe("Start as a dialog", () => {
     expect(html).toContain("u-dlg-back");
   });
 
-  it("opens the description form with the usage note and a way back", () => {
+  it("opens the description form with no provider or model chosen, and a way back", () => {
     const html = decode(render({ view: "prompt" }));
     expect(html).toContain("Generate with AI");
-    expect(html).toContain("API usage will be used to write this file.");
+    expect(html).toContain("Choose a provider");
+    expect(html).toContain("Choose a model");
+    expect(html).not.toContain("API usage will be used to write this file.");
+    expect(html).not.toContain("OPENAI_API_KEY");
     expect(html).toContain("u-dlg-back");
   });
 

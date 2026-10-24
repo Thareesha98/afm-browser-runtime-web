@@ -50,9 +50,8 @@ export function ModelPanel({ content, savedSecrets, passkeySecrets, issue, onApp
   const rejected = saved && issue?.kind === "rejected";
 
   function pickProvider(option: ProviderOption) {
+    if (option.id !== provider) setModel("");
     setProvider(option.id);
-    const first = option.models[0]?.id;
-    if (first !== undefined) setModel(first);
   }
 
   const canSave = known !== undefined && model.trim() !== "";

@@ -145,8 +145,8 @@ export function StartHere({
 }: Props) {
   const [view, setView] = useState<StartView>(initialView);
   const [prompt, setPrompt] = useState("");
-  const [providerId, setProviderId] = useState(MODEL_PROVIDERS[0]!.id);
-  const [modelId, setModelId] = useState(MODEL_PROVIDERS[0]!.models[0]!.id);
+  const [providerId, setProviderId] = useState("");
+  const [modelId, setModelId] = useState("");
   const [key, setKey] = useState("");
   const [keep, setKeep] = useState(false);
   const [answers, setAnswers] = useState("");
@@ -157,9 +157,9 @@ export function StartHere({
   const [writing, setWriting] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  const provider = findProvider(providerId) ?? MODEL_PROVIDERS[0]!;
-  const keySaved = usableSecrets(state).includes(provider.secretName);
-  const keyClosed = keySaved && !state.savedSecrets.includes(provider.secretName);
+  const provider = findProvider(providerId);
+  const keySaved = provider !== undefined && usableSecrets(state).includes(provider.secretName);
+  const keyClosed = provider !== undefined && keySaved && !state.savedSecrets.includes(provider.secretName);
 
   const answered =
     state.generatedDraft !== null || state.clarifyQuestions.length > 0 || state.draftError !== null;
@@ -167,17 +167,16 @@ export function StartHere({
     if (answered) setWriting(false);
   }, [answered]);
 
-  const authoringModel = {
-    provider: provider.id,
-    name: modelId,
-    authentication: { type: "api-key", api_key: `\${env:${provider.secretName}}` },
-  } as AgentModelRef;
-
   async function writeFile(final = false, request = prompt.trim()) {
-    if (request === "") return;
+    if (request === "" || provider === undefined || modelId === "") return;
     setWriting(true);
     if (keyClosed) await onOpenKeys();
     else if (!keySaved && key.trim() !== "") void onSaveKey(provider.secretName, key.trim(), keep);
+    const authoringModel = {
+      provider: provider.id,
+      name: modelId,
+      authentication: { type: "api-key", api_key: `\${env:${provider.secretName}}` },
+    } as AgentModelRef;
     onGenerate(request, authoringModel, final);
   }
 
@@ -438,7 +437,8 @@ export function StartHere({
   }
 
   if (view === "prompt") {
-    const canWrite = prompt.trim() !== "" && (keySaved || key.trim() !== "") && !writing;
+    const chosen = provider !== undefined && modelId !== "";
+    const canWrite = prompt.trim() !== "" && chosen && (keySaved || key.trim() !== "") && !writing;
     return frame("prompt", (
       <>
         <form
@@ -462,14 +462,16 @@ export function StartHere({
             <label className="u-group u-input-col">
               <span className="u-label">Provider</span>
               <select
-                className="u-input"
+                className={`u-input${provider === undefined ? " is-placeholder" : ""}`}
                 value={providerId}
                 onChange={(event) => {
-                  const next = findProvider(event.target.value) ?? MODEL_PROVIDERS[0]!;
-                  setProviderId(next.id);
-                  setModelId(next.models[0]!.id);
+                  setProviderId(event.target.value);
+                  setModelId("");
                 }}
               >
+                <option value="" disabled>
+                  Choose a provider
+                </option>
                 {MODEL_PROVIDERS.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
@@ -479,8 +481,16 @@ export function StartHere({
             </label>
             <label className="u-group u-input-col">
               <span className="u-label">Model</span>
-              <select className="u-input" value={modelId} onChange={(event) => setModelId(event.target.value)}>
-                {provider.models.map((option) => (
+              <select
+                className={`u-input${modelId === "" ? " is-placeholder" : ""}`}
+                value={modelId}
+                disabled={provider === undefined}
+                onChange={(event) => setModelId(event.target.value)}
+              >
+                <option value="" disabled>
+                  Choose a model
+                </option>
+                {provider?.models.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label}
                   </option>
@@ -489,7 +499,7 @@ export function StartHere({
             </label>
           </div>
 
-          {!keySaved && (
+          {chosen && !keySaved && (
             <>
               <label className="u-group">
                 <span className="u-label">{provider.secretName}</span>
@@ -506,12 +516,14 @@ export function StartHere({
             </>
           )}
 
-          <p className="u-usage-note">
-            <Glyph path={ICON_PATHS.warn} size={15} />
-            <span>
-              Your <strong>{provider.label}</strong> API usage will be used to write this file.
-            </span>
-          </p>
+          {provider !== undefined && (
+            <p className="u-usage-note">
+              <Glyph path={ICON_PATHS.warn} size={15} />
+              <span>
+                Your <strong>{provider.label}</strong> API usage will be used to write this file.
+              </span>
+            </p>
+          )}
 
           <button className="u-btn primary wide" type="submit" disabled={!canWrite}>
             {writing ? "Writing the file…" : "Write the agent file"}

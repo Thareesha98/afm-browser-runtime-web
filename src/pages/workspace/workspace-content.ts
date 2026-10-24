@@ -19,12 +19,6 @@ import { inlineAfmParam, decodeInlineAfm } from "../../load-paths";
 
 export const EMPTY_TEMPLATE = `---
 name: New Agent
-model:
-  provider: openai
-  name: gpt-4o
-  authentication:
-    type: api-key
-    api_key: \${env:OPENAI_API_KEY}
 interfaces:
   - type: webchat
 ---
