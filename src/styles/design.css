@@ -8,6 +8,7 @@
   --warn:#8E6210;--warn-soft:#FAF1DE;
   --bad:#AE3A2E;--bad-soft:#FAEBE9;
   --side:350px;
+  --side-left:320px;
   font-family:"Instrument Sans",system-ui,sans-serif;
 }
 [data-theme="dark"]{
@@ -71,6 +72,7 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .u-body{display:flex;height:604px;background:var(--ground)}
 .u-stage{flex:1;position:relative;display:flex;flex-direction:column;min-width:0}
 .u-side,.u-side-left{width:var(--side);flex:none;background:var(--ground);display:flex;flex-direction:column;position:relative;min-width:0}
+.u-side-left{width:var(--side-left)}
 
 .u-stage-top{display:flex;align-items:center;gap:12px;padding:14px 24px 0}
 .u-stage-canvas{flex:1;min-height:0;padding:16px 24px 0;display:flex}
