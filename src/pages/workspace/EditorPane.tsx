@@ -15,7 +15,7 @@
 // under the License.
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode, RefObject } from "react";
+import type { ReactNode } from "react";
 import { BuildPane } from "./BuildPane";
 import { ReadinessChip, chipAnnouncement } from "./ReadinessChip";
 import type { Needs } from "./readiness";
@@ -28,6 +28,7 @@ import type { EditorMode } from "./ViewControls";
 
 import { downloadAgentFile } from "../../download-agent-file";
 import { getFrontmatterScalar } from "./agent-source-edit";
+import { ConfirmNote } from "./ConfirmNote";
 import { IssuePill } from "./IssuePill";
 import { useSettled } from "./use-settled";
 import { CodeEditor } from "./CodeEditor";
@@ -116,13 +117,20 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
         <span className="u-mode-wrap" ref={wrap}>
           <ModeSwitch mode={mode} onMode={changeMode} />
           {asking && (
-            <InvalidSwitchNotice
-              wrap={wrap}
-              onSwitch={() => {
-                setAsking(false);
-                setMode("simple");
+            <ConfirmNote
+              title="Invalid AFM file"
+              text="Fix the issues before you switch to Build."
+              secondary={{
+                label: "Switch to Build",
+                onPick: () => {
+                  setAsking(false);
+                  setMode("simple");
+                },
               }}
-              onStay={() => setAsking(false)}
+              primary={{ label: "Stay in Raw", onPick: () => setAsking(false) }}
+              focus="primary"
+              onDismiss={() => setAsking(false)}
+              wrap={wrap}
             />
           )}
         </span>
@@ -201,49 +209,6 @@ function InvalidBanner({ onView }: { onView: () => void }) {
       <button className="u-btn primary sm" onClick={onView}>
         View
       </button>
-    </div>
-  );
-}
-
-function InvalidSwitchNotice({
-  wrap,
-  onSwitch,
-  onStay,
-}: {
-  wrap: RefObject<HTMLSpanElement | null>;
-  onSwitch: () => void;
-  onStay: () => void;
-}) {
-  const box = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    box.current?.querySelector<HTMLButtonElement>(".primary")?.focus();
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onStay();
-    };
-    const onPointer = (event: PointerEvent) => {
-      if (!(event.target instanceof Node) || wrap.current?.contains(event.target) === true) return;
-      onStay();
-    };
-    document.addEventListener("keydown", onKey);
-    document.addEventListener("pointerdown", onPointer);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("pointerdown", onPointer);
-    };
-  }, []);
-
-  return (
-    <div className="u-switch-note" role="dialog" aria-label="Invalid AFM file" ref={box}>
-      <b>Invalid AFM file</b>
-      <p>Fix the issues before you switch to Build.</p>
-      <div className="u-switch-note-actions">
-        <button className="u-btn ghost sm" onClick={onSwitch}>
-          Switch to Build
-        </button>
-        <button className="u-btn primary sm" onClick={onStay}>
-          Stay in Raw
-        </button>
-      </div>
     </div>
   );
 }

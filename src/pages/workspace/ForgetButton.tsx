@@ -14,33 +14,49 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { useState } from "react";
-
-export function ForgetConfirm({ name, onCancel, onForget }: { name: string; onCancel: () => void; onForget: () => void }) {
-  return (
-    <span
-      className="u-forget"
-      role="group"
-      aria-label={`Forget ${name}?`}
-      onKeyDown={(event) => event.key === "Escape" && onCancel()}
-    >
-      <button className="u-btn quiet sm" autoFocus onClick={onCancel}>
-        Cancel
-      </button>
-      <button className="u-btn danger sm" onClick={onForget}>
-        Forget
-      </button>
-    </span>
-  );
-}
+import { useRef, useState } from "react";
+import { ConfirmNote } from "./ConfirmNote";
 
 export function ForgetButton({ name, onForget }: { name: string; onForget: () => void }) {
   const [asking, setAsking] = useState(false);
+  const wrap = useRef<HTMLSpanElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
 
-  if (asking) return <ForgetConfirm name={name} onCancel={() => setAsking(false)} onForget={onForget} />;
+  function cancel() {
+    setAsking(false);
+    trigger.current?.focus();
+  }
+
   return (
-    <button className="u-btn quiet sm" aria-label={`Forget ${name}`} onClick={() => setAsking(true)}>
-      Forget
-    </button>
+    <span className="u-forget" ref={wrap}>
+      <button
+        className="u-btn quiet sm"
+        ref={trigger}
+        aria-label={`Forget ${name}`}
+        aria-haspopup="dialog"
+        aria-expanded={asking}
+        onClick={() => setAsking(!asking)}
+      >
+        Forget
+      </button>
+      {asking && (
+        <ConfirmNote
+          title="Forget this key?"
+          text={`${name} will be removed. You will need to paste it again to use it.`}
+          secondary={{ label: "Cancel", onPick: cancel }}
+          primary={{
+            label: "Forget",
+            onPick: () => {
+              setAsking(false);
+              onForget();
+            },
+          }}
+          focus="secondary"
+          onDismiss={cancel}
+          wrap={wrap}
+          align="end"
+        />
+      )}
+    </span>
   );
 }

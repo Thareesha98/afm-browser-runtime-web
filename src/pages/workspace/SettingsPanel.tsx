@@ -36,7 +36,7 @@ export function SettingsPanel({ session }: Props) {
             No key yet.
           </p>
         ) : (
-          <div className="u-rows">
+          <div className="u-rows is-loose">
             {keys.map((name) => (
               <div className="u-row u-key-row" key={name}>
                 <span className="u-row-name mono" title={name}>
