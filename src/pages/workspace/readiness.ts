@@ -26,8 +26,12 @@ export interface Readiness {
   subject?: string;
   tail?: string;
   fix?: ReadyFix;
-  // true when the chip or banner over the editor already says this, so the line under the editor can stay quiet
+  // true when the chip, banner or problem pill over the editor already says this, so the line under the editor can stay quiet
   chip?: boolean;
+}
+
+export function quietInRaw(state: Readiness, inRaw: boolean): Readiness {
+  return inRaw && state.fix === "raw" ? { ...state, chip: true } : state;
 }
 
 export function readinessSentence(state: Readiness): string {

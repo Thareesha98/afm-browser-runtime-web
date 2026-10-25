@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { EditorPane } from "./EditorPane";
+import type { EditorMode } from "./ViewControls";
 import { ChatPane } from "./ChatPane";
 import { AboutButton, ShareButton, WorkspaceBar } from "./WorkspaceBar";
 import { SharePanel } from "./SharePanel";
@@ -29,7 +30,7 @@ import { SidePane } from "./SideWindow";
 import { ChatHead, StatusPill, headerStatus } from "./ChatHead";
 import { useStandaloneSession } from "../../worker-client/useStandaloneSession";
 import { previewAgent, buildableAgent, collectAfmIssues } from "../../agent-validation";
-import { chipStatus, needsToRun, readiness, readinessSentence, runReason, serverNameByUrl } from "./readiness";
+import { chipStatus, needsToRun, quietInRaw, readiness, readinessSentence, runReason, serverNameByUrl } from "./readiness";
 import { useReadyChip } from "./use-ready-chip";
 import { SetupPane } from "./SetupPane";
 import { useSetup } from "./use-setup";
@@ -82,6 +83,7 @@ export function WorkspacePage() {
   const [trusted, setTrusted] = useState(() => !openedFromLink(searchParams, location.hash, draftSource));
   const [linkedFile, setLinkedFile] = useState<string | null>(null);
   const [serverEditing, setServerEditing] = useState<string | null>(null);
+  const [editorMode, setEditorMode] = useState<EditorMode>("simple");
   const [rawRequest, setRawRequest] = useState(0);
   const permissions = usePermissionsLedger();
   const theme = useThemeContext();
@@ -435,6 +437,7 @@ export function WorkspacePage() {
               openSide("tools");
             }}
             showRaw={rawRequest}
+            onModeChange={setEditorMode}
             openPanel={{
               model: overPanel === "model",
               server: overPanel === "tools" ? serverEditing : null,
@@ -451,7 +454,7 @@ export function WorkspacePage() {
             }
           />
           <StageFoot
-            state={ready}
+            state={quietInRaw(ready, editorMode === "raw")}
             onFix={(fix) => {
               if (fix === "raw") {
                 setRawRequest((n) => n + 1);

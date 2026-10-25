@@ -47,6 +47,7 @@ interface Props extends EditableProps {
   // buttons that sit at the end of the Build / Raw row on a narrow window (they are in the header otherwise)
   toolbarExtras?: ReactNode;
   openPanel?: OpenPanel;
+  onModeChange?: (mode: EditorMode) => void;
 }
 
 function agentFilename(content: string): string | undefined {
@@ -59,8 +60,9 @@ function agentFilename(content: string): string | undefined {
   return `${slug === "" ? "agent" : slug}.afm.md`;
 }
 
-export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, chip, toolbarExtras, openPanel }: Props) {
+export function EditorPane({ content, onChange, activity, reach, onOpenModel, onOpenServer, showRaw = 0, chip, toolbarExtras, openPanel, onModeChange }: Props) {
   const [mode, setMode] = useState<EditorMode>("simple");
+  useEffect(() => onModeChange?.(mode), [mode]);
   const [asking, setAsking] = useState(false);
   const wrap = useRef<HTMLSpanElement>(null);
   const firstRaw = useRef(showRaw);

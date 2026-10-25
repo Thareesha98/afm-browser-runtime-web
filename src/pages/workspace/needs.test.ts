@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from "vitest";
 import type { AgentMetadata } from "@afm/engine";
-import { chipStatus, needsToRun, readiness, readinessSentence, runReason } from "./readiness";
+import { chipStatus, needsToRun, quietInRaw, readiness, readinessSentence, runReason } from "./readiness";
 import type { ReadinessInput } from "./readiness";
 
 const WITH_MODEL = { name: "A", model: { provider: "openai", name: "gpt-4o" } } as AgentMetadata;
@@ -143,5 +143,23 @@ describe("readinessSentence", () => {
   it("reads the lead, subject and tail as one line", () => {
     expect(readinessSentence({ tone: "bad", lead: "Has a problem - ", subject: "bad field" })).toBe("Has a problem - bad field");
     expect(readinessSentence({ tone: "ok", lead: "Ready" })).toBe("Ready");
+  });
+});
+
+describe("the line under the editor in Raw", () => {
+  const problem = readiness(input({ issues: [{ severity: "error", message: "x", field: "", line: null }] }));
+
+  it("stays quiet about a problem the pill under the Raw editor already says", () => {
+    expect(problem.fix).toBe("raw");
+    expect(quietInRaw(problem, true).chip).toBe(true);
+  });
+
+  it("still speaks in Build, where there is no pill", () => {
+    expect(quietInRaw(problem, false).chip).toBeUndefined();
+  });
+
+  it("keeps speaking in Raw about things the pill does not cover", () => {
+    const running = readiness(input({ status: "streaming" }));
+    expect(quietInRaw(running, true)).toEqual(running);
   });
 });
