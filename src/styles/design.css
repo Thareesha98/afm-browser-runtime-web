@@ -8,7 +8,7 @@
   --warn:#8E6210;--warn-soft:#FAF1DE;
   --bad:#AE3A2E;--bad-soft:#FAEBE9;
   --side:350px;
-  --side-left:300px;
+  --side-left:288px;
   font-family:"Instrument Sans",system-ui,sans-serif;
 }
 [data-theme="dark"]{
