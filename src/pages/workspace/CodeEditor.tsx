@@ -39,7 +39,6 @@ function tokenLines(tokens: Token[]): Token[][] {
 
 export function CodeEditor({ value, onChange, errorLines }: Props) {
   const viewRef = useRef<HTMLPreElement>(null);
-  const gutterRef = useRef<HTMLPreElement>(null);
   const tokens = highlightAfm(value);
   const codeLines = tokenLines(tokens);
 
@@ -48,16 +47,10 @@ export function CodeEditor({ value, onChange, errorLines }: Props) {
     if (view === null) return;
     view.scrollTop = event.currentTarget.scrollTop;
     view.scrollLeft = event.currentTarget.scrollLeft;
-    if (gutterRef.current !== null) gutterRef.current.scrollTop = event.currentTarget.scrollTop;
   }
-
-  const lineCount = value.split("\n").length;
 
   return (
     <div className="code-editor u-raw">
-      <pre className="code-editor-gutter" ref={gutterRef} aria-hidden="true">
-        {Array.from({ length: lineCount }, (_, index) => `${index + 1}\n`).join("")}
-      </pre>
       <pre className="code-editor-face code-editor-view" ref={viewRef} aria-hidden="true">
         {codeLines.map((lineTokens, index) => (
           <span

@@ -17,6 +17,7 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { CodeEditor } from "./CodeEditor";
 import { RawEditor } from "./EditorPane";
 
 function raw(issues: Parameters<typeof RawEditor>[0]["issues"]): string {
@@ -55,5 +56,14 @@ describe("the check under the Raw editor", () => {
   it("marks the pill calm when there are only warnings", () => {
     const html = raw([{ severity: "warning", message: "Careful.", field: "x", line: 2 }]);
     expect(html).toMatch(/class="u-pill is-warn"/);
+  });
+});
+
+describe("the line numbers in the Raw editor", () => {
+  const html = renderToStaticMarkup(createElement(CodeEditor, { value: "---\nname: A\n---\n\n# Role\nHi\n", onChange: () => {} }));
+
+  it("belong to the lines themselves, so a long line that wraps keeps the numbers after it right", () => {
+    expect(html).not.toContain("code-editor-gutter");
+    expect(html.match(/class="code-editor-line /g)).toHaveLength(7);
   });
 });
