@@ -96,6 +96,12 @@ describe("Start as a dialog", () => {
     expect(html).toContain("u-dlg-back");
   });
 
+  it("keeps the invisible file box out of the Tab order and away from screen readers", () => {
+    const input = render({ view: "import" }).match(/<input[^>]*type="file"[^>]*>/)?.[0] ?? "";
+    expect(input).toContain('tabindex="-1"');
+    expect(input).toContain('aria-hidden="true"');
+  });
+
   it("makes the import step narrow", () => {
     const html = render({ view: "import" });
     expect(html).toContain('class="u-dlg narrow"');

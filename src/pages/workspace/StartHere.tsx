@@ -28,6 +28,7 @@ import { START_CARDS, START_FOOTERS, START_SUBTITLES, START_TITLES, templatesNot
 import type { StartStage } from "./start-copy";
 import { canClose, escapeAction, outsideClickAction, stageOf } from "./start-flow";
 import { SECRET_INPUT } from "./secret-input";
+import { HIDDEN_FILE_INPUT } from "../../chat/hidden-file-input";
 
 function SetupColumn({ children, slide = false }: { children: ReactNode; slide?: boolean }) {
   return (
@@ -311,7 +312,7 @@ export function StartHere({
           ref={fileInput}
           type="file"
           accept=".md,.afm.md,text/markdown,text/plain"
-          className="visually-hidden"
+          {...HIDDEN_FILE_INPUT}
           onChange={(event) => void openFile(event.target.files?.[0])}
         />
       </>
