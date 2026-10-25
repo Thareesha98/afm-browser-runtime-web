@@ -980,11 +980,6 @@
     margin-top: auto;
     box-shadow: 0 -12px 12px -2px var(--surface);
   }
-  /* while it is off it must still cover what scrolls under it */
-  .u-setup-col form.u-group > .u-btn.primary.wide[disabled] {
-    opacity: 1;
-    background: color-mix(in srgb, var(--accent) 40%, var(--surface));
-  }
 
   /* Chat */
   .xc-composer {
