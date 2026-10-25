@@ -28,7 +28,7 @@ function apiKeyOf(model: AgentMetadata["model"]): string | null {
 export const BROWSER_PROVIDERS: readonly string[] = ["openai", "anthropic"];
 
 function unsupported(provider: string): Error {
-  return new Error(`Unsupported model provider for the browser: '${provider}'. Use 'openai' or 'anthropic'.`);
+  return new Error(`Unsupported model provider ${provider}. Use openai or anthropic.`);
 }
 
 export async function modelFromMetadata(model: AgentMetadata["model"]): Promise<ModelPort> {

@@ -206,7 +206,7 @@ export function StartHere({
       if (error instanceof McpProxyRequiredError) {
         // opening a link needs the proxy; this is not an MCP problem, so it does not say MCP
         logDetails(error.message);
-        setImportError("Can't open links on this site");
+        setImportError("Opening links is unavailable");
       } else {
         setImportError(brief(error instanceof Error ? error.message : String(error)));
       }

@@ -37,7 +37,7 @@ describe("briefMessage", () => {
   });
 
   it("keeps a message that is already short", () => {
-    expect(briefMessage("Allow pop-ups for this site to sign in.")).toBe("Allow pop-ups for this site to sign in.");
+    expect(briefMessage("Allow pop-ups to sign in.")).toBe("Allow pop-ups to sign in.");
     expect(briefMessage("Failed to fetch")).toBe("Can't be reached");
   });
 

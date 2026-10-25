@@ -96,8 +96,7 @@ export function ModelPanel({ content, savedSecrets, passkeySecrets, issue, onApp
               "Select a provider to see its models."
             ) : (
               <>
-                This file names <code>{fileProvider}</code>, which can&apos;t run in the browser. Choose a
-                provider above.
+                Unsupported model provider <code>{fileProvider}</code>. Choose a provider above.
               </>
             )}
           </p>

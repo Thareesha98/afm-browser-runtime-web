@@ -48,7 +48,7 @@ function providerProblem(content: string, metadata: AgentMetadata): AfmIssue[] {
   return [
     {
       severity: "error",
-      message: `\`${provider}\` is not a model provider this app can run. ${advice}`,
+      message: `Unsupported model provider \`${provider}\`. ${advice}`,
       field: "model.provider",
       line: lineOfPath(content, ["model", "provider"]),
     },
@@ -63,7 +63,7 @@ function addressProblems(content: string, metadata: AgentMetadata): AfmIssue[] {
     if (url.includes("${") || parses(url)) return;
     issues.push({
       severity: "error",
-      message: `\`${url}\` is not a web address. Start it with \`https://\`.`,
+      message: `Invalid tool address \`${url}\`. Start it with \`https://\`.`,
       field: `tools.mcp.${at}.transport.url`,
       line: lineOfPath(content, ["tools", "mcp", at, "transport", "url"]),
     });
@@ -78,11 +78,11 @@ function variableProblems(content: string): AfmIssue[] {
       const end = text.indexOf("}", at);
       const shown = /^\$\{[^\s"']*/.exec(text.slice(at))?.[0] ?? "${";
       if (end === -1) {
-        issues.push({ severity: "error", message: `\`${shown}\` is missing its closing \`}\`.`, field: "", line });
+        issues.push({ severity: "error", message: `Unclosed variable \`${shown}\`. Add the closing \`}\`.`, field: "", line });
         break;
       }
       const name = text.slice(at + 2, end).replace(/^[a-z]+:/i, "").trim();
-      if (name === "") issues.push({ severity: "error", message: `\`${text.slice(at, end + 1)}\` has no name in it.`, field: "", line });
+      if (name === "") issues.push({ severity: "error", message: `Empty variable \`${text.slice(at, end + 1)}\`. Add a name.`, field: "", line });
     }
   }
   return issues;

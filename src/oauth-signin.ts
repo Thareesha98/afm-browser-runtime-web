@@ -120,7 +120,7 @@ export function createOAuthSignIns(deps: OAuthSignInDeps): OAuthSignIns {
     start(provider, vetting, remember = false) {
       const popup = openSignInPopup();
       if (popup === null) {
-        return Promise.resolve<SignInOutcome>({ status: "failed", reason: "Allow pop-ups for this site to sign in." });
+        return Promise.resolve<SignInOutcome>({ status: "failed", reason: "Allow pop-ups to sign in." });
       }
       const id = crypto.randomUUID();
       return new Promise<SignInOutcome>((resolve) => {
