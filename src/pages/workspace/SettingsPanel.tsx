@@ -16,6 +16,7 @@
 
 import { usePasskeySupport } from "../../passkey/usePasskeySupport";
 import { useThemeContext } from "../../app/ThemeContext";
+import { ForgetButton } from "./ForgetButton";
 import type { useStandaloneSession } from "../../worker-client/useStandaloneSession";
 import { usableSecrets } from "../../chat-state";
 
@@ -59,9 +60,7 @@ export function SettingsPanel({ session }: Props) {
                       Remember
                     </button>
                   )}
-                  <button className="u-btn quiet sm" onClick={() => forget(name)}>
-                    Forget
-                  </button>
+                  <ForgetButton name={name} onForget={() => forget(name)} />
                 </div>
               );
             })}
