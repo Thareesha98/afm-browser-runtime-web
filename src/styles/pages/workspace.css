@@ -50,6 +50,11 @@
   width: 100%;
   border-left: none;
 }
+@media (min-width: 641px) {
+  .u-body.is-chat-full .u-side .u-panel:not(.is-over) {
+    inset: 10px;
+  }
+}
 
 .u-side-left {
   --slide-from: -8px;
