@@ -18,7 +18,7 @@ import { discoverSignIn, resolveClientId } from "@afm/adapter-auth";
 import type { AuthorizationServerMetadata } from "@afm/adapter-auth";
 import { proxyAwareFetch } from "./tool-factory";
 import { DIRECTORY_ENTRIES } from "./mcp-directory";
-import type { DirectoryEntry, OAuthSignIn } from "./mcp-directory";
+import type { DirectoryCategory, DirectoryEntry, OAuthSignIn } from "./mcp-directory";
 
 function searchText(entry: DirectoryEntry): string {
   return `${entry.title} ${entry.description} ${entry.publisher}`.toLowerCase();
@@ -30,6 +30,10 @@ export function searchDirectory(query: string, entries: readonly DirectoryEntry[
   return entries
     .filter((entry) => terms.every((term) => searchText(entry).includes(term)))
     .sort((a, b) => Number(inTitle(b)) - Number(inTitle(a)) || a.title.localeCompare(b.title, undefined, { sensitivity: "base" }));
+}
+
+export function inCategory(entries: readonly DirectoryEntry[], category: DirectoryCategory | null): DirectoryEntry[] {
+  return category === null ? [...entries] : entries.filter((entry) => entry.category === category);
 }
 
 export function listedServer(url: string): DirectoryEntry | undefined {

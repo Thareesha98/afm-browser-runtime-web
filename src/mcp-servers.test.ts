@@ -25,6 +25,7 @@ function entry(id: string, title = id, description = `the ${id} server`): Direct
     id,
     title,
     description,
+    category: "dev",
     url: `https://${id}.example.com/mcp`,
     publisher: `${id}.example.com`,
     docsUrl: `https://${id}.example.com/docs`,

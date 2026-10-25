@@ -14,9 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { useMemo } from "react";
-import { searchDirectory } from "../../mcp-servers";
-import type { DirectoryEntry } from "../../mcp-directory";
+import { useMemo, useState } from "react";
+import { inCategory, searchDirectory } from "../../mcp-servers";
+import { DIRECTORY_CATEGORIES } from "../../mcp-directory";
+import type { DirectoryCategory, DirectoryEntry } from "../../mcp-directory";
 import { markColour } from "./mark-colour";
 
 interface Props {
@@ -66,11 +67,26 @@ function ServerRow({
   );
 }
 
+function CategoryChip({ label, on, onPick }: { label: string; on: boolean; onPick: () => void }) {
+  return (
+    <button className={`u-pill-btn${on ? " on" : ""}`} aria-pressed={on} onClick={onPick}>
+      {label}
+    </button>
+  );
+}
+
 export function ServerDirectory({ query, onConnect, onInfo }: Props) {
-  const results = useMemo(() => searchDirectory(query), [query]);
+  const [category, setCategory] = useState<DirectoryCategory | null>(null);
+  const results = useMemo(() => inCategory(searchDirectory(query), category), [query, category]);
 
   return (
     <div className="u-group grow">
+      <div className="u-pills u-chips" role="group" aria-label="Category">
+        <CategoryChip label="All" on={category === null} onPick={() => setCategory(null)} />
+        {DIRECTORY_CATEGORIES.map(({ id, label }) => (
+          <CategoryChip key={id} label={label} on={category === id} onPick={() => setCategory(id)} />
+        ))}
+      </div>
       {results.length === 0 ? (
         <p className="u-hint">Nothing here matches that. You can paste the address instead, on the Add by URL tab.</p>
       ) : (
