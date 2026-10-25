@@ -21,6 +21,7 @@ import type { CollectedFile } from "../attachments";
 import type { ImageAttachment } from "../protocol";
 import { useVoiceInput } from "./voice";
 import { grownHeight } from "./composer-size";
+import { HIDDEN_FILE_INPUT } from "./hidden-file-input";
 
 export interface AttachOutcome {
   attached: string[];
@@ -287,7 +288,7 @@ export function Composer({
             type="file"
             multiple
             accept=".pdf,.md,.markdown,.txt"
-            className="visually-hidden"
+            {...HIDDEN_FILE_INPUT}
             onChange={onFilesPicked}
           />
           <input
@@ -295,7 +296,7 @@ export function Composer({
             type="file"
             // @ts-expect-error webkitdirectory has no React typing
             webkitdirectory=""
-            className="visually-hidden"
+            {...HIDDEN_FILE_INPUT}
             onChange={onFilesPicked}
           />
           <input
@@ -303,7 +304,7 @@ export function Composer({
             type="file"
             multiple
             accept={IMAGE_ACCEPT}
-            className="visually-hidden"
+            {...HIDDEN_FILE_INPUT}
             onChange={onImagesPicked}
           />
         </div>
@@ -313,6 +314,7 @@ export function Composer({
           rows={1}
           value={text}
           disabled={disabled}
+          aria-label="Message the agent"
           placeholder={
             placeholder ?? (disabled ? "Load an agent first…" : streaming ? "Agent is responding…" : "Message the agent…")
           }
