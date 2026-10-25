@@ -47,6 +47,7 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .u-btn.sm{height:28px;padding:0 11px;font-size:12.5px;border-radius:8px}
 .u-btn.wide{width:100%;justify-content:center}
 .u-btn[disabled]{opacity:.45}
+.u-btn.primary[disabled]{opacity:1;background:var(--line);border-color:var(--line-strong);color:var(--muted);box-shadow:none}
 .u-ico{width:30px;height:30px;border-radius:10px;border:1px solid transparent;background:none;display:grid;place-items:center;color:var(--muted);cursor:pointer;flex:none;font-family:inherit}
 .u-ico svg{width:16px;height:16px}
 .u-ico:hover{background:var(--sunk)}
