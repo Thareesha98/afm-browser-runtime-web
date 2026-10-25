@@ -1775,7 +1775,8 @@ label.u-group {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 12px var(--page-pad, 24px) 0;
+  margin: 12px var(--page-pad, 24px) 0 var(--card-x, var(--page-pad, 24px));
+  width: var(--card-w, auto);
   padding: 8px 8px 8px 14px;
   border-radius: 12px;
   background: var(--bad-soft);
