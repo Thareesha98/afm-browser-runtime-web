@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode, RefObject } from "react";
 import { BuildPane } from "./BuildPane";
 import { ReadinessChip, chipAnnouncement } from "./ReadinessChip";
@@ -28,7 +28,8 @@ import type { EditorMode } from "./ViewControls";
 
 import { downloadAgentFile } from "../../download-agent-file";
 import { getFrontmatterScalar } from "./agent-source-edit";
-import { FileCheckPanel } from "./FileCheckPanel";
+import { IssuePill } from "./IssuePill";
+import { useSettled } from "./use-settled";
 import { CodeEditor } from "./CodeEditor";
 
 interface EditableProps {
@@ -67,7 +68,8 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
     if (showRaw !== firstRaw.current) setMode("raw");
   }, [showRaw]);
   const buildable = buildableAgent(content);
-  const issues = collectAfmIssues(content);
+  const settled = useSettled(content);
+  const issues = useMemo(() => collectAfmIssues(settled), [settled]);
   const filename = agentFilename(content);
 
   function changeMode(next: EditorMode) {
@@ -177,16 +179,9 @@ export function RawEditor({
     <div className="u-stage-canvas">
       <div className="u-rawwrap">
         <CodeEditor value={content} onChange={onChange} errorLines={errorLines} />
-        {issues.length === 0 ? (
-          <div className="u-checks">
-            <span className="u-chip ok">
-              <span className="u-dot" aria-hidden="true" />
-              No problems
-            </span>
-          </div>
-        ) : (
-          <FileCheckPanel issues={issues} />
-        )}
+        <div className="u-pill-dock">
+          <IssuePill issues={issues} />
+        </div>
       </div>
     </div>
   );

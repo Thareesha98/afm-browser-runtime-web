@@ -203,7 +203,6 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 
 .u-rawwrap{display:flex;flex-direction:column;height:100%;width:100%}
 .u-raw{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-family:"IBM Plex Mono",monospace;font-size:12.5px;line-height:1.8;padding:10px 0}
-.u-checks{margin-top:12px;border:1px solid var(--line);border-radius:11px;background:var(--surface);padding:11px 13px;display:flex;align-items:center;gap:10px}
 
 .u-focus{position:absolute;inset:0;background:rgba(16,20,40,.34);z-index:9;display:grid;place-items:center;padding:30px}
 .u-focus-panel{width:100%;max-width:880px;height:100%;background:var(--surface);border-radius:16px;border:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(14,18,40,.3)}
