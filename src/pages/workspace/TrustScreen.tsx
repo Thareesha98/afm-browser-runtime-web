@@ -29,6 +29,7 @@ interface Props {
   savedSecrets: string[];
   fileUrl: string | null;
   onRun: () => void;
+  canRun?: boolean;
   onOpenBuilder: () => void;
   initialTools?: string | null;
 }
@@ -105,7 +106,7 @@ function Row({ icon, label, children }: { icon: string; label: string; children:
   );
 }
 
-export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, onOpenBuilder, initialTools = null }: Props) {
+export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, onOpenBuilder, initialTools = null, canRun = true }: Props) {
   const [listed, setListed] = useState<string | null>(initialTools);
   const [query, setQuery] = useState("");
   const keys = referencedSecretNames(source);
@@ -174,7 +175,7 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
           <button className="u-btn ghost" onClick={onOpenBuilder}>
             Open in builder
           </button>
-          <button className="u-btn primary" onClick={onRun}>
+          <button className="u-btn primary" onClick={onRun} disabled={!canRun}>
             Run it
           </button>
         </>

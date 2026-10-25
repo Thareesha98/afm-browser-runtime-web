@@ -42,6 +42,7 @@ export interface ProbeResult {
 
 export interface LoadOptions {
   carryConversation?: boolean;
+  allowBrowserPreview?: boolean;
 }
 
 function freshStartNotice(messages: UiMessage[]): UiMessage {
@@ -149,10 +150,11 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
         content,
         seedHistory: carry ? toSeededConversation(resume) : [],
         permissionSeed,
+        allowBrowserPreview: options.allowBrowserPreview,
       });
       return;
     }
-    post({ type: "load", content, permissionSeed });
+    post({ type: "load", content, permissionSeed, allowBrowserPreview: options.allowBrowserPreview });
   }
 
   function send(text: string, images?: ImageAttachment[]): void {
@@ -193,6 +195,11 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
   function retryReply(): void {
     const last = state.messages[lastUserIndex(state.messages)];
     if (last?.kind !== "user") return;
+    if (state.canContinue) {
+      dispatch({ type: "continue-start" });
+      post({ type: "continue" });
+      return;
+    }
     dispatch({ type: "regenerate-start" });
     post({ type: "send", text: last.text, images: last.images });
   }

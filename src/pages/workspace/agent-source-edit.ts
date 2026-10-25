@@ -30,7 +30,10 @@ function frontmatterLines(content: string): string[] | null {
 
 function editFrontmatter(content: string, edit: (lines: string[]) => string[] | null): string {
   const end = frontmatterEnd(content);
-  if (end === null) return content;
+  if (end === null) {
+    const lines = edit(["---", "---"]);
+    return lines === null ? content : `${lines.join("\n")}\n${content.replace(/^\n+/, "")}`;
+  }
   const lines = edit(content.slice(0, end).split("\n"));
   return lines === null ? content : lines.join("\n") + content.slice(end);
 }
@@ -242,13 +245,29 @@ function findAuthenticationLine(lines: string[], block: Span): number {
 }
 
 function sectionBounds(content: string, heading: string): Span | null {
-  const headingRe = new RegExp(`^#\\s+${heading}\\s*$`, "m");
-  const match = headingRe.exec(content);
-  if (match === null) return null;
-  const bodyStart = match.index + match[0].length;
-  const nextHeading = /^#\s+\S/m.exec(content.slice(bodyStart));
-  const bodyEnd = nextHeading ? bodyStart + nextHeading.index : content.length;
-  return { start: bodyStart, end: bodyEnd };
+  const end = frontmatterEnd(content);
+  const bodyStart = end === null ? 0 : end + 1;
+  let offset = 0;
+  let start: number | null = null;
+  let fence: { marker: string; length: number } | null = null;
+  for (const line of content.split("\n")) {
+    if (offset >= bodyStart) {
+      const marker = /^ {0,3}(`{3,}|~{3,})/.exec(line)?.[1];
+      if (marker !== undefined) {
+        if (fence === null) fence = { marker: marker[0]!, length: marker.length };
+        else if (marker[0] === fence.marker && marker.length >= fence.length &&
+          /^\s*$/.test(line.slice(line.indexOf(marker) + marker.length))) fence = null;
+      } else if (fence === null) {
+        const found = /^ {0,3}#\s+(\S.*?)\s*$/.exec(line.replace(/\r$/, ""));
+        if (found !== null) {
+          if (start !== null) return { start, end: offset };
+          if (found[1]?.toLowerCase() === heading.toLowerCase()) start = offset + line.length;
+        }
+      }
+    }
+    offset += line.length + 1;
+  }
+  return start === null ? null : { start, end: content.length };
 }
 
 export function getSection(content: string, heading: string): string {

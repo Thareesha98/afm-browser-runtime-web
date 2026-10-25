@@ -30,6 +30,7 @@ import type { ServerMessage, ImageAttachment } from "./protocol";
 import { permissionKey, serverMessageFromLoopEvent } from "./protocol";
 import { userContent } from "./message-content";
 import { runtimeSystemPrompt } from "./runtime-guidance";
+import { collectAfmIssues } from "./agent-validation";
 
 const MAX_TOKENS_PER_TURN = 1_000_000;
 const MAX_WALL_CLOCK_MS = 15 * 60_000;
@@ -83,17 +84,22 @@ export class AgentSession {
     this.deps.emit({ type: "load-step", key, label, state, note });
   }
 
-  async load(content: string, seedHistory?: ChatMessage[]): Promise<void> {
+  async load(content: string, seedHistory?: ChatMessage[], allowBrowserPreview = false): Promise<void> {
     this.endTurn();
     const number = ++this.loadCount;
     const current = (): boolean => number === this.loadCount;
     let stage = "file";
     try {
       this.step("file", "Reading the agent file", "active");
-      const loaded = await loadAfm(content, this.deps.secrets);
+      const invalid = collectAfmIssues(content).find((issue) => issue.severity === "error");
+      if (invalid !== undefined) throw new Error(invalid.message);
+      const loaded = await loadAfm(content, this.deps.secrets, true);
       if (!current()) return;
       const blocked = loaded.plan.issues.find((issue) => issue.severity === "blocked");
       if (blocked !== undefined) throw new Error(blocked.message);
+      if (!allowBrowserPreview && loaded.plan.issues.some((issue) => issue.severity === "warning")) {
+        throw new Error("Review the browser limitations before running this agent.");
+      }
       this.step("file", "Reading the agent file", "done");
 
       stage = "model";
@@ -127,6 +133,7 @@ export class AgentSession {
         mcpServers: (loaded.metadata.tools?.mcp ?? []).map((server) => server.name),
         plan: loaded.plan,
       });
+      if (this.history.at(-1)?.role === "tool") this.deps.emit({ type: "resume-available" });
     } catch (error) {
       if (!current()) return;
       this.refuse(stage, error);
@@ -166,7 +173,15 @@ export class AgentSession {
     await this.sendContent(userContent(text, images), keep);
   }
 
-  private async sendContent(content: string | ContentPart[], keep?: number): Promise<void> {
+  async continue(): Promise<void> {
+    if (this.history.at(-1)?.role !== "tool") {
+      this.deps.emit({ type: "error", message: "There is no completed tool result to continue from." });
+      return;
+    }
+    await this.sendContent(null);
+  }
+
+  private async sendContent(content: string | ContentPart[] | null, keep?: number): Promise<void> {
     const loaded = this.loaded;
     const model = this.model;
     const tools = this.tools;
@@ -185,7 +200,7 @@ export class AgentSession {
     const controller = new AbortController();
     this.controller = controller;
     const current = (): boolean => this.controller === controller;
-    const messages: ChatMessage[] = [...this.history, { role: "user", content }];
+    const messages: ChatMessage[] = content === null ? [...this.history] : [...this.history, { role: "user", content }];
 
     try {
       for await (const event of runAgentTurn({
@@ -202,12 +217,15 @@ export class AgentSession {
         signal: controller.signal,
       })) {
         if (!current()) return;
-        if (event.type === "turn-complete") {
+        if (event.type === "turn-checkpoint" || event.type === "turn-complete") {
           this.history = event.messages;
         }
         const message = serverMessageFromLoopEvent(event);
         if (message !== null) {
-          this.deps.emit(message);
+          this.deps.emit(message.type === "turn-finished" && event.type === "finish" &&
+            event.reason !== "stop" && this.history.at(-1)?.role === "tool"
+            ? { ...message, canContinue: true }
+            : message);
         }
       }
     } catch (error) {

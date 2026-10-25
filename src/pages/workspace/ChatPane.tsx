@@ -80,7 +80,7 @@ export function ChatPane({
           onRetry={onRetry}
           failure={state.error}
           onRetryReply={retryReply}
-          onRegenerate={regenerate}
+          onRegenerate={state.canContinue ? retryReply : regenerate}
           onEdit={editMessage}
           onDetachFile={detachFile}
           serverOf={(toolName) => {

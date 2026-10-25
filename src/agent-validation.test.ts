@@ -136,7 +136,7 @@ describe("the line a problem is shown on", () => {
       ROLE_AND_INSTRUCTIONS,
     ].join("\n");
     const issue = collectAfmIssues(content).find((found) => found.field === "tools.mcp[1].transport.authentication");
-    expect(issue?.severity).toBe("error");
+    expect(issue?.severity).toBe("warning");
     expect(issue?.line).toBe(19);
   });
 
@@ -176,6 +176,13 @@ describe("the line a problem is shown on", () => {
     const issue = collectAfmIssues(content).find((found) => found.field === "interfaces[1]");
     expect(issue?.severity).toBe("warning");
     expect(issue?.line).toBe(8);
+  });
+
+  it("accepts a valid platform trigger but rejects an invalid mode-specific field", () => {
+    const file = (extra: string) => `---\nname: A\nmodel:\n  provider: openai\n  name: gpt-4o\ninterfaces:\n  - type: platformchat\n    platform: slack\n    mode: polling\n${extra}---\n${ROLE_AND_INSTRUCTIONS}`;
+    expect(previewAgent(file("    polling:\n      interval: 30\n")).ok).toBe(true);
+    const issues = collectAfmIssues(file("    signature:\n      output:\n        type: string\n"));
+    expect(issues.some((issue) => issue.severity === "error" && issue.message.includes("must not set signature.output"))).toBe(true);
   });
 
   it("gives no line for a broken settings block, since the block cannot be read", () => {

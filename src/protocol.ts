@@ -35,12 +35,14 @@ export type ClientMessage =
       content: string;
       seedHistory?: ChatMessage[];
       permissionSeed?: string[];
+      allowBrowserPreview?: boolean;
     }
   | { type: "send"; text: string; images?: ImageAttachment[]; keep?: number }
   | { type: "attach-files"; files: { name: string; path: string; text: string; pages?: number; note?: string }[] }
   | { type: "detach-file"; path: string }
   | { type: "cancel" }
   | { type: "regenerate" }
+  | { type: "continue" }
   | { type: "reset-chat" }
   | { type: "set-secret"; name: string; value: string; address?: string }
   | passkey.VaultMessage
@@ -90,7 +92,8 @@ export type ServerMessage =
   | { type: "text-delta"; text: string }
   | { type: "tool-call"; id: string; name: string; args: unknown }
   | { type: "tool-result"; id: string; name: string; ok: boolean; content: string }
-  | { type: "turn-finished"; reason: TurnEndReason }
+  | { type: "resume-available" }
+  | { type: "turn-finished"; reason: TurnEndReason; canContinue?: boolean }
   | { type: "notice"; text: string }
   | { type: "permission-request"; id: string; name: string; args: unknown; serverId?: string }
   | { type: "oauth-authorize-url"; id: string; url: string }
@@ -127,6 +130,8 @@ export function serverMessageFromLoopEvent(event: LoopEvent): ServerMessage | nu
         ok: event.ok,
         content: event.content,
       };
+    case "turn-checkpoint":
+      return { type: "resume-available" };
     case "budget-update":
       return {
         type: "budget-update",

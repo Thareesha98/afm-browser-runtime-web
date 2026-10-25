@@ -16,60 +16,7 @@
 
 import type { AgentMetadata } from "@afm/engine";
 import type { AfmIssue } from "./agent-validation";
-import { lineOfPath, settingsRows } from "./frontmatter-lines";
-import { BROWSER_PROVIDERS } from "./model-factory";
-
-function distance(a: string, b: string): number {
-  let previous = Array.from({ length: b.length + 1 }, (_, at) => at);
-  for (let i = 1; i <= a.length; i += 1) {
-    const row = [i];
-    for (let j = 1; j <= b.length; j += 1) {
-      row.push(Math.min(previous[j]! + 1, row[j - 1]! + 1, previous[j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1)));
-    }
-    previous = row;
-  }
-  return previous[b.length]!;
-}
-
-function parses(url: string): boolean {
-  try {
-    return new URL(url) instanceof URL;
-  } catch {
-    return false;
-  }
-}
-
-function providerProblem(content: string, metadata: AgentMetadata): AfmIssue[] {
-  const provider = metadata.model?.provider?.trim() ?? "";
-  const lower = provider.toLowerCase();
-  if (provider === "" || BROWSER_PROVIDERS.includes(lower)) return [];
-  const close = BROWSER_PROVIDERS.find((known) => distance(lower, known) <= 2);
-  const advice = close === undefined ? "Use `openai` or `anthropic`." : `Did you mean \`${close}\`?`;
-  return [
-    {
-      severity: "error",
-      message: `Unsupported model provider \`${provider}\`. ${advice}`,
-      field: "model.provider",
-      line: lineOfPath(content, ["model", "provider"]),
-    },
-  ];
-}
-
-function addressProblems(content: string, metadata: AgentMetadata): AfmIssue[] {
-  const issues: AfmIssue[] = [];
-  (metadata.tools?.mcp ?? []).forEach((server, at) => {
-    if (server.transport.type !== "http") return;
-    const url = server.transport.url;
-    if (url.includes("${") || parses(url)) return;
-    issues.push({
-      severity: "error",
-      message: `Invalid tool address \`${url}\`. Start it with \`https://\`.`,
-      field: `tools.mcp.${at}.transport.url`,
-      line: lineOfPath(content, ["tools", "mcp", at, "transport", "url"]),
-    });
-  });
-  return issues;
-}
+import { settingsRows } from "./frontmatter-lines";
 
 function variableProblems(content: string): AfmIssue[] {
   const issues: AfmIssue[] = [];
@@ -89,5 +36,18 @@ function variableProblems(content: string): AfmIssue[] {
 }
 
 export function quietMistakes(content: string, metadata: AgentMetadata): AfmIssue[] {
-  return [...providerProblem(content, metadata), ...addressProblems(content, metadata), ...variableProblems(content)];
+  void metadata;
+  const preamble = content.split(/\r?\n/).findIndex((line) => /^ {0,3}# (?:Role|Instructions)\s*$/i.test(line));
+  const lines = content.split(/\r?\n/);
+  const first = lines.findIndex((line) => line.trim() !== "");
+  const ignored = first !== -1 && lines[first]?.trim() !== "---" && preamble > first
+    ? lines.slice(first, preamble).findIndex((line) => line.trim() !== "")
+    : -1;
+  const preambleIssues: AfmIssue[] = ignored === -1 ? [] : [{
+    severity: lines.slice(first, preamble).some((line) => /^\s*[\w-]+\s*:/.test(line)) ? "error" : "warning",
+    message: "Text before the first AFM heading is ignored. Add an opening '---' if these are settings.",
+    field: "",
+    line: first + ignored + 1,
+  }];
+  return [...preambleIssues, ...variableProblems(content)];
 }

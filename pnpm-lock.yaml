@@ -24,17 +24,17 @@ importers:
         specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/auth
         version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth
       "@afm/adapter-model":
-        specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/model
-        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model(patch_hash=8bc02ba408043e420fbc54156c315284a91a4f2b143bba58d3dc853352d4588a)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)
+        specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#818f9fcf270ce4f0897a76abe4035ce91ec18ab4&path:/typescript-interpreter/packages/adapters/model
+        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/adapters/model(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine)(zod@3.25.76)
       "@afm/adapter-secret":
         specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/secret
-        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/secret(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)
+        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/secret(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine)
       "@afm/adapter-tool":
-        specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/tool
-        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/tool(@afm/adapter-auth@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)
+        specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#818f9fcf270ce4f0897a76abe4035ce91ec18ab4&path:/typescript-interpreter/packages/adapters/tool
+        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/adapters/tool(@afm/adapter-auth@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine)(zod@3.25.76)
       "@afm/engine":
-        specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/engine
-        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine
+        specifier: git+https://github.com/Thareesha98/reference-implementations-afm.git#818f9fcf270ce4f0897a76abe4035ce91ec18ab4&path:/typescript-interpreter/packages/engine
+        version: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine
       "@fontsource/ibm-plex-mono":
         specifier: 5.3.0
         version: 5.3.0
@@ -1910,12 +1910,8 @@ packages:
       tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
       integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
     version: 0.0.0
-  "@afm/adapter-model@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model":
-    resolution:
-      gitHosted: true
-      path: /typescript-interpreter/packages/adapters/model
-      tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
-      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
+  "@afm/adapter-model@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/adapters/model":
+    resolution: {gitHosted: true, path: /typescript-interpreter/packages/adapters/model, tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4}
     version: 0.0.0
     peerDependencies:
       "@afm/engine": 0.0.0
@@ -1928,22 +1924,14 @@ packages:
     version: 0.0.0
     peerDependencies:
       "@afm/engine": 0.0.0
-  "@afm/adapter-tool@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/tool":
-    resolution:
-      gitHosted: true
-      path: /typescript-interpreter/packages/adapters/tool
-      tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
-      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
+  "@afm/adapter-tool@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/adapters/tool":
+    resolution: {gitHosted: true, path: /typescript-interpreter/packages/adapters/tool, tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4}
     version: 0.0.0
     peerDependencies:
       "@afm/adapter-auth": 0.0.0
       "@afm/engine": 0.0.0
-  "@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine":
-    resolution:
-      gitHosted: true
-      path: /typescript-interpreter/packages/engine
-      tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7
-      integrity: sha512-MmcKUE9F6tWm2CSg+FcuAgZiIH7xmuavsv29KyOAB1zK5ggFg0V4RHcY8ZvyoYo+vPPCI2FGaSnP8mYiL2VDOA==
+  "@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine":
+    resolution: {gitHosted: true, path: /typescript-interpreter/packages/engine, tarball: https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4}
     version: 0.0.0
   "@types/linkify-it@5.0.0":
     resolution:
@@ -3237,25 +3225,26 @@ snapshots:
   zod@3.25.76: {}
   zwitch@2.0.4: {}
   "@afm/adapter-auth@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth": {}
-  "@afm/adapter-secret@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/secret(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)":
+  "@afm/adapter-secret@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/secret(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine)":
     dependencies:
-      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine
-  "@afm/adapter-tool@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/tool(@afm/adapter-auth@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)":
+      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine
+  "@afm/adapter-tool@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/adapters/tool(@afm/adapter-auth@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine)(zod@3.25.76)":
     dependencies:
       "@afm/adapter-auth": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/auth
-      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine
+      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine
       "@cfworker/json-schema": 4.1.1
       "@modelcontextprotocol/sdk": 1.32.1(@cfworker/json-schema@4.1.1)(zod@3.25.76)
     transitivePeerDependencies:
       - supports-color
       - zod
-  "@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine":
+  "@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine":
     dependencies:
+      ajv: 8.20.0
       yaml: 2.9.0
       zod: 3.25.76
-  "@afm/adapter-model@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/adapters/model(patch_hash=8bc02ba408043e420fbc54156c315284a91a4f2b143bba58d3dc853352d4588a)(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine)(zod@3.25.76)":
+  "@afm/adapter-model@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/adapters/model(@afm/engine@https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine)(zod@3.25.76)":
     dependencies:
-      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/c1c71e1d98c7df92e47754fe9dd1659ea7de05d7#path:/typescript-interpreter/packages/engine
+      "@afm/engine": https://codeload.github.com/Thareesha98/reference-implementations-afm/tar.gz/818f9fcf270ce4f0897a76abe4035ce91ec18ab4#path:/typescript-interpreter/packages/engine
       "@ai-sdk/anthropic": 3.0.122(zod@3.25.76)
       "@ai-sdk/openai": 3.0.118(zod@3.25.76)
       ai: 6.0.291(zod@3.25.76)
@@ -3331,5 +3320,3 @@ snapshots:
   rope-sequence@1.3.4: {}
   uc.micro@2.1.0: {}
   w3c-keyname@2.2.8: {}
-patchedDependencies:
-  "@afm/adapter-model@0.0.0": 8bc02ba408043e420fbc54156c315284a91a4f2b143bba58d3dc853352d4588a

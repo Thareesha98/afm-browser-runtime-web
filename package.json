@@ -15,10 +15,10 @@
   },
   "dependencies": {
     "@afm/adapter-auth": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/auth",
-    "@afm/adapter-model": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/model",
+    "@afm/adapter-model": "git+https://github.com/Thareesha98/reference-implementations-afm.git#818f9fcf270ce4f0897a76abe4035ce91ec18ab4&path:/typescript-interpreter/packages/adapters/model",
     "@afm/adapter-secret": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/secret",
-    "@afm/adapter-tool": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/adapters/tool",
-    "@afm/engine": "git+https://github.com/Thareesha98/reference-implementations-afm.git#c1c71e1d98c7df92e47754fe9dd1659ea7de05d7&path:/typescript-interpreter/packages/engine",
+    "@afm/adapter-tool": "git+https://github.com/Thareesha98/reference-implementations-afm.git#818f9fcf270ce4f0897a76abe4035ce91ec18ab4&path:/typescript-interpreter/packages/adapters/tool",
+    "@afm/engine": "git+https://github.com/Thareesha98/reference-implementations-afm.git#818f9fcf270ce4f0897a76abe4035ce91ec18ab4&path:/typescript-interpreter/packages/engine",
     "@fontsource/ibm-plex-mono": "5.3.0",
     "@fontsource/instrument-sans": "5.3.0",
     "pdfjs-dist": "6.3.289",

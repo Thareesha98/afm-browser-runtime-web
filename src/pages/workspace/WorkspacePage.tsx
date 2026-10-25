@@ -56,6 +56,8 @@ import { useSettled } from "./use-settled";
 import { useThemeContext } from "../../app/ThemeContext";
 import { useMediaQuery } from "../../app/use-media-query";
 import { logDetails } from "../../brief-error";
+import { runConfirmations } from "./run-confirmations";
+import type { RunConfirmation } from "./run-confirmations";
 
 // below this width the header keeps only Run, Chat and Settings; Share and About sit beside Build / Raw
 const COMPACT_QUERY = "(max-width: 640px)";
@@ -86,6 +88,8 @@ export function WorkspacePage() {
   const [serverEditing, setServerEditing] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>("simple");
   const [rawRequest, setRawRequest] = useState(0);
+  const [runPrompt, setRunPrompt] = useState<{ source: string; choices: RunConfirmation[]; index: number } | null>(null);
+  const [approvedPreviewSource, setApprovedPreviewSource] = useState<string | null>(null);
   const permissions = usePermissionsLedger();
   const theme = useThemeContext();
   const compact = useMediaQuery(COMPACT_QUERY);
@@ -113,6 +117,7 @@ export function WorkspacePage() {
   const library = useAgentsLibrary();
   const history = useHistory();
   const preview = previewAgent(content);
+  const fileIssues = collectAfmIssues(content);
   const loadedIdentityRef = useRef(identityFor(searchParams, location.hash, draftSource));
   const readable = buildableAgent(content);
   const agentLabel = (readable.ok ? readable.metadata.name : undefined) ?? "Untitled agent";
@@ -212,7 +217,8 @@ export function WorkspacePage() {
     instructions: getSection(content, "Instructions"),
     metadata: readable.ok ? readable.metadata : null,
   });
-  const canRun = preview.ok && preview.plan.runnable && !current && typedNeeds?.allDone === true;
+  const canRun = preview.ok && preview.plan.runnable && !fileIssues.some((issue) => issue.severity === "error") &&
+    !current && typedNeeds?.allDone === true;
 
   const servers = readable.ok ? (readable.metadata.tools?.mcp ?? []) : [];
   const nameByUrl = serverNameByUrl(servers);
@@ -228,7 +234,12 @@ export function WorkspacePage() {
     role: getSection(settledContentForRead, "Role"),
     instructions: getSection(settledContentForRead, "Instructions"),
     metadata: readinessMetadata,
-    issues: collectAfmIssues(settledContentForRead),
+    issues: [
+      ...collectAfmIssues(settledContentForRead),
+      ...(settledPreview.ok ? settledPreview.plan.issues.filter((issue) => issue.severity === "blocked").map((issue) => ({
+        severity: "error" as const, message: issue.message, field: issue.path ?? "", line: null,
+      })) : []),
+    ],
     status: session.state.status,
     current,
     failed,
@@ -246,13 +257,15 @@ export function WorkspacePage() {
   const lastEditAt = useRef(0);
   const editContent = useCallback((next: string) => {
     lastEditAt.current = Date.now();
+    setRunPrompt(null);
+    setApprovedPreviewSource(null);
     setContent(next);
   }, []);
   const [chipHeld, setChipHeld] = useState(false);
   const chipPhase = useReadyChip(chipStatus(needs, ready), lastEditAt, chipHeld);
   const runTip = canRun
     ? "Start the agent with this file"
-    : ((needs !== null ? runReason(needs) : null) ?? (ready.tone === "bad" ? readinessSentence(ready) : "Start the agent with this file"));
+    : ((needs !== null ? runReason(needs) : null) ?? (ready.tone === "bad" ? readinessSentence(ready) : "Fix the file before running"));
 
   function revokeGrants(serverUrl: string) {
     const scope = permissionScopeFor(agentIdRef.current, contentRef.current);
@@ -262,16 +275,51 @@ export function WorkspacePage() {
   }
 
   function runAgent() {
+    if (!canRun) return;
+    if (preview.ok && runConfirmations(preview.metadata, preview.plan.issues).length > 0 && approvedPreviewSource !== content) {
+      requestRun();
+      return;
+    }
     const { id } = persistToLibrary();
     const previous = id === null ? undefined : history.entries.find((entry) => entry.agentId === id);
     const rewritten = running && agentBrief(session.state.agentSource) !== agentBrief(content);
-    session.loadContent(content, previous?.messages, { carryConversation: !rewritten });
+    session.loadContent(content, previous?.messages, {
+      carryConversation: !rewritten,
+      allowBrowserPreview: approvedPreviewSource === content,
+    });
     openSide("chat");
   }
 
   function openSetup() {
     setup.start();
     openSide("setup");
+  }
+
+  function requestRun() {
+    if (!canRun || !preview.ok) return;
+    const choices = runConfirmations(preview.metadata, preview.plan.issues);
+    if (choices.length === 0) {
+      setApprovedPreviewSource(null);
+      openSetup();
+      return;
+    }
+    setApprovedPreviewSource(null);
+    setRunPrompt({ source: content, choices, index: 0 });
+  }
+
+  function acceptRunPrompt() {
+    if (runPrompt === null) return;
+    if (runPrompt.source !== content) {
+      setRunPrompt(null);
+      return;
+    }
+    if (runPrompt.index + 1 < runPrompt.choices.length) {
+      setRunPrompt({ ...runPrompt, index: runPrompt.index + 1 });
+      return;
+    }
+    setRunPrompt(null);
+    setApprovedPreviewSource(content);
+    openSetup();
   }
 
   function configure(row: SetupRow) {
@@ -362,7 +410,10 @@ export function WorkspacePage() {
         canAct={preview.ok}
         canRun={canRun}
         running={running}
-        onRun={openSetup}
+        onRun={requestRun}
+        runPrompt={runPrompt?.source === content ? runPrompt.choices[runPrompt.index] ?? null : null}
+        onAcceptRunPrompt={acceptRunPrompt}
+        onDeclineRunPrompt={() => setRunPrompt(null)}
         runTip={runTip}
         open={side}
         onToggle={toggleSide}
@@ -391,9 +442,10 @@ export function WorkspacePage() {
             source={content}
             savedSecrets={usableSecrets(session.state)}
             fileUrl={linkedFile}
+            canRun={canRun}
             onRun={() => {
               setTrusted(true);
-              openSetup();
+              requestRun();
             }}
             onOpenBuilder={() => {
               setTrusted(true);

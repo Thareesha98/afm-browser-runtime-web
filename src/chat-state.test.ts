@@ -292,6 +292,19 @@ describe("how a turn ended", () => {
     expect(notices(s)).toHaveLength(0);
   });
 
+  it("keeps a completed tool checkpoint available after an iteration limit", () => {
+    let state = chatReducer(initialChatState, { type: "user-message", text: "Save this" });
+    state = chatReducer(state, { type: "server", message: { type: "tool-call", id: "c1", name: "save", args: {} } });
+    state = chatReducer(state, { type: "server", message: { type: "tool-result", id: "c1", name: "save", ok: true, content: "saved" } });
+    state = chatReducer(state, { type: "server", message: { type: "resume-available" } });
+    state = chatReducer(state, { type: "server", message: { type: "turn-finished", reason: "max-iterations", canContinue: true } });
+    expect(state.canContinue).toBe(true);
+    state = chatReducer(state, { type: "continue-start" });
+    expect(state.messages.map((message) => message.kind)).toEqual(["user", "tool"]);
+    state = chatReducer(state, { type: "server", message: { type: "turn-finished", reason: "stop" } });
+    expect(state.canContinue).toBe(false);
+  });
+
   it("warns that the answer may be unfinished when the iteration limit was hit", () => {
     const s = chatReducer(initialChatState, finish("max-iterations"));
     expect(s.status).toBe("ready");

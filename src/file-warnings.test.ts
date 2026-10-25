@@ -35,16 +35,16 @@ describe("a file with no mistakes", () => {
 });
 
 describe("a model provider the browser cannot run", () => {
-  it("suggests the close word when it looks like a typo", () => {
+  it("keeps an unknown provider valid while explaining the browser limit", () => {
     const [issue] = collectAfmIssues(file(MODEL.replace("provider: openai", "provider: openia")));
-    expect(issue?.message).toBe("Unsupported model provider `openia`. Did you mean `openai`?");
-    expect(issue?.severity).toBe("error");
+    expect(issue?.message).toContain("Model provider 'openia' is valid AFM");
+    expect(issue?.severity).toBe("warning");
     expect(issue?.line).toBe(4);
   });
 
   it("names the two it can run when nothing is close", () => {
     const [issue] = collectAfmIssues(file(MODEL.replace("provider: openai", "provider: mistral")));
-    expect(issue?.message).toBe("Unsupported model provider `mistral`. Use `openai` or `anthropic`.");
+    expect(issue?.message).toContain("Model provider 'mistral' is valid AFM");
   });
 
   it("accepts the two it can run in any case, and a file with no provider", () => {
@@ -56,7 +56,7 @@ describe("a model provider the browser cannot run", () => {
 describe("a tool address that is invalid", () => {
   it("is marked on its own line", () => {
     const [issue] = collectAfmIssues(file(MODEL, server("not-a-url")));
-    expect(issue?.message).toBe("Invalid tool address `not-a-url`. Start it with `https://`.");
+    expect(issue?.message).toContain("transport.url must be an absolute http:// or https:// URL");
     expect(issue?.field).toBe("tools.mcp.0.transport.url");
     expect(issue?.line).toBe(14);
   });

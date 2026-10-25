@@ -173,6 +173,7 @@ describe("AgentSession", () => {
         turn += 1;
         if (turn === 1) {
           yield { type: "tool-call" as const, id: "c1", name: "weather", args: {} };
+          yield { type: "finish" as const, reason: "tool-calls" as const };
           return;
         }
         yield { type: "text-delta" as const, text: "28C." };
@@ -202,6 +203,57 @@ describe("AgentSession", () => {
     expect(followUp.some((m) => m.role === "tool" && m.content === "28C and humid")).toBe(true);
     expect(followUp.some((m) => m.role === "assistant" && m.content === "28C.")).toBe(true);
     expect(followUp.at(-1)).toEqual({ role: "user", content: "and tomorrow?" });
+  });
+
+  it("continues after a model failure without repeating a completed write", async () => {
+    let calls = 0;
+    let writes = 0;
+    const seen: ChatMessage[][] = [];
+    const model: ModelPort = {
+      async *stream(request) {
+        seen.push(request.messages);
+        calls += 1;
+        if (calls === 1) {
+          yield { type: "tool-call", id: "write-1", name: "save", args: {} };
+          yield { type: "finish", reason: "tool-calls" };
+        } else if (calls === 2) {
+          throw new Error("Model connection lost");
+        } else {
+          yield { type: "text-delta", text: "Saved." };
+          yield { type: "finish", reason: "stop" };
+        }
+      },
+    };
+    const emitted: ServerMessage[] = [];
+    const session = new AgentSession({
+      createModel: async () => model,
+      createTools: () => inPageToolPort([{ name: "save", inputSchema: { type: "object" }, run: () => { writes += 1; return "saved"; } }]),
+      filesTools: inPageToolPort([]),
+      describeAttachedFiles: () => "no files attached",
+      secrets: configSecretPort({}),
+      permission: allowAllPermissions,
+      emit: (message) => emitted.push(message),
+    });
+    await session.load(VALID);
+    await session.send("Save my work");
+    expect(emitted.at(-1)).toMatchObject({ type: "error", message: expect.stringContaining("Model connection lost") });
+    expect(writes).toBe(1);
+
+    await session.continue();
+    expect(writes).toBe(1);
+    expect(seen.at(-1)?.at(-1)).toEqual({ role: "tool", toolCallId: "write-1", content: "saved" });
+    expect(seen.at(-1)?.filter((message) => message.role === "user")).toHaveLength(1);
+    expect(emitted.at(-1)).toEqual({ type: "turn-finished", reason: "stop" });
+  });
+
+  it("offers continuation when a saved conversation ends at a completed tool result", async () => {
+    const { session, emitted } = makeSession();
+    await session.load(VALID, [
+      { role: "user", content: "Save this" },
+      { role: "assistant", content: "", toolCalls: [{ id: "write-1", name: "save", args: {} }] },
+      { role: "tool", toolCallId: "write-1", content: "saved" },
+    ]);
+    expect(emitted.some((message) => message.type === "resume-available")).toBe(true);
   });
 
   it("starts again from an earlier message when told how many turns to keep", async () => {
@@ -298,13 +350,59 @@ describe("AgentSession", () => {
       },
     });
 
-    await session.load(WITH_SKILLS);
+    await session.load(WITH_SKILLS, undefined, true);
     expect(emitted[0]).toMatchObject({ type: "loaded", name: "Tester" });
     expect(emitted[1]).toMatchObject({ type: "tools-listed" });
 
     await session.send("hi");
     expect(seenSystemPrompts[0]).not.toContain("available_skills");
     expect(seenSystemPrompts[0]).not.toContain("activate_skill");
+  });
+
+  it("requires approval before previewing unsupported features and skips them after approval", async () => {
+    const source = `---
+name: Portable
+model:
+  provider: openai
+  name: gpt-4o
+  url: https://models.example.com/v1
+interfaces:
+  - type: platformchat
+    platform: slack
+    mode: notification
+tools:
+  mcp:
+    - name: local
+      transport:
+        type: stdio
+        command: npx
+---
+# Role
+Assistant
+# Instructions
+Be helpful.
+`;
+    const createModel = vi.fn(async () => replyingModel());
+    const createTools = vi.fn(() => inPageToolPort([]));
+    const emitted: ServerMessage[] = [];
+    const session = new AgentSession({
+      createModel,
+      createTools,
+      filesTools: inPageToolPort([]),
+      describeAttachedFiles: () => "no files attached",
+      secrets: configSecretPort({}),
+      permission: allowAllPermissions,
+      emit: (message) => emitted.push(message),
+    });
+
+    await session.load(source);
+    expect(emitted.some((message) => message.type === "agent-not-ready")).toBe(true);
+    expect(createModel).not.toHaveBeenCalled();
+
+    await session.load(source, undefined, true);
+    expect(emitted.some((message) => message.type === "loaded")).toBe(true);
+    expect(createModel).toHaveBeenCalledWith(expect.objectContaining({ url: undefined }));
+    expect(createTools).toHaveBeenCalledWith(expect.objectContaining({ interfaces: [], tools: { mcp: [] } }));
   });
 
   it("always includes the files system note, and merges the (always-present) files tool port", async () => {
@@ -943,10 +1041,12 @@ describe("research turn budget", () => {
         if (calls === 1) {
           yield { type: "tool-call", id: "lookup-1", name: "lookup", args: {} };
           yield { type: "usage", inputTokens: 250_000, outputTokens: 1 };
+          yield { type: "finish", reason: "tool-calls" };
           return;
         }
         yield { type: "text-delta", text: "Verified preparation summary" };
         yield { type: "usage", inputTokens: 20, outputTokens: 5 };
+        yield { type: "finish", reason: "stop" };
       },
     };
     const session = new AgentSession({

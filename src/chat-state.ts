@@ -71,6 +71,7 @@ export interface ChatState {
   passkeySecrets: string[];
   pendingPermission: PendingPermission | null;
   error: string | null;
+  canContinue: boolean;
   nextId: number;
   budget: BudgetSnapshot | null;
   generatedDraft: string | null;
@@ -92,6 +93,7 @@ export const initialChatState: ChatState = {
   passkeySecrets: [],
   pendingPermission: null,
   error: null,
+  canContinue: false,
   nextId: 1,
   budget: null,
   generatedDraft: null,
@@ -114,6 +116,7 @@ export type ChatAction =
   | { type: "draft-dismissed" }
   | { type: "agent-cleared" }
   | { type: "regenerate-start" }
+  | { type: "continue-start" }
   | { type: "rewind"; id: number }
   | { type: "server"; message: ServerMessage }
   | { type: "permission-dismissed" }
@@ -147,6 +150,14 @@ export function turnEndNotice(reason: TurnEndReason, maxIterations?: number, bud
       }
       return "Stopped at the token or time budget for this turn. Send a follow-up to continue from the completed tool results.";
     }
+    case "length":
+      return "The model reached its output limit. This reply may be incomplete. Send a follow-up to continue.";
+    case "content-filter":
+      return "The model filtered part of this reply. The answer may be incomplete.";
+    case "error":
+      return "The model stopped with an error. The answer may be incomplete.";
+    case "other":
+      return "The model stopped without confirming a complete answer. Send a follow-up to continue.";
   }
 }
 
@@ -166,7 +177,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
   switch (action.type) {
     case "user-message":
       return withMessage(
-        { ...state, status: "streaming", error: null, budget: null },
+        { ...state, status: "streaming", error: null, budget: null, canContinue: false },
         { kind: "user", text: action.text, images: action.images },
       );
     case "agent-loading":
@@ -177,6 +188,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         agentSource: action.content,
         loadSteps: [],
         error: null,
+        canContinue: false,
         notReady: null,
         messages: action.keepMessages ? state.messages : [],
       };
@@ -190,6 +202,7 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
         messages: action.messages,
         nextId: Math.max(state.nextId, ...action.messages.map((message) => message.id + 1)),
         error: null,
+        canContinue: false,
         notReady: null,
       };
     case "draft-dismissed":
@@ -204,7 +217,13 @@ export function chatReducer(state: ChatState, action: ChatAction): ChatState {
     case "regenerate-start": {
       const index = lastUserIndex(state.messages);
       if (index === -1) return state;
-      return { ...state, status: "streaming", error: null, messages: state.messages.slice(0, index + 1) };
+      return { ...state, status: "streaming", error: null, canContinue: false, messages: state.messages.slice(0, index + 1) };
+    }
+    case "continue-start": {
+      const lastTool = state.messages.reduce((last, message, index) =>
+        message.kind === "tool" && message.status !== "running" ? index : last, -1);
+      if (lastTool === -1) return state;
+      return { ...state, status: "streaming", error: null, messages: state.messages.slice(0, lastTool + 1) };
     }
     case "rewind": {
       const index = state.messages.findIndex((message) => message.id === action.id);
@@ -281,6 +300,8 @@ function applyServerMessage(state: ChatState, message: ServerMessage): ChatState
       });
     case "tool-result":
       return updateTool(state, message.id, message.ok, message.content);
+    case "resume-available":
+      return { ...state, canContinue: true };
     case "notice":
       return withMessage(state, { kind: "notice", text: message.text });
     case "budget-update":
@@ -298,7 +319,7 @@ function applyServerMessage(state: ChatState, message: ServerMessage): ChatState
         },
       };
     case "turn-finished": {
-      const ready = { ...state, status: "ready" as const, pendingPermission: null };
+      const ready = { ...state, status: "ready" as const, pendingPermission: null, canContinue: message.canContinue === true };
       const text = turnEndNotice(message.reason, state.budget?.maxIterations, state.budget);
       return text === null ? ready : withMessage(ready, { kind: "notice", text });
     }

@@ -101,9 +101,9 @@ describe("model frontmatter editing", () => {
     expect(getModelField(source, "name")).toBe("");
   });
 
-  it("returns empty for a file with no frontmatter", () => {
+  it("creates frontmatter when editing a file without it", () => {
     expect(getModelField("# Role\nr\n", "provider")).toBe("");
-    expect(setModelField("# Role\nr\n", "provider", "openai")).toBe("# Role\nr\n");
+    expect(setModelField("# Role\nr\n", "provider", "openai")).toBe("---\nmodel:\n  provider: openai\n---\n# Role\nr\n");
   });
 });
 
@@ -578,7 +578,7 @@ r
     expect(setFrontmatterValue(ABOUT, "description", "x").endsWith("---\n\n# Role\nr\n")).toBe(true);
   });
 
-  it("does nothing to a file with no frontmatter", () => {
-    expect(setFrontmatterValue("# Role\nr\n", "license", "MIT")).toBe("# Role\nr\n");
+  it("creates frontmatter when setting metadata on a file without it", () => {
+    expect(setFrontmatterValue("# Role\nr\n", "license", "MIT")).toBe("---\nlicense: MIT\n---\n# Role\nr\n");
   });
 });

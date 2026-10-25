@@ -106,7 +106,7 @@ export function collectAfmIssues(content: string): AfmIssue[] {
   const metadata = validateMetadata(frontmatter);
   for (const planIssue of planForBrowser(metadata).issues) {
     issues.push({
-      severity: planIssue.severity === "blocked" ? "error" : "warning",
+      severity: "warning",
       message: planIssue.message,
       field: planIssue.path ?? "",
       line: lineOfPath(content, pathFromText(planIssue.path)),

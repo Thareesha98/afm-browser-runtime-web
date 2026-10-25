@@ -171,7 +171,7 @@ scope.addEventListener("message", (event) => {
       for (const name of message.permissionSeed ?? []) alwaysAllow.add(name);
       for (const name of FILE_TOOL_NAMES) alwaysAllow.add(permissionKey(undefined, name));
       attachedFiles.clear();
-      void store.opened().then(() => session.load(message.content, message.seedHistory));
+      void store.opened().then(() => session.load(message.content, message.seedHistory, message.allowBrowserPreview));
       break;
     case "attach-files":
       for (const file of message.files) {
@@ -186,6 +186,9 @@ scope.addEventListener("message", (event) => {
       break;
     case "regenerate":
       void session.regenerate();
+      break;
+    case "continue":
+      void session.continue();
       break;
     case "reset-chat":
       session.resetChat();

@@ -97,8 +97,8 @@ export function pathFromText(text: string | undefined): PathSegment[] {
 function settingsBlock(content: string): { lines: string[]; open: number; close: number } | null {
   const lines = content.split("\n");
   const open = lines.findIndex((line) => line.trim() !== "");
-  if (open === -1 || lines[open]!.trim() !== "---") return null;
-  const close = lines.findIndex((line, at) => at > open && line.trim() === "---");
+  if (open === -1 || lines[open]!.trimEnd() !== "---") return null;
+  const close = lines.findIndex((line, at) => at > open && line.trimEnd() === "---");
   return close === -1 ? null : { lines, open, close };
 }
 

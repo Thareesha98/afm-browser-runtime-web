@@ -14,8 +14,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { useRef } from "react";
 import type { ReactNode } from "react";
 import type { SidePanel } from "./workspace-view";
+import { ConfirmNote } from "./ConfirmNote";
+import type { RunConfirmation } from "./run-confirmations";
 
 interface Props {
   agentName: string;
@@ -28,6 +31,9 @@ interface Props {
   canRun: boolean;
   running: boolean;
   onRun: () => void;
+  runPrompt?: RunConfirmation | null;
+  onAcceptRunPrompt?: () => void;
+  onDeclineRunPrompt?: () => void;
   // what the Run button says on hover and focus: the reason while it is blocked
   runTip: string;
   onToggleTheme: () => void;
@@ -109,11 +115,15 @@ export function WorkspaceBar({
   canRun,
   running,
   onRun,
+  runPrompt = null,
+  onAcceptRunPrompt = () => {},
+  onDeclineRunPrompt = () => {},
   runTip,
   onToggleTheme,
   dark,
   compact = false,
 }: Props) {
+  const runWrap = useRef<HTMLSpanElement>(null);
   return (
     <div className="u-bar">
       <span className="u-brand">AFM</span>
@@ -130,17 +140,31 @@ export function WorkspaceBar({
       <span className="u-bar-right">
         {(!running || canRun) && (
           <>
-            <button
-              className={`u-btn primary${canRun ? "" : " is-blocked"}`}
-              onClick={() => {
-                if (canRun) onRun();
-              }}
-              aria-disabled={canRun ? undefined : true}
-              data-tip={runTip}
-            >
-              <span className="u-play" aria-hidden="true" />
-              {running ? "Re-run" : "Run"}
-            </button>
+            <span className="u-run-wrap" ref={runWrap}>
+              <button
+                className={`u-btn primary${canRun ? "" : " is-blocked"}`}
+                onClick={() => {
+                  if (canRun) onRun();
+                }}
+                aria-disabled={canRun ? undefined : true}
+                data-tip={runTip}
+              >
+                <span className="u-play" aria-hidden="true" />
+                {running ? "Re-run" : "Run"}
+              </button>
+              {runPrompt !== null && (
+                <ConfirmNote
+                  title={runPrompt.title}
+                  text={runPrompt.text}
+                  secondary={{ label: "No", onPick: onDeclineRunPrompt }}
+                  primary={{ label: "Yes", onPick: onAcceptRunPrompt }}
+                  focus="secondary"
+                  onDismiss={onDeclineRunPrompt}
+                  wrap={runWrap}
+                  align="end"
+                />
+              )}
+            </span>
             <span className="u-sep" aria-hidden="true" />
           </>
         )}
