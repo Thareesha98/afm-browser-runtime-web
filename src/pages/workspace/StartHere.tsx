@@ -457,7 +457,7 @@ export function StartHere({
             autoFocus
           />
 
-          <div className="u-label">Written by your own model</div>
+          <div className="u-label">Model that writes the file</div>
           <div className="u-input-row">
             <label className="u-group u-input-col">
               <span className="u-label">Provider</span>
@@ -502,13 +502,13 @@ export function StartHere({
           {chosen && !keySaved && (
             <>
               <label className="u-group">
-                <span className="u-label">{provider.secretName}</span>
+                <span className="u-label">{provider.label} API key</span>
                 <input
                   className="u-input"
                   type="password"
                   value={key}
                   onChange={(event) => setKey(event.target.value)}
-                  placeholder={provider.secretName}
+                  placeholder={`Paste your ${provider.label} key`}
                   autoComplete="off"
                 />
               </label>
