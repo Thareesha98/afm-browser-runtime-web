@@ -1272,3 +1272,21 @@
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--ink) 26%, transparent);
   }
 }
+
+@media (max-width: 640px) {
+  .u-linkish,
+  .u-detail-back,
+  .u-dlg-back {
+    padding-block: 5px;
+    margin-block: -5px;
+  }
+  .u-detail-back {
+    margin-bottom: 23px;
+  }
+  .u-detail-back.is-near {
+    margin-bottom: 7px;
+  }
+  .u-dlg-back {
+    margin-bottom: 3px;
+  }
+}

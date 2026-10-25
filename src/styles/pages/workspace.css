@@ -1953,7 +1953,7 @@ label.u-group {
 }
 .u-pill-msg {
   min-width: 0;
-  align-self: stretch;
+  min-height: 24px;
   padding: 0;
   border: 0;
   background: none;
@@ -1973,7 +1973,7 @@ label.u-group {
 }
 .u-pill-more {
   flex: none;
-  height: 22px;
+  height: 24px;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 999px;
