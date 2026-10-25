@@ -802,6 +802,15 @@ label.u-group {
 .u-rows.is-loose {
   overflow: visible;
 }
+.u-rows.is-loose > .u-row:first-child {
+  border-radius: 10px 10px 0 0;
+}
+.u-rows.is-loose > .u-row:last-child {
+  border-radius: 0 0 10px 10px;
+}
+.u-rows.is-loose > .u-row:only-child {
+  border-radius: 10px;
+}
 .u-key-row {
   cursor: default;
 }
