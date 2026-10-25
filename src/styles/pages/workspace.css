@@ -248,7 +248,10 @@
   height: 0;
 }
 .code-editor-input::selection {
-  background: var(--accent-soft);
+  background: rgba(122, 80, 200, 0.22);
+}
+[data-theme="dark"] .code-editor-input::selection {
+  background: rgba(183, 155, 240, 0.32);
 }
 .syn-delimiter { color: var(--faint); }
 .syn-root-key { color: #7a50c8; font-weight: 600; }
