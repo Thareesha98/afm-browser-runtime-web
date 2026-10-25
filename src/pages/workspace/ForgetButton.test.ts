@@ -17,29 +17,20 @@
 import { describe, expect, it } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ForgetButton, ForgetConfirm } from "./ForgetButton";
+import { ForgetButton } from "./ForgetButton";
 
 describe("the Forget button beside a saved key", () => {
   const html = renderToStaticMarkup(createElement(ForgetButton, { name: "OPENAI_API_KEY", onForget: () => {} }));
 
-  it("starts as one quiet button that names the key for a screen reader", () => {
+  it("starts as one quiet button that names the key and says it opens a question", () => {
     expect(html).toContain(">Forget<");
     expect(html).toContain('aria-label="Forget OPENAI_API_KEY"');
-    expect(html).not.toContain("Cancel");
-  });
-});
-
-describe("asking before a key is forgotten", () => {
-  const html = renderToStaticMarkup(createElement(ForgetConfirm, { name: "OPENAI_API_KEY", onCancel: () => {}, onForget: () => {} }));
-
-  it("offers Cancel and Forget, and names the key for a screen reader", () => {
-    expect(html).toContain(">Cancel<");
-    expect(html).toContain(">Forget<");
-    expect(html).toContain('aria-label="Forget OPENAI_API_KEY?"');
+    expect(html).toContain('aria-haspopup="dialog"');
+    expect(html).toContain('aria-expanded="false"');
   });
 
-  it("lists Cancel first and marks Forget as the risky one", () => {
-    expect(html.indexOf("Cancel")).toBeLessThan(html.indexOf(">Forget<"));
-    expect(html).toMatch(/class="u-btn danger sm"[^>]*>Forget</);
+  it("shows no question until it is pressed", () => {
+    expect(html).not.toContain("u-confirm");
+    expect(html).not.toContain("Forget this key?");
   });
 });
