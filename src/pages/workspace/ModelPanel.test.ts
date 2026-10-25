@@ -96,6 +96,16 @@ describe("a provider with no model yet", () => {
   });
 });
 
+describe("the key box in the Model window", () => {
+  it("asks password managers not to offer to save the key", () => {
+    const html = panel([], []);
+    expect(html).toContain('autoComplete="off"');
+    expect(html).toContain('data-1p-ignore="true"');
+    expect(html).toContain('data-lpignore="true"');
+    expect(html).toContain('data-bwignore="true"');
+  });
+});
+
 describe("the model panel's key", () => {
   it("says no key has been entered yet, and offers to keep one on this device", () => {
     const html = panel([], []);
