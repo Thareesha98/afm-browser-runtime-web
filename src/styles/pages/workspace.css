@@ -67,6 +67,9 @@
 .u-panel.is-over {
   z-index: 4;
 }
+.u-panel:focus {
+  outline: none;
+}
 
 .u-float-scrim {
   display: none;

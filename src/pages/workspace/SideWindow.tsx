@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 interface Props {
@@ -42,8 +43,24 @@ const EXPAND = "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7";
 const CLOSE = "M18 6L6 18M6 6l12 12";
 
 export function SidePane({ title, heading, onClose, onExpand, over = false, flush = false, floating = false, children }: Props) {
+  const section = useRef<HTMLElement>(null);
+  const expandable = onExpand !== undefined;
+  const wasExpandable = useRef(expandable);
+
+  useEffect(() => {
+    if (wasExpandable.current === expandable) return;
+    wasExpandable.current = expandable;
+    const active = document.activeElement;
+    if (active === null || active === document.body) section.current?.focus({ preventScroll: true });
+  }, [expandable]);
+
   return (
-    <section className={`u-panel ${over ? "is-over panel-slide-in" : ""} ${floating ? "is-floating" : ""}`} aria-label={title}>
+    <section
+      className={`u-panel ${over ? "is-over panel-slide-in" : ""} ${floating ? "is-floating" : ""}`}
+      aria-label={title}
+      tabIndex={-1}
+      ref={section}
+    >
       <div className="u-panel-head">
         {heading ?? <span className="u-panel-title">{title}</span>}
         <span style={{ marginLeft: "auto", display: "flex", gap: "2px" }}>

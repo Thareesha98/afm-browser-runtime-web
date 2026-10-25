@@ -27,6 +27,7 @@ import { AgentPicker } from "./AgentPicker";
 import { ModelPanel } from "./ModelPanel";
 import { ServerPanel } from "./ServerPanel";
 import { SidePane } from "./SideWindow";
+import { usePanelEscape, usePanelFocus } from "./use-panel-keys";
 import { ChatHead, StatusPill, headerStatus } from "./ChatHead";
 import { useStandaloneSession } from "../../worker-client/useStandaloneSession";
 import { previewAgent, buildableAgent, collectAfmIssues } from "../../agent-validation";
@@ -345,6 +346,16 @@ export function WorkspacePage() {
   );
 
   const overPanel = side !== null && side !== "chat" ? side : null;
+  const closeChat = () => (chatCloseAction(chatFull, compact) === "shrink" ? setChatFull(false) : closeSide());
+  const leftRef = useRef<HTMLElement>(null);
+  const sideRef = useRef<HTMLElement>(null);
+  usePanelEscape(leftRef, sideRef, { left: leftPanel !== null, side: side !== null, over: overPanel !== null }, {
+    left: closeLeft,
+    over: leavePanel,
+    chat: closeChat,
+  });
+  usePanelFocus(leftRef, leftPanel, leftPanel === null ? 0 : 1);
+  usePanelFocus(sideRef, side, side === null ? 0 : nav.under.length + 1);
   const showTrust = !trusted && !fileLoading;
   const reachedServerIds = [
     ...new Set(
@@ -400,7 +411,7 @@ export function WorkspacePage() {
             }}
           />
         )}
-        <aside className="u-side-left" aria-hidden={leftPanel === null}>
+        <aside className="u-side-left" aria-hidden={leftPanel === null} ref={leftRef}>
           {leftPanel !== null && (
             <SidePane key={leftPanel} title={LEFT_TITLE[leftPanel]} onClose={closeLeft} flush={leftPanel === "agents"}>
               {leftPanel === "agents" && (
@@ -469,7 +480,7 @@ export function WorkspacePage() {
 
         <div className="u-float-scrim" onClick={side !== null ? leavePanel : closeLeft} role="presentation" />
 
-        <aside className="u-side" aria-hidden={side === null}>
+        <aside className="u-side" aria-hidden={side === null} ref={sideRef}>
           <SidePane
             title="Chat"
             heading={
@@ -479,7 +490,7 @@ export function WorkspacePage() {
                 <ChatHead name={agentLabel} iconUrl={agentIcon} status={chatState} />
               )
             }
-            onClose={() => (chatCloseAction(chatFull, compact) === "shrink" ? setChatFull(false) : closeSide())}
+            onClose={closeChat}
             onExpand={chatFull ? undefined : () => setChatFull(true)}
             floating={chatFull}
             flush
