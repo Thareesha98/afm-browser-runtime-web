@@ -27,6 +27,7 @@ import { DialogFrame } from "./DialogFrame";
 import { START_CARDS, START_FOOTERS, START_SUBTITLES, START_TITLES, templatesNote } from "./start-copy";
 import type { StartStage } from "./start-copy";
 import { canClose, escapeAction, outsideClickAction, stageOf } from "./start-flow";
+import { SECRET_INPUT } from "./secret-input";
 
 function SetupColumn({ children, slide = false }: { children: ReactNode; slide?: boolean }) {
   return (
@@ -499,10 +500,10 @@ export function StartHere({
               <input
                 className="u-input"
                 type="password"
+                {...SECRET_INPUT}
                 value={key}
                 onChange={(event) => setKey(event.target.value)}
                 placeholder={`Paste your ${provider.label} key`}
-                autoComplete="off"
               />
             </label>
           )}

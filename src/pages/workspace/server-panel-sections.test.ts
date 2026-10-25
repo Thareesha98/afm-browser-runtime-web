@@ -79,3 +79,12 @@ describe("the status beside a server's secret fields", () => {
     }
   });
 });
+
+describe("the box for a server's secret", () => {
+  it("asks password managers not to offer to save it", () => {
+    const html = fields(() => false);
+    expect(html).toContain('type="password"');
+    expect(html).toContain('autoComplete="off"');
+    expect(html).toContain('data-1p-ignore="true"');
+  });
+});

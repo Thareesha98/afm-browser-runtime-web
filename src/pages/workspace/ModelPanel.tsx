@@ -19,6 +19,7 @@ import { MODEL_PROVIDERS, findProvider } from "./model-catalog";
 import type { ProviderOption } from "./model-catalog";
 import { getModelField, setModelField, setModelApiKey, getModelApiKey, envSecretName } from "./agent-source-edit";
 import type { Issue } from "./setup-check";
+import { SECRET_INPUT } from "./secret-input";
 
 interface Props {
   content: string;
@@ -129,6 +130,7 @@ export function ModelPanel({ content, savedSecrets, issue, onApply, onSaveKey, o
               <input
                 className="u-input u-key-input"
                 type="password"
+                {...SECRET_INPUT}
                 value={key}
                 placeholder={saved ? "•••••••••••••••••••••" : `Paste your ${known.label} key`}
                 onChange={(event) => setKey(event.target.value)}

@@ -17,6 +17,7 @@
 import type { ToolInfo } from "../../protocol";
 import { isSecretAuthField } from "./mcp-secret-fields";
 import type { AuthField } from "./server-config";
+import { SECRET_INPUT } from "./secret-input";
 
 interface AuthFieldsProps {
   fields: readonly AuthField[];
@@ -56,6 +57,7 @@ export function AuthFields({ fields, values, secretEdits, saved, rejected, clien
             <input
               className="u-input mono"
               type="password"
+              {...SECRET_INPUT}
               value={secretEdits[field.key] ?? ""}
               placeholder={saved(field.key) ? "•••••••••••••••••••••" : `Paste the ${field.name}`}
               onChange={(event) => onSecretEdit(field.key, event.target.value)}
