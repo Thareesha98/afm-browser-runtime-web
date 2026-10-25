@@ -84,12 +84,20 @@ export function EditorPane({ content, onChange, activity, reach, onOpenModel, on
   useLayoutEffect(() => {
     const row = top.current;
     if (row === null) return;
-    const card = row.parentElement?.querySelector<HTMLElement>(".u-brief") ?? null;
+    const stage = row.parentElement;
+    const card = stage?.querySelector<HTMLElement>(".u-brief") ?? null;
     const place = () => {
-      if (card === null) return row.style.removeProperty("--need-x");
+      if (card === null) {
+        row.style.removeProperty("--need-x");
+        stage?.style.removeProperty("--card-x");
+        stage?.style.removeProperty("--card-w");
+        return;
+      }
       const r = row.getBoundingClientRect();
       const c = card.getBoundingClientRect();
       row.style.setProperty("--need-x", `${c.left + c.width / 2 - r.left}px`);
+      stage?.style.setProperty("--card-x", `${c.left - r.left}px`);
+      stage?.style.setProperty("--card-w", `${c.width}px`);
     };
     place();
     const watch = new ResizeObserver(place);
@@ -230,7 +238,7 @@ function InvalidSwitchNotice({
   return (
     <div className="u-switch-note" role="dialog" aria-label="Invalid AFM file" ref={box}>
       <b>Invalid AFM file</b>
-      <p>Build keeps the model and tools locked until it is fixed.</p>
+      <p>Fix the issues before you switch to Build.</p>
       <div className="u-switch-note-actions">
         <button className="u-btn ghost sm" onClick={onSwitch}>
           Switch to Build
