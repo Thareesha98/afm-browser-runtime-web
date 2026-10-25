@@ -17,7 +17,8 @@ import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ServerDirectory } from "./ServerDirectory";
-import { DIRECTORY_ENTRIES } from "../../mcp-directory";
+import { DIRECTORY_CATEGORIES, DIRECTORY_ENTRIES } from "../../mcp-directory";
+import { inCategory } from "../../mcp-servers";
 
 function directory(query: string): string {
   return renderToStaticMarkup(createElement(ServerDirectory, { query, onConnect: () => {}, onInfo: () => {} }));
@@ -63,5 +64,33 @@ describe("the directory list's header", () => {
   it("has no recently connected group, only the servers themselves", () => {
     expect(directory("")).not.toContain("Recently connected");
     expect(rows(directory(""))).toBe(DIRECTORY_ENTRIES.length);
+  });
+});
+
+describe("the category chips", () => {
+  const html = directory("");
+
+  it("sit above the list: All first, then each category", () => {
+    const labels = [...html.matchAll(/aria-pressed="(?:true|false)"[^>]*>([^<]+)</g)].map((match) => match[1]);
+    expect(labels).toEqual(["All", ...DIRECTORY_CATEGORIES.map((category) => category.label)]);
+  });
+
+  it("start on All", () => {
+    expect(html).toMatch(/class="u-pill-btn on" aria-pressed="true">All</);
+    expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
+  });
+});
+
+describe("narrowing the list to a category", () => {
+  it("keeps only that category, and everything for All", () => {
+    expect(inCategory(DIRECTORY_ENTRIES, null)).toHaveLength(DIRECTORY_ENTRIES.length);
+    const docs = inCategory(DIRECTORY_ENTRIES, "docs");
+    expect(docs.length).toBeGreaterThan(0);
+    expect(docs.every((entry) => entry.category === "docs")).toBe(true);
+  });
+
+  it("covers every server exactly once across the categories", () => {
+    const total = DIRECTORY_CATEGORIES.reduce((sum, category) => sum + inCategory(DIRECTORY_ENTRIES, category.id).length, 0);
+    expect(total).toBe(DIRECTORY_ENTRIES.length);
   });
 });

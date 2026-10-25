@@ -2000,3 +2000,12 @@ label.u-group {
     animation: need-fade-out 0.2s both;
   }
 }
+
+.u-chips {
+  flex: none;
+  margin-bottom: 10px;
+}
+.u-chips .u-pill-btn {
+  padding: 4px 11px;
+  font-size: 12px;
+}

@@ -15,7 +15,7 @@
 // under the License.
 
 import { describe, it, expect } from "vitest";
-import { DIRECTORY_ENTRIES } from "./mcp-directory";
+import { DIRECTORY_CATEGORIES, DIRECTORY_ENTRIES } from "./mcp-directory";
 
 function isHttps(value: string): boolean {
   try {
@@ -126,5 +126,37 @@ describe("Canva", () => {
     const at = ids.indexOf("canva");
     expect(ids[at - 1]! < "canva").toBe(true);
     expect(ids[at + 1]! > "canva").toBe(true);
+  });
+});
+
+describe("the directory's categories", () => {
+  const known = DIRECTORY_CATEGORIES.map((category) => category.id);
+
+  it("puts every server in one known category", () => {
+    const stray = DIRECTORY_ENTRIES.filter((entry) => !known.includes(entry.category));
+    expect(stray.map((entry) => entry.id)).toEqual([]);
+  });
+
+  it("uses every category, so no chip leads to an empty list", () => {
+    for (const id of known) {
+      expect(DIRECTORY_ENTRIES.some((entry) => entry.category === id), id).toBe(true);
+    }
+  });
+
+  it("has a short label for each, with no repeats", () => {
+    const labels = DIRECTORY_CATEGORIES.map((category) => category.label);
+    expect(duplicates(labels)).toEqual([]);
+    expect(labels.filter((label) => label.length > 10)).toEqual([]);
+  });
+
+  it("files well-known servers where a person would look for them", () => {
+    const of = (id: string) => DIRECTORY_ENTRIES.find((entry) => entry.id === id)?.category;
+    expect(of("context7")).toBe("docs");
+    expect(of("exa")).toBe("search");
+    expect(of("github")).toBe("dev");
+    expect(of("supabase")).toBe("data");
+    expect(of("notion")).toBe("work");
+    expect(of("stripe")).toBe("business");
+    expect(of("canva")).toBe("design");
   });
 });
