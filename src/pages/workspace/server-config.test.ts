@@ -18,7 +18,7 @@ import { describe, expect, it } from "vitest";
 import { buildableAgent } from "../../agent-validation";
 import { addMcpServer } from "./agent-source-edit";
 import { lacksRequiredField } from "./mcp-secret-fields";
-import { AUTH_METHODS, nameFromUrl, prepareServerSave } from "./server-config";
+import { AUTH_METHODS, addressNote, nameFromUrl, prepareServerSave } from "./server-config";
 
 const FILE = `---
 name: Fixture
@@ -151,5 +151,20 @@ describe("prepareServerSave", () => {
     Object.freeze(input.knownSecrets);
     prepareServerSave(input);
     expect(input).toEqual(before);
+  });
+});
+
+describe("addressNote", () => {
+  it("says nothing for a web address, an empty box or an address with a variable in it", () => {
+    expect(addressNote("https://mcp.example.com/mcp")).toBeNull();
+    expect(addressNote("  http://localhost:8080/mcp ")).toBeNull();
+    expect(addressNote("")).toBeNull();
+    expect(addressNote("${env:MCP_URL}")).toBeNull();
+  });
+
+  it("says it as a plain statement for anything that is not a web address", () => {
+    expect(addressNote("not-a-url")).toBe("Invalid address `not-a-url`. Start it with `https://`.");
+    expect(addressNote("example.com/mcp")).toBe("Invalid address `example.com/mcp`. Start it with `https://`.");
+    expect(addressNote(" ftp://example.com ")).toBe("Invalid address `ftp://example.com`. Start it with `https://`.");
   });
 });

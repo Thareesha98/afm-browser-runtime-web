@@ -72,6 +72,17 @@ function freeName(base: string, taken: string[]): string {
   }
 }
 
+export function addressNote(url: string): string | null {
+  const trimmed = url.trim();
+  if (trimmed === "" || trimmed.includes("${")) return null;
+  try {
+    const { protocol } = new URL(trimmed);
+    if (protocol === "http:" || protocol === "https:") return null;
+  } catch {
+  }
+  return `Invalid address \`${trimmed}\`. Start it with \`https://\`.`;
+}
+
 export function nameFromUrl(url: string, taken: string[], listedId?: string): string {
   if (listedId !== undefined) return freeName(listedId, taken);
   let host = "";

@@ -2053,3 +2053,7 @@ label.u-group {
 .u-start-notice {
   margin: 0 0 12px;
 }
+
+.u-hint code {
+  overflow-wrap: anywhere;
+}

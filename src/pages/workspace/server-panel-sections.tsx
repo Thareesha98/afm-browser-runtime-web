@@ -18,6 +18,7 @@ import type { ToolInfo } from "../../protocol";
 import { isSecretAuthField } from "./mcp-secret-fields";
 import type { AuthField } from "./server-config";
 import { SECRET_INPUT } from "./secret-input";
+import { withCode } from "./FileCheckPanel";
 
 interface AuthFieldsProps {
   fields: readonly AuthField[];
@@ -154,7 +155,7 @@ export function ServerTools({ url, probing, found, error, allowed, waiting, onTo
           ))}
         </div>
       ) : found === null ? (
-        <p className="u-hint">{waiting}</p>
+        <p className="u-hint">{withCode(waiting)}</p>
       ) : (
         <div className="u-rows scroll is-found">
           {found.map((tool) => (

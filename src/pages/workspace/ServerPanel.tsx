@@ -21,7 +21,7 @@ import type { AgentMetadata } from "@afm/engine";
 import type { ProbeResult } from "../../worker-client/useStandaloneSession";
 import { removeMcpServer } from "./agent-source-edit";
 import { isSecretAuthField, lacksRequiredField, secretFieldState } from "./mcp-secret-fields";
-import { AUTH_METHODS, nameFromUrl, prepareServerSave } from "./server-config";
+import { AUTH_METHODS, addressNote, nameFromUrl, prepareServerSave } from "./server-config";
 import type { NewMcpServer } from "./agent-source-edit";
 import type { SignInVetting, ToolInfo } from "../../protocol";
 import type { SignInOutcome } from "../../oauth-signin";
@@ -74,6 +74,8 @@ function waitingNote(
 ): string {
   if (probing) return "Checking the address…";
   if (url.trim() === "") return "Enter the address and its tools are listed here.";
+  const badAddress = addressNote(url);
+  if (badAddress !== null) return badAddress;
   if (need === "missing") return "This server needs its credential. Enter it above to list its tools.";
   if (need === "signin") return "Sign in above to list this server's tools.";
   if (error !== null) return "No tools listed. Fix the address or check again.";
@@ -495,7 +497,7 @@ export function ServerPanel({
           )}
           <div className="u-spacer" />
           <button className="u-btn ghost" onClick={onClose}>Cancel</button>
-          <button className="u-btn primary" disabled={url.trim() === "" || name === "" || isStdio || !writesMethod || incomplete} onClick={save}>
+          <button className="u-btn primary" disabled={url.trim() === "" || addressNote(url) !== null || name === "" || isStdio || !writesMethod || incomplete} onClick={save}>
             Save
           </button>
         </div>
