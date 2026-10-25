@@ -15,7 +15,7 @@
 // under the License.
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { EMPTY_TEMPLATE, autosaveDue, identityFor, initialContent, openedFromLink } from "./workspace-content";
+import { EMPTY_TEMPLATE, autosaveDue, identityFor, initialContent, missingAgentId, missingAgentNotice, openedFromLink } from "./workspace-content";
 import { encodeInlineAfm } from "../../load-paths";
 import { previewAgent } from "../../agent-validation";
 
@@ -170,5 +170,35 @@ describe("autosaveDue", () => {
 
   it("never saves the previous agent under a new one that was just started", () => {
     expect(autosaveDue("previous agent", EMPTY_TEMPLATE, EMPTY_TEMPLATE)).toBe(false);
+  });
+});
+
+describe("a link to an agent that is not saved here", () => {
+  beforeEach(() => {
+    vi.unstubAllGlobals();
+    vi.stubGlobal("localStorage", storageHolding([{ id: "a1", name: "Saved", description: "", source: AGENT_SOURCE, createdAt: 1, updatedAt: 1, origin: "blank" }]));
+  });
+
+  it("names the id that was not found", () => {
+    expect(missingAgentId(params("agentId=nope"), "", undefined)).toBe("nope");
+    expect(missingAgentId(params("agentId="), "", undefined)).toBe("");
+  });
+
+  it("finds nothing missing when the agent is saved, or there is no agent id", () => {
+    expect(missingAgentId(params("agentId=a1"), "", undefined)).toBeNull();
+    expect(missingAgentId(params(""), "", undefined)).toBeNull();
+    expect(missingAgentId(params("view=chat"), "", undefined)).toBeNull();
+  });
+
+  it("finds nothing missing when the page opens something else", () => {
+    const encoded = encodeInlineAfm(AGENT_SOURCE);
+    expect(missingAgentId(params("agentId=nope"), "", "draft text")).toBeNull();
+    expect(missingAgentId(params("agentId=nope&file=https%3A%2F%2Fx.test%2Fa.afm.md"), "", undefined)).toBeNull();
+    expect(missingAgentId(params("agentId=nope"), `#afm=${encoded}`, undefined)).toBeNull();
+  });
+
+  it("says it as a plain statement", () => {
+    expect(missingAgentNotice("nope")).toBe("Agent not found `nope`.");
+    expect(missingAgentNotice("")).toBe("Agent not found.");
   });
 });

@@ -17,6 +17,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { brief, logDetails } from "../../brief-error";
+import { withCode } from "./FileCheckPanel";
 import { EXAMPLES } from "../../examples";
 import { MODEL_PROVIDERS, findProvider } from "./model-catalog";
 import type { AgentModelRef } from "../../protocol";
@@ -125,6 +126,7 @@ interface Props {
   state: ChatState;
   dialog?: boolean;
   initialView?: StartView;
+  notice?: string;
   onUseSource: (source: string) => void;
   onGenerate: (prompt: string, model: AgentModelRef, final?: boolean) => void;
   onDismissDraft: () => void;
@@ -141,6 +143,7 @@ export function StartHere({
   onBlank,
   dialog = false,
   initialView = "menu",
+  notice,
 }: Props) {
   const [view, setView] = useState<StartView>(initialView);
   const [prompt, setPrompt] = useState("");
@@ -539,19 +542,23 @@ export function StartHere({
 
   if (dialog) {
     return frame("menu", (
-      <Cards
-        items={[
-          { key: "blank", icon: <Glyph path={ICON_PATHS.blank} />, name: "Blank", desc: START_CARDS.blank, onPick: onBlank },
-          { key: "generate", icon: <Glyph path={ICON_PATHS.generate} />, name: "Generate with AI", desc: START_CARDS.generate, onPick: () => setView("prompt") },
-          { key: "templates", icon: <Glyph path={ICON_PATHS.template} />, name: "From a template", desc: templatesNote(EXAMPLES.length), onPick: () => setView("templates") },
-          { key: "import", icon: <Glyph path={ICON_PATHS.file} />, name: "Import a file", desc: START_CARDS.import, onPick: () => setView("import") },
-        ]}
-      />
+      <>
+        {notice !== undefined && <p className="u-errcard u-start-notice">{withCode(notice)}</p>}
+        <Cards
+          items={[
+            { key: "blank", icon: <Glyph path={ICON_PATHS.blank} />, name: "Blank", desc: START_CARDS.blank, onPick: onBlank },
+            { key: "generate", icon: <Glyph path={ICON_PATHS.generate} />, name: "Generate with AI", desc: START_CARDS.generate, onPick: () => setView("prompt") },
+            { key: "templates", icon: <Glyph path={ICON_PATHS.template} />, name: "From a template", desc: templatesNote(EXAMPLES.length), onPick: () => setView("templates") },
+            { key: "import", icon: <Glyph path={ICON_PATHS.file} />, name: "Import a file", desc: START_CARDS.import, onPick: () => setView("import") },
+          ]}
+        />
+      </>
     ), {});
   }
 
   return (
     <SetupColumn>
+      {notice !== undefined && <p className="u-errcard u-start-notice">{withCode(notice)}</p>}
       <p className="u-setup-note">
         The empty agent is already beside you. Fill it in yourself, or start from one of these.
         <br />

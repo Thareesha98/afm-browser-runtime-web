@@ -45,7 +45,15 @@ import { LEFT_TITLE, NOTHING_OPEN, chatCloseAction, closePanel, openOver, openPa
 import type { LeftPanel, SideState, SidePanel } from "./workspace-view";
 import { resolveContent } from "../../load-paths";
 import { agentFileFetch } from "../../tool-factory";
-import { EMPTY_TEMPLATE, autosaveDue, initialContent, identityFor, openedFromLink } from "./workspace-content";
+import {
+  EMPTY_TEMPLATE,
+  autosaveDue,
+  initialContent,
+  identityFor,
+  missingAgentId,
+  missingAgentNotice,
+  openedFromLink,
+} from "./workspace-content";
 import { useAgentsLibrary } from "../../agents/AgentsLibraryContext";
 import { useHistory } from "../../history/HistoryContext";
 import { permissionScopeFor, grantsToRevoke } from "../../permissions-store";
@@ -66,7 +74,8 @@ export function WorkspacePage() {
   const draftSource = (location.state as { draftSource?: string } | null)?.draftSource;
   const [content, setContent] = useState(() => initialContent(searchParams, location.hash, draftSource));
   const [savedContent, setSavedContent] = useState(() => initialContent(searchParams, location.hash, draftSource));
-  const [agentId, setAgentId] = useState<string | null>(() => searchParams.get("agentId"));
+  const [missingAgent, setMissingAgent] = useState<string | null>(() => missingAgentId(searchParams, location.hash, draftSource));
+  const [agentId, setAgentId] = useState<string | null>(() => (missingAgent === null ? searchParams.get("agentId") : null));
   const [saveFailed, setSaveFailed] = useState(false);
   const [fileLoading, setFileLoading] = useState(() => searchParams.get("file") !== null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -74,7 +83,8 @@ export function WorkspacePage() {
     searchParams.get("view") === "chat" ? { open: "chat", under: [] } : NOTHING_OPEN,
   );
   const [left, setLeft] = useState<LeftPanel | null>(() =>
-    searchParams.get("view") !== "chat" && identityFor(searchParams, location.hash, draftSource) === "blank"
+    searchParams.get("view") !== "chat" &&
+    (identityFor(searchParams, location.hash, draftSource) === "blank" || missingAgent !== null)
       ? "start"
       : null,
   );
@@ -122,6 +132,16 @@ export function WorkspacePage() {
   const reached = reachOf(setup.rows);
 
   useEffect(() => {
+    const gone = missingAgentId(searchParams, location.hash, draftSource);
+    if (gone !== null) {
+      setMissingAgent(gone);
+      setAgentId(null);
+      if (searchParams.get("view") !== "chat") setLeft("start");
+      const rest = new URLSearchParams(searchParams);
+      rest.delete("agentId");
+      setSearchParams(rest, { replace: true });
+      return;
+    }
     const nextIdentity = identityFor(searchParams, location.hash, draftSource);
     if (nextIdentity === loadedIdentityRef.current) return;
     loadedIdentityRef.current = nextIdentity;
@@ -322,11 +342,16 @@ export function WorkspacePage() {
     session.clearAgent();
   }
 
+  useEffect(() => {
+    if (left !== "start") setMissingAgent(null);
+  }, [left]);
+
   const startDialog = left === "start" && !compact;
   const leftPanel = startDialog ? null : left;
   const startHere = (dialog: boolean) => (
     <StartHere
       dialog={dialog}
+      notice={missingAgent === null ? undefined : missingAgentNotice(missingAgent)}
       state={session.state}
       onUseSource={(source) => {
         setContent(source);

@@ -316,7 +316,7 @@ code{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--sunk
 .u-issue-dot.warn{background:var(--warn)}
 .u-issue-body{flex:1;min-width:0}
 .u-issue-where{font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--faint);display:block;margin-top:2px}
-.u-errcard{border:1px solid var(--bad);background:var(--bad-soft);border-radius:11px;padding:11px 12px;font-size:12.5px;color:var(--bad);line-height:1.5}
+.u-errcard{overflow-wrap:anywhere;border:1px solid var(--bad);background:var(--bad-soft);border-radius:11px;padding:11px 12px;font-size:12.5px;color:var(--bad);line-height:1.5}
 .u-toast{position:absolute;left:50%;translate:-50% 0;animation:fade-up .25s ease;bottom:20px;z-index:9;background:var(--ink);color:#fff;border-radius:999px;padding:8px 8px 8px 18px;font-size:12.5px;display:flex;align-items:center;gap:14px;box-shadow:0 8px 28px rgba(16,20,44,.28);white-space:nowrap}
 [data-theme="dark"] .u-toast{background:var(--surface);border:1px solid var(--line);color:var(--ink)}
 .u-toast button{font-family:inherit;font-size:12.5px;font-weight:600;color:#fff;background:none;border:0;cursor:pointer;border-radius:999px;padding:4px 13px}

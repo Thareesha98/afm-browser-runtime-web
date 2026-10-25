@@ -45,6 +45,18 @@ export function initialContent(searchParams: URLSearchParams, hash: string, draf
   return EMPTY_TEMPLATE;
 }
 
+export function missingAgentId(searchParams: URLSearchParams, hash: string, draftSource: string | undefined): string | null {
+  if (draftSource !== undefined) return null;
+  const agentId = searchParams.get("agentId");
+  if (agentId === null || findAgent(agentId) !== null) return null;
+  if (searchParams.get("file") !== null || inlineAfmParam(searchParams, hash) !== null) return null;
+  return agentId;
+}
+
+export function missingAgentNotice(agentId: string): string {
+  return agentId === "" ? "Agent not found." : `Agent not found \`${agentId}\`.`;
+}
+
 export function autosaveDue(settled: string, current: string, saved: string): boolean {
   return settled === current && settled !== saved;
 }
