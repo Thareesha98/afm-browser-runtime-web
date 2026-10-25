@@ -58,8 +58,32 @@ describe("a file with no model yet", () => {
     expect(html).not.toContain("u-radio");
   });
 
+  it("tells the person what to do first", () => {
+    expect(html).toContain("Select a provider to see its models.");
+    expect(html).not.toContain("Select a model");
+  });
+
   it("keeps Save off", () => {
     expect(html).toMatch(/<button class="u-btn primary" disabled="">Save<\/button>/);
+  });
+});
+
+describe("a provider with no model yet", () => {
+  const html = renderToStaticMarkup(
+    createElement(ModelPanel, {
+      content: "---\nname: Tester\nmodel:\n  provider: openai\n---\n\n# Role\nr\n",
+      savedSecrets: [],
+      issue: null,
+      onApply: () => {},
+      onSaveKey: () => {},
+      onClose: () => {},
+    }),
+  );
+
+  it("lists the models and says to select one", () => {
+    expect(html).toContain("GPT-6.1 Sol");
+    expect(html).toContain("Select a model to enable Save.");
+    expect(html).not.toContain("Select a provider");
   });
 });
 

@@ -86,12 +86,16 @@ export function ModelPanel({ content, savedSecrets, issue, onApply, onSaveKey, o
         </div>
 
         {known === undefined ? (
-          fileProvider !== "" && (
-            <p className="u-hint">
-              This file names <code>{fileProvider}</code>, which can&apos;t run in the browser. Choose a
-              provider above.
-            </p>
-          )
+          <p className="u-hint">
+            {fileProvider === "" ? (
+              "Select a provider to see its models."
+            ) : (
+              <>
+                This file names <code>{fileProvider}</code>, which can&apos;t run in the browser. Choose a
+                provider above.
+              </>
+            )}
+          </p>
         ) : (
           <>
             <div className="u-group">
@@ -111,6 +115,7 @@ export function ModelPanel({ content, savedSecrets, issue, onApply, onSaveKey, o
                   </button>
                 ))}
               </div>
+              {model.trim() === "" && <p className="u-hint">Select a model to enable Save.</p>}
             </div>
 
             <div className="u-group">
