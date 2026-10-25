@@ -16,6 +16,7 @@
 
 import { parseAfm, agentMetadataSchema, validateMetadata, planForBrowser, splitFrontmatter } from "@afm/engine";
 import type { AgentMetadata, Plan } from "@afm/engine";
+import { quietMistakes } from "./file-warnings";
 import { lineOfPath, pathFromText } from "./frontmatter-lines";
 
 export type AgentPreview =
@@ -111,5 +112,6 @@ export function collectAfmIssues(content: string): AfmIssue[] {
       line: lineOfPath(content, pathFromText(planIssue.path)),
     });
   }
+  issues.push(...quietMistakes(content, metadata));
   return issues;
 }
