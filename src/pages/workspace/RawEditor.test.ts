@@ -24,16 +24,36 @@ function raw(issues: Parameters<typeof RawEditor>[0]["issues"]): string {
 }
 
 describe("the check under the Raw editor", () => {
-  it("says No problems, with a capital, and nothing more", () => {
+  it("shows nothing but the empty space for it when the file has no problems", () => {
     const html = raw([]);
-    expect(html).toContain("No problems");
+    expect(html).toContain("u-pill-dock");
+    expect(html).not.toMatch(/class="u-pill[ "]/);
+    expect(html).not.toContain("No problems");
     expect(html).not.toContain("no problems");
-    expect(html).not.toContain("This file will run.");
   });
 
-  it("lists the problems instead when there are some", () => {
-    const html = raw([{ severity: "error", message: "A name is needed.", field: "name", line: 2 }]);
-    expect(html).not.toContain("No problems");
-    expect(html).toContain("Line 2");
+  it("says the first problem in a pill, with its line", () => {
+    const html = raw([{ severity: "error", message: "`model.authentication.type` is required.", field: "model.authentication.type", line: 5 }]);
+    expect(html).toMatch(/class="u-pill"/);
+    expect(html).toContain("1 problem");
+    expect(html).toContain("Line 5");
+    expect(html).toContain("<code>model.authentication.type</code> is required.");
+    expect(html).not.toContain("u-pill-more");
+  });
+
+  it("counts the rest and offers them", () => {
+    const html = raw([
+      { severity: "error", message: "Unknown field 'a'.", field: "a", line: 2 },
+      { severity: "error", message: "Unknown field 'b'.", field: "b", line: 3 },
+      { severity: "warning", message: "Something small.", field: "c", line: 4 },
+    ]);
+    expect(html).toContain("3 problems");
+    expect(html).toContain("+2 more");
+    expect(html).toContain("Unknown field &#x27;a&#x27;.");
+  });
+
+  it("marks the pill calm when there are only warnings", () => {
+    const html = raw([{ severity: "warning", message: "Careful.", field: "x", line: 2 }]);
+    expect(html).toMatch(/class="u-pill is-warn"/);
   });
 });

@@ -14,7 +14,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import type { ReactNode } from "react";
 import type { AfmIssue } from "../../agent-validation";
+
+export function withCode(text: string): ReactNode[] {
+  return text.split("`").map((part, at) => (at % 2 === 1 ? <code key={at}>{part}</code> : part));
+}
 
 interface Props {
   issues: AfmIssue[];
@@ -33,7 +38,7 @@ export function FileCheckPanel({ issues }: Props) {
           <div className="u-issue" key={index}>
             <span className={`u-issue-dot ${issue.severity === "error" ? "bad" : "warn"}`} aria-hidden="true" />
             <span className="u-issue-body">
-              <b>{issue.message}</b>
+              <b>{withCode(issue.message)}</b>
               {where !== "" && <span className="u-issue-where">{where}</span>}
             </span>
           </div>
