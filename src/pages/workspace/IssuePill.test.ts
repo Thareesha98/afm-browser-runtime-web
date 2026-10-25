@@ -19,7 +19,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AfmIssue } from "../../agent-validation";
 import { FileCheckPanel } from "./FileCheckPanel";
-import { issueAnnouncement, mostSevereFirst, problemCount } from "./IssuePill";
+import { IssuePill, issueAnnouncement, mostSevereFirst, problemCount } from "./IssuePill";
 
 const error = (message: string, line: number | null = null): AfmIssue => ({ severity: "error", message, field: "x", line });
 const warning = (message: string): AfmIssue => ({ severity: "warning", message, field: "y", line: 9 });
@@ -57,5 +57,13 @@ describe("the list of problems", () => {
     const html = renderToStaticMarkup(createElement(FileCheckPanel, { issues: [error("`model.name` is required.", 3)] }));
     expect(html).toContain("<code>model.name</code> is required.");
     expect(html).not.toContain("`");
+  });
+});
+
+describe("reading a message that does not fit", () => {
+  it("makes the message itself the button that opens the full text", () => {
+    const html = renderToStaticMarkup(createElement(IssuePill, { issues: [error("A long message.", 4)] }));
+    expect(html).toMatch(/<button class="u-pill-msg" title="A long message\." aria-expanded="false">A long message\.<\/button>/);
+    expect(html).not.toContain("u-pill-more");
   });
 });

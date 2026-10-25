@@ -76,7 +76,7 @@ export function IssuePill({ issues }: { issues: readonly AfmIssue[] }) {
   }, [open]);
 
   useEffect(() => {
-    if (items.length < 2) setOpen(false);
+    if (items.length === 0) setOpen(false);
   }, [items.length]);
 
   if (items.length === 0) return null;
@@ -100,9 +100,9 @@ export function IssuePill({ issues }: { issues: readonly AfmIssue[] }) {
           <span className="u-pill-in">
             <span className="u-pill-lead">{problemCount(ordered)}</span>
             {first.line !== null && <span className="u-pill-line">Line {first.line}</span>}
-            <span className="u-pill-msg" title={first.message}>
+            <button className="u-pill-msg" title={first.message} aria-expanded={open} onClick={() => setOpen(!open)}>
               {withCode(first.message)}
-            </span>
+            </button>
             {more > 0 && (
               <button className="u-pill-more" aria-expanded={open} onClick={() => setOpen(!open)}>
                 {open ? "Hide" : `+${more} more`}

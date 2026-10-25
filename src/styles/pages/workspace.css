@@ -1959,8 +1959,20 @@ label.u-group {
 }
 .u-pill-msg {
   min-width: 0;
+  align-self: stretch;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+}
+.u-pill-msg:hover {
+  color: var(--ink);
 }
 .u-pill-msg code {
   font-size: 0.9em;
