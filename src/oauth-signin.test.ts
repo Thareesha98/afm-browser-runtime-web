@@ -238,7 +238,7 @@ describe("createOAuthSignIns", () => {
     vi.stubGlobal("window", win);
     const posted: ClientMessage[] = [];
     const outcome = await createOAuthSignIns({ post: (message) => void posted.push(message) }).start(provider, { listed: true });
-    expect(outcome).toEqual({ status: "failed", reason: "Allow pop-ups for this site to sign in." });
+    expect(outcome).toEqual({ status: "failed", reason: "Allow pop-ups to sign in." });
     expect(posted).toHaveLength(0);
   });
 

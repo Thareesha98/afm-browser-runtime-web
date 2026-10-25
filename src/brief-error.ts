@@ -25,7 +25,7 @@ const RULES: [RegExp, string][] = [
   [/rate limit|too many requests|overloaded|\b429\b|\b50[03]\b|\b529\b/i, "Busy right now"],
 ];
 
-// A short message that tells the person what to do is kept as it is ("Allow pop-ups for this site to sign in.")
+// A short message that tells the person what to do is kept as it is ("Allow pop-ups to sign in.")
 const SHORT_ENOUGH = 40;
 
 // What to show for a message that came from the engine, the network or a server.

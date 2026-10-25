@@ -37,14 +37,14 @@ describe("a file with no mistakes", () => {
 describe("a model provider the browser cannot run", () => {
   it("suggests the close word when it looks like a typo", () => {
     const [issue] = collectAfmIssues(file(MODEL.replace("provider: openai", "provider: openia")));
-    expect(issue?.message).toBe("`openia` is not a model provider this app can run. Did you mean `openai`?");
+    expect(issue?.message).toBe("Unsupported model provider `openia`. Did you mean `openai`?");
     expect(issue?.severity).toBe("error");
     expect(issue?.line).toBe(4);
   });
 
   it("names the two it can run when nothing is close", () => {
     const [issue] = collectAfmIssues(file(MODEL.replace("provider: openai", "provider: mistral")));
-    expect(issue?.message).toBe("`mistral` is not a model provider this app can run. Use `openai` or `anthropic`.");
+    expect(issue?.message).toBe("Unsupported model provider `mistral`. Use `openai` or `anthropic`.");
   });
 
   it("accepts the two it can run in any case, and a file with no provider", () => {
@@ -53,10 +53,10 @@ describe("a model provider the browser cannot run", () => {
   });
 });
 
-describe("a tool address that is not a web address", () => {
+describe("a tool address that is invalid", () => {
   it("is marked on its own line", () => {
     const [issue] = collectAfmIssues(file(MODEL, server("not-a-url")));
-    expect(issue?.message).toBe("`not-a-url` is not a web address. Start it with `https://`.");
+    expect(issue?.message).toBe("Invalid tool address `not-a-url`. Start it with `https://`.");
     expect(issue?.field).toBe("tools.mcp.0.transport.url");
     expect(issue?.line).toBe(14);
   });
@@ -73,18 +73,18 @@ describe("a tool address that is not a web address", () => {
 });
 
 describe("a variable that is not written properly", () => {
-  it("says which line is missing its closing brace", () => {
+  it("says which line has an unclosed variable", () => {
     const [issue] = collectAfmIssues(file(MODEL.replace("${env:OPENAI_API_KEY}", "${env:OPENAI_API_KEY")));
-    expect(issue?.message).toBe("`${env:OPENAI_API_KEY` is missing its closing `}`.");
+    expect(issue?.message).toBe("Unclosed variable `${env:OPENAI_API_KEY`. Add the closing `}`.");
     expect(issue?.line).toBe(8);
   });
 
   it("says when a variable has no name", () => {
     expect(collectAfmIssues(file(MODEL.replace("${env:OPENAI_API_KEY}", "${env:}"))).map((issue) => issue.message)).toEqual([
-      "`${env:}` has no name in it.",
+      "Empty variable `${env:}`. Add a name.",
     ]);
     expect(collectAfmIssues(file(MODEL.replace("${env:OPENAI_API_KEY}", "${}"))).map((issue) => issue.message)).toEqual([
-      "`${}` has no name in it.",
+      "Empty variable `${}`. Add a name.",
     ]);
   });
 

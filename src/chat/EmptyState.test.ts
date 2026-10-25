@@ -70,6 +70,6 @@ describe("NotReadyReason", () => {
   });
 
   it("does not offer a new key for a failure that is not about one", () => {
-    expect(html("Unsupported model provider for the browser: 'gemini'.", () => {})).not.toContain("Replace key");
+    expect(html("Unsupported model provider gemini. Use openai or anthropic.", () => {})).not.toContain("Replace key");
   });
 });
