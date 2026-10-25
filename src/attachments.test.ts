@@ -273,10 +273,10 @@ describe("extractFiles - the total size of a conversation's files", () => {
     expect(MAX_TOTAL_BYTES).toBe(100 * 1024 * 1024);
   });
 
-  it("skips a file that would take the conversation past the total, and says why", async () => {
+  it("skips a file that would go over the total, and says why", async () => {
     const result = await extractFiles([sized("big.txt", 20)], 10);
     expect(result.attached).toEqual([]);
-    expect(result.skipped).toEqual([{ name: "big.txt", reason: "would take this conversation past 100 MB of files" }]);
+    expect(result.skipped).toEqual([{ name: "big.txt", reason: "would go over the 100 MB limit for all files" }]);
   });
 
   it("counts each file it attaches against the total as it goes", async () => {

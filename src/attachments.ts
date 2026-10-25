@@ -195,7 +195,7 @@ export async function extractFiles(collected: CollectedFile[], remainingBytes = 
   const sizes = new Map<string, number>();
   for (const { file, path } of collected) {
     if (file.size > remainingBytes) {
-      skipped.push({ name: file.name, reason: `would take this conversation past ${MAX_TOTAL_BYTES / (1024 * 1024)} MB of files` });
+      skipped.push({ name: file.name, reason: `would go over the ${MAX_TOTAL_BYTES / (1024 * 1024)} MB limit for all files` });
       continue;
     }
     const result = await extractFile(file, path);

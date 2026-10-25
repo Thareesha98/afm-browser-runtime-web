@@ -46,3 +46,11 @@ describe("the file boxes behind the Attach menu", () => {
     }
   });
 });
+
+describe("the line about attached files", () => {
+  it("is always there for a screen reader to speak into, and hidden from sight until it has something to say", () => {
+    const html = composer(false);
+    expect(html).toContain('<span class="visually-hidden" role="status"></span>');
+    expect(html).not.toContain("composer-attach-status");
+  });
+});

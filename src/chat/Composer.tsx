@@ -18,6 +18,8 @@ import { useEffect, useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent } from "react";
 import { collectFromDataTransfer, collectFromFileList, supportsDirectoryDrop, pickImages, isSupportedImageFile, IMAGE_ACCEPT, MAX_IMAGES_PER_MESSAGE } from "../attachments";
 import type { CollectedFile } from "../attachments";
+import { attachFeedback } from "./attach-feedback";
+import type { SkippedFile } from "./attach-feedback";
 import type { ImageAttachment } from "../protocol";
 import { useVoiceInput } from "./voice";
 import { grownHeight } from "./composer-size";
@@ -37,13 +39,6 @@ interface Props {
   placeholder?: string;
 }
 
-function feedbackLine(attached: string[], skipped: number, noun: string): string | null {
-  const parts: string[] = [];
-  if (attached.length > 0) parts.push(`Attached ${attached.join(", ")}`);
-  if (skipped > 0) parts.push(`Skipped ${skipped} ${noun}${skipped === 1 ? "" : "s"}`);
-  return parts.length === 0 ? null : parts.join(" · ");
-}
-
 export function Composer({
   onSend,
   onStop,
@@ -59,9 +54,9 @@ export function Composer({
   const imagesInputRef = useRef<HTMLInputElement>(null);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
   const attachAnchorRef = useRef<HTMLDivElement>(null);
-  const [attaching, setAttaching] = useState(false);
+  const [attaching, setAttaching] = useState(0);
   const [dragOver, setDragOver] = useState(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ text: string; problem: boolean } | null>(null);
   const [images, setImages] = useState<ImageAttachment[]>([]);
 
   useEffect(() => {
@@ -119,15 +114,21 @@ export function Composer({
   }, [attachMenuOpen]);
 
   useEffect(() => {
-    if (feedback === null) return;
+    if (feedback === null || feedback.problem) return;
     const timer = setTimeout(() => setFeedback(null), 5000);
     return () => clearTimeout(timer);
   }, [feedback]);
+
+  function report(attached: string[], skipped: SkippedFile[]) {
+    const text = attachFeedback(attached, skipped);
+    setFeedback(text === null ? null : { text, problem: skipped.length > 0 });
+  }
 
   function submit() {
     const trimmed = text.trim();
     if ((trimmed.length === 0 && images.length === 0) || disabled || streaming) return;
     onSend(trimmed, images.length > 0 ? images : undefined);
+    setFeedback(null);
     setText("");
     setImages([]);
     if (ref.current) ref.current.style.height = "auto";
@@ -149,12 +150,12 @@ export function Composer({
 
   async function runAttach(collected: CollectedFile[]) {
     if (collected.length === 0) return;
-    setAttaching(true);
+    setAttaching(collected.length);
     try {
       const outcome = await onAttach(collected);
-      setFeedback(feedbackLine(outcome.attached, outcome.skipped.length, "unsupported file"));
+      report(outcome.attached, outcome.skipped);
     } finally {
-      setAttaching(false);
+      setAttaching(0);
     }
   }
 
@@ -162,8 +163,7 @@ export function Composer({
     if (files.length === 0) return;
     const { attached, skipped } = await pickImages(files, images.length);
     if (attached.length > 0) setImages((prev) => [...prev, ...attached]);
-    const message = feedbackLine(attached.map((image) => image.name), skipped.length, "image");
-    if (message !== null) setFeedback(message);
+    report(attached.map((image) => image.name), skipped);
   }
 
   function onFilesPicked(event: React.ChangeEvent<HTMLInputElement>) {
@@ -211,6 +211,8 @@ export function Composer({
     }
   }
 
+  const status = attaching > 0 ? `Reading ${attaching === 1 ? "the file" : `${attaching} files`}…` : (feedback?.text ?? "");
+
   const attachOptions = [
     { label: "Attach files (PDF, MD, TXT)", input: filesInputRef, disabled: false },
     { label: "Attach a folder", input: folderInputRef, disabled: false },
@@ -229,9 +231,14 @@ export function Composer({
           <span>Drop to attach (PDF, Markdown, text, or an image)</span>
         </div>
       )}
-      {(attaching || feedback !== null) && (
-        <div className="composer-attach-status">{attaching ? "Reading file(s)…" : feedback}</div>
+      {status !== "" && (
+        <div className="composer-attach-status" aria-hidden="true">
+          {status}
+        </div>
       )}
+      <span className="visually-hidden" role="status">
+        {status}
+      </span>
       {images.length > 0 && (
         <div className="composer-image-row" role="group" aria-label="Attached images">
           {images.map((image, index) => (
