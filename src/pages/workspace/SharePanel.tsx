@@ -45,7 +45,7 @@ export function shareChecks(metadata: AgentMetadata | null): { label: string; do
 }
 
 export function SharePanel({ agentSource }: Props) {
-  const [method, setMethod] = useState<ShareMethod>("url");
+  const [method, setMethod] = useState<ShareMethod>("inline");
   const [fileUrl, setFileUrl] = useState("");
   const [tab, setTab] = useState<"link" | "file">("link");
   const { copied, copy } = useCopyFeedback(1500);

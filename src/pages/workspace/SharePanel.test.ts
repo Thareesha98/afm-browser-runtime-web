@@ -66,10 +66,18 @@ i
   beforeEach(() => vi.stubGlobal("window", { location: { origin: "https://afm.example" } }));
   afterEach(() => vi.unstubAllGlobals());
 
-  it("warns about a key written into the file, for the hosted file it opens with as well as for the link that carries it", () => {
+  it("warns about a key written into the file, because anyone with the link can read it", () => {
     const html = panel(file("sk-typed-in"));
     expect(html).toContain("This file has a key written into it (api_key), and anyone with the link can read it.");
     expect(html).not.toContain("Your API key is never included.");
+  });
+
+  it("opens on the recommended way, with a link ready to copy", () => {
+    const html = panel(file("\${env:OPENAI_API_KEY}"));
+    expect(html).toMatch(/class="on" aria-pressed="true">In the link</);
+    expect(html).toContain("https://afm.example/?view=chat#afm=");
+    expect(html).not.toContain("Add the file&#x27;s address above to get a link.");
+    expect(html).not.toMatch(/<button[^>]*disabled=""[^>]*>Copy link/);
   });
 
   it("says no key is included when the file only refers to one", () => {
