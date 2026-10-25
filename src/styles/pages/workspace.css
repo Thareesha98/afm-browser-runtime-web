@@ -2009,3 +2009,9 @@ label.u-group {
   padding: 4px 11px;
   font-size: 12px;
 }
+
+.u-forget {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}

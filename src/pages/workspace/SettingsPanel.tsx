@@ -15,6 +15,7 @@
 // under the License.
 
 import { useThemeContext } from "../../app/ThemeContext";
+import { ForgetButton } from "./ForgetButton";
 import type { useStandaloneSession } from "../../worker-client/useStandaloneSession";
 
 interface Props {
@@ -41,9 +42,7 @@ export function SettingsPanel({ session }: Props) {
                 <span className="u-row-name mono" title={name}>
                   {name}
                 </span>
-                <button className="u-btn quiet sm" onClick={() => session.removeSecret(name)}>
-                  Forget
-                </button>
+                <ForgetButton name={name} onForget={() => session.removeSecret(name)} />
               </div>
             ))}
           </div>
