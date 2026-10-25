@@ -16,6 +16,7 @@
 
 import { parseAfm, agentMetadataSchema, validateMetadata, planForBrowser, splitFrontmatter } from "@afm/engine";
 import type { AgentMetadata, Plan } from "@afm/engine";
+import { lineOfPath, pathFromText } from "./frontmatter-lines";
 
 export type AgentPreview =
   | { ok: true; metadata: AgentMetadata; plan: Plan }
@@ -58,33 +59,6 @@ interface ZodIssueLike {
   received?: unknown;
 }
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function findLine(content: string, key: string | null): number | null {
-  if (key === null || key === "") return null;
-  const re = new RegExp("^\\s*-?\\s*" + escapeRegExp(key) + "\\s*:");
-  const lines = content.split("\n");
-  for (let i = 0; i < lines.length; i++) {
-    if (re.test(lines[i] ?? "")) return i + 1;
-  }
-  return null;
-}
-
-function lastKeySegment(path: (string | number)[]): string | null {
-  for (let i = path.length - 1; i >= 0; i--) {
-    if (typeof path[i] === "string") return path[i] as string;
-  }
-  return null;
-}
-
-function planPathKey(path: string | undefined): string | null {
-  if (path === undefined || path === "") return null;
-  const segments = path.match(/[a-zA-Z_]+/g);
-  return segments && segments.length > 0 ? (segments[segments.length - 1] ?? null) : null;
-}
-
 function messageFor(issue: ZodIssueLike, field: string): string {
   if (issue.code === "invalid_type" && issue.received === "undefined") {
     return `\`${field}\` is required.`;
@@ -113,7 +87,7 @@ export function collectAfmIssues(content: string): AfmIssue[] {
             severity: "error",
             message: `Unknown field '${key}'.`,
             field: [...raw.path.map(String), key].join("."),
-            line: findLine(content, key),
+            line: lineOfPath(content, [...raw.path, key]),
           });
         }
       } else {
@@ -121,7 +95,7 @@ export function collectAfmIssues(content: string): AfmIssue[] {
           severity: "error",
           message: messageFor(raw, field),
           field,
-          line: findLine(content, lastKeySegment(raw.path)),
+          line: lineOfPath(content, raw.path),
         });
       }
     }
@@ -134,7 +108,7 @@ export function collectAfmIssues(content: string): AfmIssue[] {
       severity: planIssue.severity === "blocked" ? "error" : "warning",
       message: planIssue.message,
       field: planIssue.path ?? "",
-      line: findLine(content, planPathKey(planIssue.path)),
+      line: lineOfPath(content, pathFromText(planIssue.path)),
     });
   }
   return issues;
