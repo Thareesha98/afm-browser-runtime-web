@@ -425,3 +425,38 @@ describe("budget stop diagnostics", () => {
     expect(stopped(100, 900_001)[0]?.text).toContain("15-minute time budget");
   });
 });
+
+describe("a reply that fails", () => {
+  const start = (): ChatState => {
+    let state = chatReducer(initialChatState, { type: "server", message: loaded("Agent A") });
+    state = chatReducer(state, { type: "user-message", text: "first question" });
+    state = chatReducer(state, { type: "server", message: { type: "text-delta", text: "first answer" } });
+    state = chatReducer(state, { type: "server", message: { type: "turn-finished", reason: "stop" } });
+    state = chatReducer(state, { type: "user-message", text: "second question" });
+    state = chatReducer(state, { type: "server", message: { type: "text-delta", text: "half an ans" } });
+    return chatReducer(state, { type: "server", message: { type: "error", message: "401 Unauthorized" } });
+  };
+
+  it("keeps the conversation, remembers why, and lets the person type again", () => {
+    const state = start();
+    expect(state.error).toBe("401 Unauthorized");
+    expect(state.status).toBe("ready");
+    expect(state.messages.map((message) => message.kind)).toEqual(["user", "assistant", "user", "assistant"]);
+  });
+
+  it("is retried by dropping what the failed turn wrote and keeping the question", () => {
+    const state = chatReducer(start(), { type: "regenerate-start" });
+    expect(state.error).toBeNull();
+    expect(state.status).toBe("streaming");
+    expect(state.messages.map((message) => (message.kind === "user" ? message.text : message.kind))).toEqual([
+      "first question",
+      "assistant",
+      "second question",
+    ]);
+  });
+
+  it("is forgotten when the person asks something new", () => {
+    const state = chatReducer(start(), { type: "user-message", text: "third question" });
+    expect(state.error).toBeNull();
+  });
+});

@@ -20,6 +20,7 @@ import type { LoadStep } from "../protocol";
 import { Message } from "./Message";
 import { ToolFootnote } from "./ToolFootnote";
 import { EmptyState, NotReadyReason } from "./EmptyState";
+import { ReplyFailure } from "./ReplyFailure";
 import { attachedFilesOf, attachedFileKey, attachmentBadge, describeAttachment } from "./attachment";
 
 interface Props {
@@ -31,6 +32,8 @@ interface Props {
   loadSteps: LoadStep[];
   notReady: string | null;
   onRetry: () => void;
+  failure?: string | null;
+  onRetryReply?: () => void;
   onRegenerate: () => void;
   onDetachFile?: (messageId: number, key: string) => void;
   description?: string;
@@ -68,7 +71,7 @@ function toolsBeforeAnswers(messages: UiMessage[]): Map<number, ToolMessage[]> {
 }
 
 export function MessageList(props: Props) {
-  const { messages, streaming, status, agentName, iconUrl = "", loadSteps, notReady, onRetry, onRegenerate, onDetachFile,
+  const { messages, streaming, status, agentName, iconUrl = "", loadSteps, notReady, onRetry, failure = null, onRetryReply, onRegenerate, onDetachFile,
     description, role, onAsk, onReplaceKey, serverOf, onEdit } = props;
   const endRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -76,7 +79,7 @@ export function MessageList(props: Props) {
 
   useEffect(() => {
     if (atBottom) endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streaming, atBottom]);
+  }, [messages, streaming, failure, atBottom]);
 
   function onScroll() {
     const el = scrollRef.current;
@@ -193,6 +196,13 @@ export function MessageList(props: Props) {
             </div>
           )}
         </div>
+        {failure !== null && status === "ready" && (
+          <ReplyFailure
+            message={failure}
+            onRetry={onRetryReply !== undefined && lastIndexOfKind(messages, "user") !== -1 ? onRetryReply : undefined}
+            onReplaceKey={onReplaceKey}
+          />
+        )}
         {status === "not-ready" && (
           <div className="xc-notready">
             <NotReadyReason notReady={notReady} onRetry={onRetry} onReplaceKey={onReplaceKey} />

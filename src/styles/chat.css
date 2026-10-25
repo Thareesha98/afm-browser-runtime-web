@@ -307,3 +307,25 @@
 .code-copy:hover {
   color: var(--text);
 }
+
+.reply-failure {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--bad);
+  animation: fade-up 0.25s ease;
+}
+.reply-failure-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--bad);
+}
+.reply-failure-text {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}

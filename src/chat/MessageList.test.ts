@@ -88,3 +88,70 @@ describe("tool results without a final answer", () => {
     expect(out.match(/xc-used-name/g)).toHaveLength(1);
   });
 });
+
+function failed(
+  failure: string | null,
+  options: { status?: Parameters<typeof MessageList>[0]["status"]; messages?: UiMessage[]; retry?: boolean; replaceKey?: boolean } = {},
+): string {
+  const { status = "ready", messages = THREAD, retry = true, replaceKey = true } = options;
+  return renderToStaticMarkup(
+    createElement(MessageList, {
+      messages,
+      streaming: false,
+      status,
+      agentName: "Demo",
+      loadSteps: [],
+      notReady: null,
+      onRetry: () => {},
+      failure,
+      onRetryReply: retry ? () => {} : undefined,
+      onReplaceKey: replaceKey ? () => {} : undefined,
+      onRegenerate: () => {},
+    }),
+  );
+}
+
+describe("a reply that failed", () => {
+  it("says so in a few words under the last message, with Retry", () => {
+    const html = failed("Failed to fetch");
+    expect(html).toContain("Hi there");
+    expect(html).toContain('class="reply-failure"');
+    expect(html).toContain("Can&#x27;t be reached");
+    expect(html).toContain(">Retry<");
+    expect(html).not.toContain("Replace key");
+  });
+
+  it("offers a new key when the key was refused", () => {
+    const html = failed("401 Unauthorized: Incorrect API key provided");
+    expect(html).toContain("Key not accepted");
+    expect(html).toContain(">Replace key<");
+    expect(html).toContain(">Retry<");
+  });
+
+  it("keeps a long technical message off the screen", () => {
+    const html = failed("Something odd happened inside the provider's response handling code at line 42");
+    expect(html).toContain("Something went wrong");
+    expect(html).not.toContain("provider&#x27;s response");
+  });
+
+  it("has no Retry when there is no question to ask again", () => {
+    const html = failed("Failed to fetch", { messages: [{ kind: "assistant", id: 1, text: "Hi" }] });
+    expect(html).toContain("reply-failure");
+    expect(html).not.toContain(">Retry<");
+  });
+
+  it("has no Retry when nothing was given to retry with", () => {
+    expect(failed("Failed to fetch", { retry: false })).not.toContain(">Retry<");
+  });
+
+  it("shows nothing when there was no failure, or the agent is busy or not ready", () => {
+    expect(failed(null)).not.toContain("reply-failure");
+    expect(failed("Failed to fetch", { status: "streaming" })).not.toContain("reply-failure");
+    expect(failed("Failed to fetch", { status: "connecting" })).not.toContain("reply-failure");
+    expect(failed("Failed to fetch", { status: "not-ready" })).not.toContain("reply-failure");
+  });
+
+  it("is announced to a screen reader", () => {
+    expect(failed("Failed to fetch")).toContain('role="alert"');
+  });
+});

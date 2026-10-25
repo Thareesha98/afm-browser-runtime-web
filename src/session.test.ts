@@ -224,6 +224,31 @@ describe("AgentSession", () => {
     expect(last.at(-1)?.content).toBe("two, again");
   });
 
+  it("leaves out a turn that failed, so asking the same question again repeats nothing", async () => {
+    const seen: ChatMessage[][] = [];
+    let calls = 0;
+    const model = async () => ({
+      async *stream(request: { messages: ChatMessage[] }) {
+        seen.push(request.messages);
+        calls += 1;
+        if (calls === 2) throw new Error("Failed to fetch");
+        yield { type: "text-delta" as const, text: "ok" };
+        yield { type: "finish" as const, reason: "stop" as const };
+      },
+    });
+    const { session, emitted } = makeSession(model);
+    await session.load(VALID);
+    await session.send("one");
+    await session.send("two");
+    expect(emitted.at(-1)).toMatchObject({ type: "error", message: expect.stringContaining("Failed to fetch") });
+
+    await session.send("two");
+    const retried = seen.at(-1) ?? [];
+    expect(retried.map((message) => message.role)).toEqual(["user", "assistant", "user"]);
+    expect(retried.map((message) => message.content).filter((content) => content === "two")).toHaveLength(1);
+    expect(emitted.at(-1)).toEqual({ type: "turn-finished", reason: "stop" });
+  });
+
   it("errors when sending before loading", async () => {
     const { session, emitted } = makeSession();
     await session.send("hi");

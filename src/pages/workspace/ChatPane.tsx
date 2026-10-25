@@ -46,7 +46,7 @@ export function ChatPane({
   role = "",
   iconUrl = "",
 }: Props) {
-  const { state, send, stop, attachFiles, detachFile, regenerate, editMessage, submitPermission } = session;
+  const { state, send, stop, attachFiles, detachFile, regenerate, retryReply, editMessage, submitPermission } = session;
   const { pendingPermission } = state;
 
   return (
@@ -78,6 +78,8 @@ export function ChatPane({
           onAsk={state.status === "ready" ? (question) => send(question) : undefined}
           onReplaceKey={onReplaceKey}
           onRetry={onRetry}
+          failure={state.error}
+          onRetryReply={retryReply}
           onRegenerate={regenerate}
           onEdit={editMessage}
           onDetachFile={detachFile}

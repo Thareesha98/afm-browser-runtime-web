@@ -15,7 +15,7 @@
 // under the License.
 
 import { useEffect, useReducer, useRef } from "react";
-import { chatReducer, initialChatState } from "../chat-state";
+import { chatReducer, initialChatState, lastUserIndex } from "../chat-state";
 import type { OAuthProviderRef } from "@afm/adapter-auth";
 import { passkey } from "@afm/adapter-secret";
 import type { ClientMessage, ServerMessage, AgentModelRef, ImageAttachment, SignInVetting, ToolInfo } from "../protocol";
@@ -190,6 +190,13 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
     post({ type: "regenerate" });
   }
 
+  function retryReply(): void {
+    const last = state.messages[lastUserIndex(state.messages)];
+    if (last?.kind !== "user") return;
+    dispatch({ type: "regenerate-start" });
+    post({ type: "send", text: last.text, images: last.images });
+  }
+
   function editMessage(id: number, text: string): void {
     const original = state.messages.find((message) => message.id === id);
     const images = original?.kind === "user" ? original.images : undefined;
@@ -283,6 +290,7 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
     detachFile,
     clearAgent,
     regenerate,
+    retryReply,
     editMessage,
     storeSecret,
     rememberWithPasskey,
