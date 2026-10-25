@@ -87,6 +87,8 @@ describe("Start as a dialog", () => {
   it("opens the description form with no provider or model chosen, and a way back", () => {
     const html = decode(render({ view: "prompt" }));
     expect(html).toContain("Generate with AI");
+    expect(html).toContain("Model that writes the file");
+    expect(html).not.toContain("Written by your own model");
     expect(html).toContain("Choose a provider");
     expect(html).toContain("Choose a model");
     expect(html).not.toContain("API usage will be used to write this file.");
