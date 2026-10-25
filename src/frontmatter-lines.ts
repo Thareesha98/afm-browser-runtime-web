@@ -94,16 +94,27 @@ export function pathFromText(text: string | undefined): PathSegment[] {
   return parts.map((part) => (part.startsWith("[") ? Number(part.slice(1, -1)) : part));
 }
 
-export function lineOfPath(content: string, path: readonly PathSegment[]): number | null {
-  if (path.length === 0) return null;
+function settingsBlock(content: string): { lines: string[]; open: number; close: number } | null {
   const lines = content.split("\n");
   const open = lines.findIndex((line) => line.trim() !== "");
   if (open === -1 || lines[open]!.trim() !== "---") return null;
   const close = lines.findIndex((line, at) => at > open && line.trim() === "---");
-  if (close === -1) return null;
+  return close === -1 ? null : { lines, open, close };
+}
 
-  let block = rowsOf(lines, open + 1, close);
-  let line = open + 1;
+export function settingsRows(content: string): { line: number; text: string }[] {
+  const block = settingsBlock(content);
+  if (block === null) return [];
+  return rowsOf(block.lines, block.open + 1, block.close).map(({ line, text }) => ({ line, text }));
+}
+
+export function lineOfPath(content: string, path: readonly PathSegment[]): number | null {
+  if (path.length === 0) return null;
+  const found = settingsBlock(content);
+  if (found === null) return null;
+
+  let block = rowsOf(found.lines, found.open + 1, found.close);
+  let line = found.open + 1;
   for (const segment of path) {
     const hit = step(block, segment);
     if (hit === null) break;

@@ -15,7 +15,7 @@
 // under the License.
 
 import { describe, expect, it } from "vitest";
-import { lineOfPath, pathFromText } from "./frontmatter-lines";
+import { lineOfPath, pathFromText, settingsRows } from "./frontmatter-lines";
 
 const FILE = `---
 model:
@@ -146,5 +146,22 @@ describe("reading a path written as text", () => {
   it("gives an empty path for nothing", () => {
     expect(pathFromText(undefined)).toEqual([]);
     expect(pathFromText("")).toEqual([]);
+  });
+});
+
+describe("the lines of the settings block", () => {
+  const content = "intro\n---\n# note\nname: A\n\nmodel:\n  - x: 1\n---\n# Role\nname: not a setting\n";
+
+  it("gives each line of the block with its place in the file, without comments and blank lines", () => {
+    expect(settingsRows(content)).toEqual([]);
+    expect(settingsRows(content.replace("intro\n", ""))).toEqual([
+      { line: 3, text: "name: A" },
+      { line: 5, text: "model:" },
+      { line: 6, text: "x: 1" },
+    ]);
+  });
+
+  it("gives nothing without a closed block", () => {
+    expect(settingsRows("---\nname: A\n")).toEqual([]);
   });
 });
