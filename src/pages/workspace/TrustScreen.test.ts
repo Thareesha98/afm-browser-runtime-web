@@ -19,7 +19,7 @@ import { describe, expect, it } from "vitest";
 import type { AgentMetadata } from "@afm/engine";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TRUST_COPY, TrustScreen, filterTools, linkedFileHost, serverTools, toolCount } from "./TrustScreen";
+import { TRUST_COPY, TrustScreen, filterTools, linkedFileHost, serverTools, tickedSummary, toolCount } from "./TrustScreen";
 
 const withServers = (mcp: unknown[]) => ({ name: "A", tools: { mcp } }) as AgentMetadata;
 
@@ -57,7 +57,7 @@ describe("serverTools", () => {
 
   it("has no host for a server that is not reached over http", () => {
     const metadata = withServers([{ name: "local", transport: { type: "stdio", command: "run" } }]);
-    expect(serverTools(metadata)).toEqual([{ name: "local", host: null, tools: [] }]);
+    expect(serverTools(metadata)).toEqual([{ name: "local", url: null, host: null, tools: [] }]);
   });
 });
 
@@ -127,6 +127,16 @@ describe("filterTools", () => {
   });
 });
 
+describe("tickedSummary", () => {
+  it("says every listed tool asks first until one is ticked", () => {
+    expect(tickedSummary(0, 4)).toBe("4 tools · all ask first");
+  });
+
+  it("says how many of the listed tools run without asking once some are ticked", () => {
+    expect(tickedSummary(1, 4)).toBe("1 of 4 tools run without asking");
+  });
+});
+
 describe("toolCount", () => {
   it("says tool once and tools otherwise", () => {
     expect(toolCount(1)).toBe("1 tool");
@@ -154,20 +164,20 @@ describe("the window a shared agent opens in", () => {
     const html = screen();
     expect(html).toContain("Notion");
     expect(html).toContain("mcp.notion.com");
-    expect(html).toContain("4 tools");
-    expect(html).toContain("View tools");
+    expect(html).toContain("4 tools · all ask first");
+    expect(html).toContain("Choose tools");
     for (const tool of TOOLS) expect(html).not.toContain(tool);
   });
 
   it("says a server with no listed tools has none, and gives it no button", () => {
     const html = screen({ servers: [{ name: "github", transport: { type: "http", url: "https://api.githubcopilot.com/mcp" } }] });
     expect(html).toContain("No tools listed");
-    expect(html).not.toContain("View tools");
+    expect(html).not.toContain("Choose tools");
   });
 
   it("gives each server with tools its own button", () => {
     const html = screen({ servers: [notion, { ...notion, name: "linear", transport: { type: "http", url: "https://mcp.linear.app/mcp" } }] });
-    expect(html.match(/View tools/g)).toHaveLength(2);
+    expect(html.match(/Choose tools/g)).toHaveLength(2);
   });
 
   it("says None when the file names no server", () => {
@@ -225,8 +235,15 @@ describe("the list of a server's tools", () => {
   it("names the server, counts its tools and has a way back", () => {
     const html = screen({ initialTools: "notion" });
     expect(html).toContain("Notion");
-    expect(html).toContain("4 tools run without asking in this file. Any other tool asks first.");
+    expect(html).toContain("The file lists 4 tools for mcp.notion.com. Tick the ones that may run without asking. The rest ask first.");
     expect(html).toContain("u-dlg-back");
+  });
+
+  it("gives every tool a tick box that starts unticked, so none runs without asking until the person ticks it", () => {
+    const html = screen({ initialTools: "notion" });
+    expect(html.match(/type="checkbox"/g)).toHaveLength(TOOLS.length);
+    expect(html).not.toContain("checked");
+    expect(html).toContain("Tick all");
   });
 
   it("lists every tool name, with a search box", () => {
@@ -235,9 +252,9 @@ describe("the list of a server's tools", () => {
     expect(html).toContain('aria-label="Search tools"');
   });
 
-  it("says a single tool runs, not run", () => {
+  it("says tool for a single tool", () => {
     const html = screen({ servers: [{ ...notion, tool_filter: { allow: ["notion-search"] } }], initialTools: "notion" });
-    expect(html).toContain("1 tool runs without asking in this file.");
+    expect(html).toContain("The file lists 1 tool for mcp.notion.com.");
   });
 
   it("ends with Done and the sentence that says what the list is", () => {

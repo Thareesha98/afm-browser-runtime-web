@@ -40,7 +40,8 @@ interface Props {
   content: string;
   editing: string | null;
   metadata: AgentMetadata;
-  onApply: (content: string) => void;
+  // savedServerUrl is set when the person saved a server, which confirms the tools ticked for it
+  onApply: (content: string, savedServerUrl?: string) => void;
   onServerDropped: (serverUrl: string) => void;
   onProbe: (server: NonNullable<AgentMetadata["tools"]>) => Promise<ProbeResult>;
   onSignIn: (provider: OAuthProviderRef, vetting: SignInVetting) => Promise<SignInOutcome>;
@@ -50,6 +51,7 @@ interface Props {
   issue: Issue | null;
   onBack?: () => void;
   onClose: () => void;
+  fromSomeoneElse?: boolean;
 }
 
 function signInValues(auth: OAuthSignIn, clientId = ""): Record<string, string> {
@@ -97,6 +99,7 @@ export function ServerPanel({
   knownSecrets,
   issue,
   onBack,
+  fromSomeoneElse = false,
 }: Props) {
   const existing = (metadata.tools?.mcp ?? []).find((server) => server.name === editing);
   const existingUrl = existing?.transport.type === "http" ? existing.transport.url : "";
@@ -301,7 +304,7 @@ export function ServerPanel({
     for (const secret of next.secrets) {
       onStoreSecret(secret.name, secret.value, serverAddress(url.trim()));
     }
-    onApply(next.content);
+    onApply(next.content, url.trim());
     if (existingUrl !== "" && existingUrl !== url.trim()) onServerDropped(existingUrl);
     onClose();
   }
@@ -474,6 +477,7 @@ export function ServerPanel({
               checkable={live}
               showTip={showTip}
               hideTip={hideTip}
+              fromSomeoneElse={fromSomeoneElse}
             />
           </>
         )}

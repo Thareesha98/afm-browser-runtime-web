@@ -41,6 +41,7 @@ export interface ProbeResult {
 
 export interface LoadOptions {
   carryConversation?: boolean;
+  confirmedTools?: string[];
 }
 
 function freshStartNotice(messages: UiMessage[]): UiMessage {
@@ -147,10 +148,11 @@ export function useStandaloneSession(hooks: SessionHooks = {}) {
         content,
         seedHistory: carry ? toSeededConversation(resume) : [],
         permissionSeed,
+        confirmedTools: options.confirmedTools,
       });
       return;
     }
-    post({ type: "load", content, permissionSeed });
+    post({ type: "load", content, permissionSeed, confirmedTools: options.confirmedTools });
   }
 
   function send(text: string, images?: ImageAttachment[]): void {

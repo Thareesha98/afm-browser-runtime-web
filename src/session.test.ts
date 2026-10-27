@@ -16,6 +16,7 @@
 
 import { describe, it, expect, vi } from "vitest";
 import { AgentSession } from "./session";
+import { listedToolKey } from "./listed-tools";
 import { compositeToolPort, inPageToolPort, namespacedToolPort } from "@afm/adapter-tool";
 import { configSecretPort } from "@afm/adapter-secret";
 import { allowAllPermissions } from "@afm/engine";
@@ -805,6 +806,27 @@ i
     await session.send("go");
     expect(asked).toEqual([]);
     expect(toolResult(emitted)).toMatchObject({ ok: true, content: "echoed" });
+  });
+
+  it("asks about a listed tool in a file someone else wrote, until the person confirms it", async () => {
+    const { session, asked } = sessionOn(DOCS);
+    await session.load(listing(DOCS, ["echo"]), undefined, []);
+    await session.send("go");
+    expect(asked).toEqual([`${DOCS}::docs__echo`]);
+  });
+
+  it("runs a listed tool in a file someone else wrote without asking, once the person confirmed it by name", async () => {
+    const { session, asked } = sessionOn(DOCS);
+    await session.load(listing(DOCS, ["echo"]), undefined, [listedToolKey(DOCS, "echo")]);
+    await session.send("go");
+    expect(asked).toEqual([]);
+  });
+
+  it("does not let a tool confirmed on one server run without asking on another", async () => {
+    const { session, asked } = sessionOn(DOCS);
+    await session.load(listing(DOCS, ["echo"]), undefined, [listedToolKey(OTHER, "echo")]);
+    await session.send("go");
+    expect(asked).toEqual([`${DOCS}::docs__echo`]);
   });
 
   it("asks about a tool the file does not list", async () => {

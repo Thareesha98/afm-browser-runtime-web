@@ -21,7 +21,14 @@ import type { SavedAgent, AgentOrigin, AgentSaveResult } from "../agents-store";
 
 interface AgentsLibraryValue {
   agents: SavedAgent[];
-  save: (agent: { id?: string; name: string; description: string; source: string; origin: AgentOrigin }) => AgentSaveResult;
+  save: (agent: {
+    id?: string;
+    name: string;
+    description: string;
+    source: string;
+    origin: AgentOrigin;
+    confirmedTools?: string[];
+  }) => AgentSaveResult;
   remove: (id: string) => void;
 }
 

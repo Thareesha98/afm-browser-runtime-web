@@ -29,6 +29,7 @@ import { ToolNameError, compositeToolPort, namespacedToolName } from "@afm/adapt
 import type { ServerMessage, ImageAttachment } from "./protocol";
 import { permissionKey, serverMessageFromLoopEvent } from "./protocol";
 import { userContent } from "./message-content";
+import { listedToolKey } from "./listed-tools";
 
 const MAX_TOKENS_PER_TURN = 250_000;
 const MAX_WALL_CLOCK_MS = 180_000;
@@ -48,11 +49,16 @@ const FILES_SYSTEM_NOTE =
   "What is attached is listed below and is accurate as of this message, so do not call " +
   "list_files to find out whether something is attached.\n";
 
-function listedAsAllowed(metadata: AgentMetadata): Set<string> {
+// confirmed is null for the person's own file; for a file someone else wrote, only the listed tools
+// the person confirmed run without asking
+function listedAsAllowed(metadata: AgentMetadata, confirmed: ReadonlySet<string> | null): Set<string> {
   const keys = new Set<string>();
   for (const server of metadata.tools?.mcp ?? []) {
     if (server.transport.type !== "http") continue;
-    for (const name of server.tool_filter?.allow ?? []) keys.add(permissionKey(server.transport.url, namespacedToolName(server.name, name)));
+    for (const name of server.tool_filter?.allow ?? []) {
+      if (confirmed !== null && !confirmed.has(listedToolKey(server.transport.url, name))) continue;
+      keys.add(permissionKey(server.transport.url, namespacedToolName(server.name, name)));
+    }
   }
   return keys;
 }
@@ -82,7 +88,7 @@ export class AgentSession {
     this.deps.emit({ type: "load-step", key, label, state, note });
   }
 
-  async load(content: string, seedHistory?: ChatMessage[]): Promise<void> {
+  async load(content: string, seedHistory?: ChatMessage[], confirmedTools?: readonly string[]): Promise<void> {
     this.endTurn();
     const number = ++this.loadCount;
     const current = (): boolean => number === this.loadCount;
@@ -113,7 +119,7 @@ export class AgentSession {
         ...loaded,
         systemPrompt: loaded.systemPrompt + FILES_SYSTEM_NOTE,
       };
-      this.allowed = listedAsAllowed(loaded.metadata);
+      this.allowed = listedAsAllowed(loaded.metadata, confirmedTools === undefined ? null : new Set(confirmedTools));
       this.model = model;
       this.tools = tools;
       this.history = seedHistory ?? [];

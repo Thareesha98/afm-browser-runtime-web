@@ -26,6 +26,8 @@ export interface SavedAgent {
   createdAt: number;
   updatedAt: number;
   origin: AgentOrigin;
+  // set for a file someone else wrote: the listed tools the person confirmed by name (listedToolKey)
+  confirmedTools?: string[];
 }
 
 const AGENTS_KEY = "afm.agents.v1";
@@ -59,6 +61,7 @@ export function saveAgent(
     origin: agent.origin,
     createdAt: previous?.createdAt ?? now,
     updatedAt: now,
+    ...(agent.confirmedTools !== undefined ? { confirmedTools: agent.confirmedTools } : {}),
   };
   const rest = existing.filter((a) => a.id !== id);
   const agents = [next, ...rest];
