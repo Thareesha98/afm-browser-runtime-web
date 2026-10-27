@@ -34,6 +34,9 @@ export type ClientMessage =
       content: string;
       seedHistory?: ChatMessage[];
       permissionSeed?: string[];
+      // set for a file someone else wrote: the listed tools the person confirmed by name, as
+      // listedToolKey; the other listed tools ask first
+      confirmedTools?: string[];
     }
   | { type: "send"; text: string; images?: ImageAttachment[]; keep?: number }
   | { type: "attach-files"; files: { name: string; path: string; text: string; pages?: number; note?: string }[] }

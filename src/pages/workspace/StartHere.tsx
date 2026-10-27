@@ -127,7 +127,8 @@ interface Props {
   dialog?: boolean;
   initialView?: StartView;
   notice?: string;
-  onUseSource: (source: string) => void;
+  // fromOutside is true for a file or link, which may be someone else's agent
+  onUseSource: (source: string, fromOutside?: boolean) => void;
   onGenerate: (prompt: string, model: AgentModelRef, final?: boolean) => void;
   onDismissDraft: () => void;
   onSaveKey: (name: string, value: string) => void;
@@ -181,7 +182,7 @@ export function StartHere({
 
   async function openFile(file: File | undefined) {
     if (file === undefined) return;
-    onUseSource(await file.text());
+    onUseSource(await file.text(), true);
   }
 
   async function openLink() {
@@ -198,7 +199,7 @@ export function StartHere({
         setImportError("Nothing came back from that address.");
         return;
       }
-      onUseSource(text);
+      onUseSource(text, true);
     } catch (error) {
       if (error instanceof McpProxyRequiredError) {
         // opening a link needs the proxy; this is not an MCP problem, so it does not say MCP

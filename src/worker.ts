@@ -163,7 +163,7 @@ scope.addEventListener("message", (event) => {
       for (const name of message.permissionSeed ?? []) alwaysAllow.add(name);
       for (const name of FILE_TOOL_NAMES) alwaysAllow.add(permissionKey(undefined, name));
       attachedFiles.clear();
-      void session.load(message.content, message.seedHistory);
+      void session.load(message.content, message.seedHistory, message.confirmedTools);
       break;
     case "attach-files":
       for (const file of message.files) {

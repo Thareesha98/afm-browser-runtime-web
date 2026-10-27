@@ -145,6 +145,7 @@ export function AgentPicker({ currentId, onPick, onNew, onRemoved }: Props) {
               description: undo.agent.description,
               source: undo.agent.source,
               origin: undo.agent.origin,
+              confirmedTools: undo.agent.confirmedTools,
             });
             if (undo.conversations.length > 0) history.restore(undo.conversations);
             setUndo(null);

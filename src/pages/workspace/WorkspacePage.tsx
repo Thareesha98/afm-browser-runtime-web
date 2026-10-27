@@ -53,7 +53,9 @@ import {
   missingAgentId,
   missingAgentNotice,
   openedFromLink,
+  initialConfirmed,
 } from "./workspace-content";
+import { confirmServer } from "../../listed-tools";
 import { useAgentsLibrary } from "../../agents/AgentsLibraryContext";
 import { useHistory } from "../../history/HistoryContext";
 import { permissionScopeFor, grantsToRevoke } from "../../permissions-store";
@@ -92,6 +94,8 @@ export function WorkspacePage() {
   const backToSetup = nav.under[nav.under.length - 1] === "setup";
   const [chatFull, setChatFull] = useState(() => searchParams.get("view") === "chat");
   const [trusted, setTrusted] = useState(() => !openedFromLink(searchParams, location.hash, draftSource));
+  // null for the person's own file; for a file someone else wrote, the listed tools they confirmed
+  const [confirmed, setConfirmed] = useState<string[] | null>(() => initialConfirmed(searchParams, location.hash, draftSource));
   const [linkedFile, setLinkedFile] = useState<string | null>(null);
   const [serverEditing, setServerEditing] = useState<string | null>(null);
   const [editorMode, setEditorMode] = useState<EditorMode>("simple");
@@ -146,6 +150,7 @@ export function WorkspacePage() {
     if (nextIdentity === loadedIdentityRef.current) return;
     loadedIdentityRef.current = nextIdentity;
     setTrusted(!openedFromLink(searchParams, location.hash, draftSource));
+    setConfirmed(initialConfirmed(searchParams, location.hash, draftSource));
     setLinkedFile(null);
     const next = initialContent(searchParams, location.hash, draftSource);
     const nextId = searchParams.get("agentId");
@@ -171,6 +176,7 @@ export function WorkspacePage() {
         setContent(text);
         setSavedContent(text);
         setAgentId(null);
+        setConfirmed([]);
         setLinkedFile(fileParam);
       })
       .catch((error: unknown) => {
@@ -212,6 +218,7 @@ export function WorkspacePage() {
       description: readable.metadata.description ?? "",
       source,
       origin: "blank",
+      confirmedTools: confirmed ?? undefined,
     });
     if (result.persisted) setSavedContent(source);
     setSaveFailed(!result.persisted);
@@ -285,7 +292,7 @@ export function WorkspacePage() {
     const { id } = persistToLibrary();
     const previous = id === null ? undefined : history.entries.find((entry) => entry.agentId === id);
     const rewritten = running && agentBrief(session.state.agentSource) !== agentBrief(content);
-    session.loadContent(content, previous?.messages, { carryConversation: !rewritten });
+    session.loadContent(content, previous?.messages, { carryConversation: !rewritten, confirmedTools: confirmed ?? undefined });
     openSide("chat");
   }
 
@@ -338,6 +345,7 @@ export function WorkspacePage() {
     setContent(EMPTY_TEMPLATE);
     setSavedContent(EMPTY_TEMPLATE);
     setAgentId(null);
+    setConfirmed(null);
     loadedIdentityRef.current = "blank";
     session.clearAgent();
   }
@@ -353,10 +361,12 @@ export function WorkspacePage() {
       dialog={dialog}
       notice={missingAgent === null ? undefined : missingAgentNotice(missingAgent)}
       state={session.state}
-      onUseSource={(source) => {
+      onUseSource={(source, fromOutside = false) => {
         setContent(source);
         setSavedContent(source);
         setAgentId(null);
+        setTrusted(!fromOutside);
+        setConfirmed(fromOutside ? [] : null);
         setSearchParams({}, { replace: true });
         loadedIdentityRef.current = "blank";
         session.clearAgent();
@@ -425,7 +435,8 @@ export function WorkspacePage() {
             source={content}
             savedSecrets={session.state.savedSecrets}
             fileUrl={linkedFile}
-            onRun={() => {
+            onRun={(ticked) => {
+              setConfirmed(ticked);
               setTrusted(true);
               openSetup();
             }}
@@ -582,10 +593,15 @@ export function WorkspacePage() {
                   content={content}
                   editing={serverEditing}
                   metadata={readable.metadata}
-                  onApply={(next) => {
+                  onApply={(next, savedUrl) => {
                     setContent(next);
+                    if (savedUrl !== undefined) {
+                      const saved = buildableAgent(next);
+                      setConfirmed((current) => (current === null ? null : confirmServer(current, saved.ok ? saved.metadata : null, savedUrl)));
+                    }
                     if (serverEditing !== null) setup.changed(serverRowId(serverEditing));
                   }}
+                  fromSomeoneElse={confirmed !== null}
                   onServerDropped={revokeGrants}
                   onStoreSecret={session.storeSecret}
                   knownSecrets={session.state.savedSecrets}

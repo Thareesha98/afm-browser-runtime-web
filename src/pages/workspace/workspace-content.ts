@@ -65,6 +65,15 @@ export function openedFromLink(searchParams: URLSearchParams, hash: string, draf
   return draftSource === undefined && (searchParams.get("file") !== null || inlineAfmParam(searchParams, hash) !== null);
 }
 
+// For a file someone else wrote, the listed tools the person confirmed by name; null for their own
+// work. A file from a link starts with none confirmed, and a library agent keeps what was saved with it.
+export function initialConfirmed(searchParams: URLSearchParams, hash: string, draftSource: string | undefined): string[] | null {
+  if (openedFromLink(searchParams, hash, draftSource)) return [];
+  if (draftSource !== undefined) return null;
+  const agentId = searchParams.get("agentId");
+  return agentId === null ? null : (findAgent(agentId)?.confirmedTools ?? null);
+}
+
 export function identityFor(searchParams: URLSearchParams, hash: string, draftSource: string | undefined): string {
   if (draftSource !== undefined) return `draft:${draftSource}`;
   const file = searchParams.get("file");

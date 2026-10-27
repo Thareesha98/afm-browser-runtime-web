@@ -112,9 +112,15 @@ interface ServerToolsProps {
   checkable: boolean;
   showTip: (tool: ToolInfo, row: HTMLElement) => void;
   hideTip: () => void;
+  fromSomeoneElse?: boolean;
 }
 
-export function ServerTools({ url, probing, found, error, allowed, waiting, onToggle, onToggleAll, onCheckAgain, checkable, showTip, hideTip }: ServerToolsProps) {
+export const TICK_HINT = {
+  own: "Ticked tools run without asking. Unticked tools stay off.",
+  shared: "This agent came from outside your library. Saving here lets the ticked tools run without asking. Unticked tools stay off.",
+};
+
+export function ServerTools({ url, probing, found, error, allowed, waiting, onToggle, onToggleAll, onCheckAgain, checkable, showTip, hideTip, fromSomeoneElse = false }: ServerToolsProps) {
   return (
     <div className="u-group grow">
       <div className="u-label-row">
@@ -134,7 +140,7 @@ export function ServerTools({ url, probing, found, error, allowed, waiting, onTo
         )}
       </div>
 
-      {found !== null && found.length > 0 && <p className="u-hint">Ticked tools run without asking. Unticked tools stay off.</p>}
+      {found !== null && found.length > 0 && <p className="u-hint">{fromSomeoneElse ? TICK_HINT.shared : TICK_HINT.own}</p>}
 
       {error !== null && (
         <div className="repair">

@@ -42,6 +42,12 @@ describe("the agents library", () => {
     expect(loadAgents()).toEqual([result.saved]);
   });
 
+  it("keeps an agent from someone else marked as such, even with no tools confirmed", () => {
+    const { id } = saveAgent({ ...draft("Shared"), confirmedTools: [] }).saved;
+    expect(findAgent(id)?.confirmedTools).toEqual([]);
+    expect(findAgent(saveAgent(draft("Mine")).saved.id)?.confirmedTools).toBeUndefined();
+  });
+
   it("keeps the newest agent first", () => {
     saveAgent(draft("First"));
     const second = saveAgent(draft("Second")).saved;

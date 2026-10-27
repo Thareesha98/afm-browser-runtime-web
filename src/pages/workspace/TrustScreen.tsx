@@ -19,6 +19,7 @@ import type { ReactNode } from "react";
 import { DEFAULT_MAX_ITERATIONS, referencedSecretNames } from "@afm/engine";
 import type { AgentMetadata } from "@afm/engine";
 import { hostOf } from "../../load-paths";
+import { listedToolKey } from "../../listed-tools";
 import { findProvider, shortModelLabel } from "./model-catalog";
 import { displayName } from "./setup-check";
 import { DialogFrame } from "./DialogFrame";
@@ -28,22 +29,24 @@ interface Props {
   source: string;
   savedSecrets: string[];
   fileUrl: string | null;
-  onRun: () => void;
+  // the listed tools the person ticked, as listedToolKey; the rest ask first
+  onRun: (confirmed: string[]) => void;
   onOpenBuilder: () => void;
   initialTools?: string | null;
 }
 
 export interface ServerTools {
   name: string;
+  url: string | null;
   host: string | null;
   tools: string[];
 }
 
 export const TRUST_COPY = {
-  lead: "Someone shared this agent with you. Here is what the file sets up, before it runs.",
+  lead: "This agent comes from outside your library. Here is what the file sets up, before it runs.",
   footer: "Nothing runs until you press Run it.",
-  toolsFooter: "These are the tools this file lists.",
-  toolsNote: "Tools the file lists run without asking. Any other tool asks first, unless you allow it in this tab.",
+  toolsFooter: "Only the tools you tick run without asking.",
+  toolsNote: "A tool runs without asking only if you tick it here. Every other tool asks first, unless you allow it in this tab.",
   keysNote: "A key you enter stays in memory for this tab and is gone when you close or refresh it.",
 };
 
@@ -69,9 +72,16 @@ function Icon({ path, size = 16 }: { path: string; size?: number }) {
 export function serverTools(metadata: AgentMetadata): ServerTools[] {
   return (metadata.tools?.mcp ?? []).map((server) => ({
     name: server.name,
+    url: server.transport.type === "http" ? server.transport.url : null,
     host: server.transport.type === "http" ? hostOf(server.transport.url) : null,
     tools: server.tool_filter?.allow ?? [],
   }));
+}
+
+// what the summary says about a server's listed tools, by how many the person ticked
+export function tickedSummary(ticked: number, listed: number): string {
+  if (ticked === 0) return `${toolCount(listed)} · all ask first`;
+  return `${ticked} of ${toolCount(listed)} run without asking`;
 }
 
 export function linkedFileHost(fileUrl: string | null): string | null {
@@ -109,18 +119,32 @@ function Row({ icon, label, children }: { icon: string; label: string; children:
 export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, onOpenBuilder, initialTools = null }: Props) {
   const [listed, setListed] = useState<string | null>(initialTools);
   const [query, setQuery] = useState("");
+  const [ticked, setTicked] = useState<ReadonlySet<string>>(() => new Set());
   const keys = referencedSecretNames(source);
   const servers = serverTools(metadata);
   const fileHost = linkedFileHost(fileUrl);
-  const open = servers.find((server) => server.name === listed);
+  const open = servers.find((server) => server.name === listed && server.url !== null);
+  const keyOf = (server: ServerTools, tool: string) => listedToolKey(server.url ?? "", tool);
+  const tickedOn = (server: ServerTools) => server.tools.filter((tool) => ticked.has(keyOf(server, tool))).length;
+  const setTick = (keys: string[], on: boolean) =>
+    setTicked((current) => {
+      const next = new Set(current);
+      for (const key of keys) {
+        if (on) next.add(key);
+        else next.delete(key);
+      }
+      return next;
+    });
 
   if (open !== undefined) {
     const back = () => setListed(null);
     const shown = filterTools(open.tools, query);
+    const shownKeys = shown.map((tool) => keyOf(open, tool));
+    const allShownTicked = shownKeys.length > 0 && shownKeys.every((key) => ticked.has(key));
     return (
       <DialogFrame
         title={displayName(open.name)}
-        subtitle={`${toolCount(open.tools.length)} ${open.tools.length === 1 ? "runs" : "run"} without asking in this file. Any other tool asks first.`}
+        subtitle={`The file lists ${toolCount(open.tools.length)} for ${open.host ?? "this server"}. Tick the ones that may run without asking. The rest ask first.`}
         footer={TRUST_COPY.toolsFooter}
         icon={<Icon path={ICONS.tools} size={17} />}
         actions={
@@ -144,6 +168,14 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
             aria-label="Search tools"
           />
         </label>
+        {shown.length > 0 && (
+          <div className="u-tr-tickbar">
+            <span className="u-tr-meta">{tickedSummary(tickedOn(open), open.tools.length)}</span>
+            <button className="u-linkish" onClick={() => setTick(shownKeys, !allShownTicked)}>
+              {allShownTicked ? "Clear" : "Tick all"}
+            </button>
+          </div>
+        )}
         {shown.length === 0 ? (
           <div className="u-tr-empty">
             <b>No tools match “{query.trim()}”</b>
@@ -154,9 +186,14 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
         ) : (
           <div className="u-tr-names">
             {shown.map((tool) => (
-              <span key={tool} className="u-tr-name">
-                {tool}
-              </span>
+              <label key={tool} className="u-tr-name">
+                <input
+                  type="checkbox"
+                  checked={ticked.has(keyOf(open, tool))}
+                  onChange={(event) => setTick([keyOf(open, tool)], event.target.checked)}
+                />
+                <span>{tool}</span>
+              </label>
             ))}
           </div>
         )}
@@ -175,7 +212,7 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
           <button className="u-btn ghost" onClick={onOpenBuilder}>
             Open in builder
           </button>
-          <button className="u-btn primary" onClick={onRun}>
+          <button className="u-btn primary" onClick={() => onRun([...ticked])}>
             Run it
           </button>
         </>
@@ -209,8 +246,12 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
                     {displayName(server.name)}
                     {server.host !== null && <small> · {server.host}</small>}
                   </span>
-                  <span className="u-tr-meta">{server.tools.length === 0 ? "No tools listed" : toolCount(server.tools.length)}</span>
-                  {server.tools.length > 0 && (
+                  <span className="u-tr-meta">
+                    {server.tools.length === 0 || server.url === null
+                      ? "No tools listed"
+                      : tickedSummary(tickedOn(server), server.tools.length)}
+                  </span>
+                  {server.tools.length > 0 && server.url !== null && (
                     <button
                       className="u-btn ghost sm"
                       onClick={() => {
@@ -218,7 +259,7 @@ export function TrustScreen({ metadata, source, savedSecrets, fileUrl, onRun, on
                         setListed(server.name);
                       }}
                     >
-                      View tools
+                      Choose tools
                     </button>
                   )}
                 </div>
