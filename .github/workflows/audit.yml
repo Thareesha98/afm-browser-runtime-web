@@ -1,0 +1,29 @@
+name: Dependency Audit
+
+# Runs every day as well as on changes, so an advisory published between pushes is seen.
+# Any finding fails the run, and GitHub emails the repository owner.
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Audit dependencies
+        run: pnpm audit
