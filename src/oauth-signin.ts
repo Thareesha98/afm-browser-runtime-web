@@ -29,8 +29,12 @@ const CALLBACK_CHANNEL = "afm-oauth-callback";
 const SIGN_IN_TIMEOUT_MS = 10 * 60 * 1000;
 
 // Must be called straight from the click, before any await, or the browser blocks the window.
+// The link back to this tab is cut before the provider's page loads, so that page cannot send
+// the AFM tab somewhere else. The answer comes back on the BroadcastChannel, not through opener.
 function openSignInPopup(): Window | null {
-  return window.open("about:blank", POPUP_NAME, "width=520,height=680");
+  const popup = window.open("about:blank", POPUP_NAME, "width=520,height=680");
+  if (popup !== null) popup.opener = null;
+  return popup;
 }
 
 export function relayOAuthCallback(): boolean {

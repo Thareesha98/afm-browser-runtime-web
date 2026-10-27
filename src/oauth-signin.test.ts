@@ -76,7 +76,7 @@ describe("clearLegacyRefreshTokens", () => {
 const ORIGIN = "https://app.example.com";
 
 function fakePopup() {
-  return { closed: false, close: vi.fn(function (this: { closed: boolean }) { this.closed = true; }), location: { href: "" } };
+  return { closed: false, close: vi.fn(function (this: { closed: boolean }) { this.closed = true; }), location: { href: "" }, opener: {} as object | null };
 }
 
 class FakeChannel {
@@ -220,6 +220,11 @@ describe("createOAuthSignIns", () => {
 
     signIns.onDone(startId, true);
     expect(await result).toEqual({ status: "signed-in" });
+  });
+
+  it("cuts the pop-up's link back to the AFM tab before sending it to the provider", () => {
+    const { popup } = setup();
+    expect(popup.opener).toBeNull();
   });
 
   it("tells the worker whether the server is in the directory and which host the user agreed to", async () => {
